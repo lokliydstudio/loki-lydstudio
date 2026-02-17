@@ -28,23 +28,25 @@
 
       <nav class="nav" aria-label="Hovedmeny">
         <a href="#tjenester">Tjenester</a>
+        <a href="#lyd">Lyd</a>
         <a href="#kontakt">Kontakt</a>
       </nav>
     </div>
   </header>
 
   <main id="main">
+    <!-- HERO -->
     <section class="hero" id="top">
       <div class="container hero__inner">
         <div>
-          <h1>Loki Lydstudio</h1>
+          <h1>Studio-quality lyd, med ro og presisjon.</h1>
           <p class="lead">
-            Innspilling, miks, master og produksjon.
+            Innspilling, miks, master og produksjon — ryddig workflow, tydelige leveranser og fokus på detaljer.
           </p>
 
           <div class="hero__cta">
             <a class="btn" href="#kontakt">Send forespørsel</a>
-           
+            <a class="btn btn--ghost" href="mailto:post@lokilyd.no">post@lokilyd.no</a>
           </div>
 
           <div class="social">
@@ -70,32 +72,37 @@
           </div>
         </div>
 
-        <div class="hero__card" aria-hidden="true">
-          <div class="glass">
-            <div class="glass__line"></div>
-            <div class="glass__line glass__line--strong"></div>
-            <div class="glass__line glass__line--soft"></div>
+        <!-- BIG LOGO RIGHT -->
+        <aside class="hero__card" aria-label="Loki Lydstudio">
+          <div class="hero__logoWrap">
+            <img class="hero__logoBig" src="assets/Loki_kunlogo_ubakgrunn.png" alt="Loki Lydstudio logo" />
           </div>
-          <p class="muted">Enkel prosess. Profesjonelt resultat.</p>
-        </div>
+
+          <div class="pillars" aria-hidden="true">
+            <div class="pillar"><span>Release-ready leveranser</span><span>✓</span></div>
+            <div class="pillar"><span>Ryddig workflow</span><span>✓</span></div>
+            <div class="pillar"><span>Tydelig feedback</span><span>✓</span></div>
+          </div>
+        </aside>
       </div>
     </section>
 
+    <!-- TJENESTER -->
     <section class="section" id="tjenester">
       <div class="container">
         <div class="section__head">
           <h2>Tjenester</h2>
-          <p class="muted">Velg det du trenger — vi tar resten.</p>
+          <p class="muted">Enkel prosess. Profesjonelt resultat.</p>
         </div>
 
         <div class="grid">
           <article class="card">
             <h3>Innspilling</h3>
-            <p>Komfort, kvalitet og klasse i våre store lokaler på Gyldenpris.</p>
+            <p>Vokal og instrumenter med fokus på komfort og kvalitet.</p>
           </article>
           <article class="card">
             <h3>Miks</h3>
-            <p>Vi mikser musikken din. Enten den er innspilt hos oss, eller om du har med filer selv.</p>
+            <p>Balanse, dybde og punch tilpasset sjanger og uttrykk.</p>
           </article>
           <article class="card">
             <h3>Master</h3>
@@ -109,6 +116,27 @@
       </div>
     </section>
 
+    <!-- SPOTIFY -->
+    <section class="section" id="lyd">
+      <div class="container">
+        <div class="section__head">
+          <h2>Lyd</h2>
+          <p class="muted">Et lite utvalg / inspirasjon / referanser.</p>
+        </div>
+
+        <div class="spotify">
+          <!-- Bytt ut playlist-ID eller embed-lenke (se under) -->
+          <iframe
+            src="https://open.spotify.com/embed/playlist/24317smFzZyrchM3p0zGfC?si=ef61a3a8c0ad4c7b?utm_source=generator"
+            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+            loading="lazy"
+            title="Spotify spilleliste">
+          </iframe>
+        </div>
+      </div>
+    </section>
+
+    <!-- KONTAKT -->
     <section class="section section--tight" id="kontakt">
       <div class="container">
         <div class="section__head">
@@ -173,7 +201,7 @@
 
             <div class="form__actions">
               <button class="btn" type="submit">Send henvendelse</button>
-              <p class="muted small">Svar direkte på e-posten dere mottar.</p>
+              <p class="muted small">Vi svarer raskt på e-post.</p>
             </div>
           </form>
         </div>
