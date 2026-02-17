@@ -17,8 +17,6 @@
 </head>
 
 <body>
-  <a class="skip" href="#main">Hopp til innhold</a>
-
   <header class="header">
     <div class="container header__inner">
       <a class="brand" href="#top" aria-label="Loki Lydstudio – Hjem">
@@ -34,14 +32,14 @@
     </div>
   </header>
 
-  <main id="main">
+  <main id="top">
     <!-- HERO -->
-    <section class="hero" id="top">
+    <section class="hero">
       <div class="container hero__inner">
         <div>
-          <h1>Studio-quality lyd, med ro og presisjon.</h1>
+          <h1>Lyd som tåler release.</h1>
           <p class="lead">
-            Innspilling, miks, master og produksjon — ryddig workflow, tydelige leveranser og fokus på detaljer.
+            Innspilling, miks, master og produksjon — ryddig prosess og fokus på detaljer.
           </p>
 
           <div class="hero__cta">
@@ -49,40 +47,14 @@
             <a class="btn btn--ghost" href="mailto:post@lokilyd.no">post@lokilyd.no</a>
           </div>
 
-          <div class="social">
-            <a class="social__link" href="https://instagram.com/lokilydstudio" target="_blank" rel="noreferrer">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
-                  <path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2Z" stroke="currentColor" stroke-width="1.6"/>
-                  <path d="M12 16.2a4.2 4.2 0 1 0 0-8.4 4.2 4.2 0 0 0 0 8.4Z" stroke="currentColor" stroke-width="1.6"/>
-                  <path d="M17.6 6.6h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                </svg>
-              </span>
-              <span>@lokilydstudio</span>
-            </a>
-
-            <a class="social__link" href="https://facebook.com/lokilyd" target="_blank" rel="noreferrer">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="18" height="18" fill="none">
-                  <path d="M14 8.5V7.3c0-.9.6-1.1 1.1-1.1H16V4h-1.6C12.5 4 12 5.5 12 7v1.5H10v2h2V20h2.5v-9.5H16l.5-2H14Z" fill="currentColor"/>
-                </svg>
-              </span>
-              <span>@lokilyd</span>
-            </a>
+          <div class="metaRow" aria-label="Info">
+            <span class="pill">Instagram: <a class="inline" href="https://instagram.com/lokilydstudio" target="_blank" rel="noreferrer">@lokilydstudio</a></span>
+            <span class="pill">Facebook: <a class="inline" href="https://facebook.com/lokilyd" target="_blank" rel="noreferrer">@lokilyd</a></span>
           </div>
         </div>
 
-        <!-- BIG LOGO RIGHT -->
-        <aside class="hero__card" aria-label="Loki Lydstudio">
-          <div class="hero__logoWrap">
-            <img class="hero__logoBig" src="assets/Loki_kunlogo_ubakgrunn.png" alt="Loki Lydstudio logo" />
-          </div>
-
-          <div class="pillars" aria-hidden="true">
-            <div class="pillar"><span>Release-ready leveranser</span><span>✓</span></div>
-            <div class="pillar"><span>Ryddig workflow</span><span>✓</span></div>
-            <div class="pillar"><span>Tydelig feedback</span><span>✓</span></div>
-          </div>
+        <aside class="logoCard" aria-label="Loki Lydstudio logo">
+          <img src="assets/Loki_kunlogo_ubakgrunn.png" alt="Loki Lydstudio logo" />
         </aside>
       </div>
     </section>
@@ -92,21 +64,21 @@
       <div class="container">
         <div class="section__head">
           <h2>Tjenester</h2>
-          <p class="muted">Enkel prosess. Profesjonelt resultat.</p>
+          <p>Enkel oversikt.</p>
         </div>
 
         <div class="grid">
           <article class="card">
             <h3>Innspilling</h3>
-            <p>Vokal og instrumenter med fokus på komfort og kvalitet.</p>
+            <p>Vokal og instrumenter med fokus på kvalitet og flyt.</p>
           </article>
           <article class="card">
             <h3>Miks</h3>
-            <p>Balanse, dybde og punch tilpasset sjanger og uttrykk.</p>
+            <p>Balanse, rom og punch — tilpasset låta.</p>
           </article>
           <article class="card">
             <h3>Master</h3>
-            <p>Konsistent nivå og oversettelse — klar for streaming og release.</p>
+            <p>Release-ready nivå og oversettelse for streaming.</p>
           </article>
           <article class="card">
             <h3>Produksjon</h3>
@@ -121,13 +93,12 @@
       <div class="container">
         <div class="section__head">
           <h2>Lyd</h2>
-          <p class="muted">Et lite utvalg / inspirasjon / referanser.</p>
+          <p>Spilleliste / referanser.</p>
         </div>
 
         <div class="spotify">
-          <!-- Bytt ut playlist-ID eller embed-lenke (se under) -->
           <iframe
-            src="https://open.spotify.com/embed/playlist/24317smFzZyrchM3p0zGfC?si=ef61a3a8c0ad4c7b?utm_source=generator"
+            src="https://open.spotify.com/embed/playlist/SPOTIFY_PLAYLIST_ID_HER?utm_source=generator"
             allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
             loading="lazy"
             title="Spotify spilleliste">
@@ -137,14 +108,11 @@
     </section>
 
     <!-- KONTAKT -->
-    <section class="section section--tight" id="kontakt">
+    <section class="section" id="kontakt">
       <div class="container">
         <div class="section__head">
           <h2>Kontakt</h2>
-          <p class="muted">
-            Send en henvendelse her, eller mail direkte til
-            <a class="inline" href="mailto:post@lokilyd.no">post@lokilyd.no</a>.
-          </p>
+          <p>Send en henvendelse.</p>
         </div>
 
         <div class="contact">
@@ -155,20 +123,17 @@
               <li><span class="k">Instagram</span><span class="v"><a href="https://instagram.com/lokilydstudio" target="_blank" rel="noreferrer">@lokilydstudio</a></span></li>
               <li><span class="k">Facebook</span><span class="v"><a href="https://facebook.com/lokilyd" target="_blank" rel="noreferrer">@lokilyd</a></span></li>
             </ul>
-            <p class="muted small" style="margin-top:12px;">
-              Skjemaet sender e-post til dere og lar dere svare direkte til avsender.
+            <p style="margin:12px 0 0; color:#666;">
+              Du kan også sende mail direkte til <a class="inline" href="mailto:post@lokilyd.no">post@lokilyd.no</a>.
             </p>
           </div>
 
-          <form class="card form"
-                action="https://formspree.io/f/REPLACE_ME"
-                method="POST">
+          <form class="card form" action="https://formspree.io/f/REPLACE_ME" method="POST">
             <div class="form__row">
               <label>
                 Navn
                 <input name="name" type="text" autocomplete="name" placeholder="Ditt navn" required />
               </label>
-
               <label>
                 Din e-post
                 <input name="email" type="email" autocomplete="email" placeholder="navn@epost.no" required />
@@ -194,14 +159,14 @@
 
             <label>
               Melding
-              <textarea name="message" rows="6" placeholder="Fortell litt om prosjektet ditt…" required></textarea>
+              <textarea name="message" rows="6" placeholder="Fortell kort om prosjektet ditt…" required></textarea>
             </label>
 
             <input type="hidden" name="_subject" value="Ny henvendelse — Loki Lydstudio" />
 
             <div class="form__actions">
-              <button class="btn" type="submit">Send henvendelse</button>
-              <p class="muted small">Vi svarer raskt på e-post.</p>
+              <button class="btn" type="submit">Send</button>
+              <span style="color:#666; font-weight:600;">Vi svarer på e-post.</span>
             </div>
           </form>
         </div>
@@ -211,8 +176,8 @@
 
   <footer class="footer">
     <div class="container footer__inner">
-      <p class="muted small">© <span id="year"></span> Loki Lydstudio</p>
-      <p class="muted small"><a class="inline" href="#top">Til toppen</a></p>
+      <span>© <span id="year"></span> Loki Lydstudio</span>
+      <a class="inline" href="#top">Til toppen</a>
     </div>
   </footer>
 
