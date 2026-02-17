@@ -1,0 +1,72 @@
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0b0b0f;
+  color:#fff;
+}
+.container{
+  max-width:1000px;
+  margin:auto;
+  padding:20px;
+}
+.header{
+  border-bottom:1px solid #222;
+}
+.header__inner{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.brand{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.brand__logo{
+  width:40px;
+}
+.nav a{
+  color:#ccc;
+  margin-left:15px;
+  text-decoration:none;
+}
+.hero{
+  padding:80px 0;
+  text-align:center;
+}
+.btn{
+  display:inline-block;
+  padding:10px 20px;
+  background:#fff;
+  color:#000;
+  text-decoration:none;
+  margin-top:10px;
+}
+.section{
+  padding:60px 0;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:20px;
+}
+.card{
+  padding:20px;
+  background:#111;
+  border:1px solid #222;
+}
+form{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  max-width:500px;
+}
+input, select, textarea{
+  padding:10px;
+  border:none;
+}
+.footer{
+  border-top:1px solid #222;
+  padding:20px 0;
+  text-align:center;
+}
