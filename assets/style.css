@@ -321,3 +321,29 @@ textarea{ resize: vertical; }
   .form__row{ grid-template-columns: 1fr; }
   .spotify iframe{ height: 420px; }
 }
+/* Social icons */
+.social{
+  margin-top: 18px;
+  display:flex;
+  gap: 16px;
+}
+
+.social a{
+  color: #111;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.12);
+  background: #fff;
+  transition: all .2s ease;
+}
+
+.social a:hover{
+  background:#111;
+  color:#fff;
+  transform: translateY(-2px);
+}
+
