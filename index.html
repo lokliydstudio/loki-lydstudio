@@ -153,24 +153,52 @@ https://templatemo.com/tm-612-parallax-starter
     </section>
 
     <!-- Section 5: Contact -->
-    <section id="contact" class="parallax-section">
-        <div class="parallax-bg" data-speed="0.5" style="background-image: url('images/parallax-bg-05.jpg')"></div>
-        <div class="parallax-overlay overlay-medium"></div>
-        <div class="section-content">
-            <h2 class="section-title">KONTAKT OSS</h2>
-            <p class="section-subtitle caps">LA OSS SKAPE MAGI I LAG</p>
-            <div class="contact-form-wrap">
-                <form id="contactForm" class="contact-form">
-                    <div class="form-row">
-                        <input type="text" placeholder="DITT NAVN" required>
-                        <input type="email" placeholder="DIN E-POST" required>
-                    </div>
-                    <textarea placeholder="MIKS, INNSPILLING, MASTER?" rows="5" required></textarea>
-                    <button type="submit" class="btn-submit">SEND MELDING</button>
-                </form>
+ <form class="card form" action="https://formspree.io/f/xvzbregv" method="POST">
+            <div class="form__row">
+              <label>
+                Navn
+                <input name="name" type="text" autocomplete="name" placeholder="Ditt navn" required />
+              </label>
+              <label>
+                Din e-post
+                <input name="email" type="email" autocomplete="email" placeholder="navn@epost.no" required />
+              </label>
             </div>
+
+            <label>
+              Hva gjelder det?
+              <select name="service" required>
+                <option value="" selected disabled>Velg…</option>
+                <option>Innspilling</option>
+                <option>Miks</option>
+                <option>Master</option>
+                <option>Produksjon</option>
+                <option>Annet</option>
+              </select>
+            </label>
+
+            <label>
+              Hvor hørte du om Loki Lydstudio?
+              <input name="referral" type="text" placeholder="Instagram, venn, Google, …" required />
+            </label>
+
+            <label>
+              Melding
+              <textarea name="message" rows="6" placeholder="Fortell kort om prosjektet ditt…" required></textarea>
+            </label>
+
+            <input type="hidden" name="_subject" value="Ny henvendelse — Loki Lydstudio" />
+
+            <div class="form__actions">
+              <button class="btn" type="submit">Send</button>
+              <span style="color:#666; font-weight:600;">Vi svarer på e-post.</span>
+            </div>
+          </form>
         </div>
+      </div>
     </section>
+  </main>
+
 
     <!-- Footer -->
     <footer id="templatemo-footer">
@@ -180,6 +208,7 @@ https://templatemo.com/tm-612-parallax-starter
 </body>
 
 </html>
+
 
 
 
