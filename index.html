@@ -153,32 +153,24 @@ https://templatemo.com/tm-612-parallax-starter
     </section>
 
     <!-- Section 5: Contact -->
-<section id="contact" class="parallax-section">
-    <div class="parallax-bg" data-speed="0.5" style="background-image: url('images/parallax-bg-05.jpg')"></div>
-    <div class="parallax-overlay overlay-medium"></div>
-    <div class="section-content">
-        <h2 class="section-title">KONTAKT OSS</h2>
-        <p class="section-subtitle caps">LA OSS SKAPE MAGI I LAG</p>
-        <div class="contact-form-wrap">
-            <form
-  action="https://formspree.io/f/xvzbregv"
-  method="POST"
->
-  <label>
-    DIN E-POST:
-    <input type="email" name="email">
-  </label>
-  <label>
-    DIN MELDING:
-    <textarea name="message"></textarea>
-  </label>
-  <!-- your other form fields go here -->
-  <button type="submit">SEND</button>
-</form>
+    <section id="contact" class="parallax-section">
+        <div class="parallax-bg" data-speed="0.5" style="background-image: url('images/parallax-bg-05.jpg')"></div>
+        <div class="parallax-overlay overlay-medium"></div>
+        <div class="section-content">
+            <h2 class="section-title">KONTAKT OSS</h2>
+            <p class="section-subtitle caps">LA OSS SKAPE MAGI I LAG</p>
+            <div class="contact-form-wrap">
+                <form id="contactForm" class="contact-form">
+                    <div class="form-row">
+                        <input type="text" placeholder="DITT NAVN" required>
+                        <input type="email" placeholder="DIN E-POST" required>
+                    </div>
+                    <textarea placeholder="MIKS, INNSPILLING, MASTER?" rows="5" required></textarea>
+                    <button type="submit" class="btn-submit">SEND MELDING</button>
+                </form>
+            </div>
         </div>
-    </div>
-</section>
-
+    </section>
 
     <!-- Footer -->
     <footer id="templatemo-footer">
@@ -188,6 +180,7 @@ https://templatemo.com/tm-612-parallax-starter
 </body>
 
 </html>
+
 
 
 
