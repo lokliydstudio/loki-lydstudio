@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mailingliste | LOKI LYDSTUDIO</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="templatemo-parallax-starter.css">
+
+    <style>
+        .newsletter-card {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 35px;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(6px);
+        }
+
+        .newsletter-card p {
+            color: #fff;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            margin-bottom: 24px;
+        }
+
+        .newsletter-form .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .newsletter-form input[type="text"],
+        .newsletter-form input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.45);
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .newsletter-form input::placeholder {
+            color: rgba(255, 255, 255, 0.75);
+        }
+
+        .consent-box {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin: 20px 0 12px;
+            color: #fff;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 0.98rem;
+            line-height: 1.5;
+            text-align: left;
+        }
+
+        .consent-box input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            min-width: 20px;
+            margin-top: 2px;
+            accent-color: #fff;
+            cursor: pointer;
+        }
+
+        .consent-box a,
+        .privacy-note a {
+            color: #fff;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .privacy-note {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.92rem;
+            line-height: 1.5;
+            margin: 0 0 22px;
+            text-align: left;
+        }
+
+        #newsletter-status {
+            margin-top: 15px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .hidden-field {
+            position: absolute;
+            left: -9999px;
+            opacity: 0;
+            height: 0;
+            width: 0;
+        }
+
+        @media (max-width: 768px) {
+            .newsletter-card {
+                padding: 25px 20px;
+            }
+
+            .newsletter-form .form-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navigation -->
+    <nav id="templatemo-nav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="images/logosmall.png" alt="Loki Lydstudio Logo" class="nav-logo-img">
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li class="language-switcher" aria-label="Velg språk">
+                    <a href="/" class="active-language" lang="no" aria-current="page"><span class="flag" aria-hidden="true">🇳🇴</span><span>Norsk</span></a>
+                    <a href="/en/" lang="en"><span class="flag" aria-hidden="true">🇬🇧</span><span>English</span></a>
+                </li>
+                <li><a href="/#home">HJEM</a></li>
+                <li><a href="/#about">OM OSS</a></li>
+                <li><a href="/#services">TJENESTER</a></li>
+                <li><a href="/#camp">LOKI SONGS</a></li>
+                <li><a href="/#gallery">RENOMMÉ</a></li>
+                <li><a href="/loki-songs-camp.html">SAVE THE DATE</a></li>
+                <li><a href="/#contact">KONTAKT</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Mailingliste -->
+    <section id="newsletter" class="parallax-section">
+        <div class="parallax-bg" data-speed="0.5" style="background-image: url('images/lokicamp.jpg')"></div>
+        <div class="parallax-overlay overlay-dark"></div>
+
+        <div class="section-content">
+            <h1 class="section-title hero-title">MELD DEG PÅ MAILINGLISTEN</h1>
+            <p class="section-subtitle caps">LOKI SONGS &middot; CAMPS &middot; NYHETER</p>
+
+            <div class="newsletter-card">
+                <p>
+                    Få oppdateringer om kommende låtskrivercamps, sessions og nyheter fra Loki Lydstudio.
+                    Påmeldingen er frivillig, og du kan melde deg av når som helst.
+                </p>
+
+                <!--
+                    Dette skjemaet bruker FormSubmit for å sende innholdet til cams@lokilyd.no.
+                    Første gang skjemaet brukes, må mottakeradressen ofte bekreftes via e-post fra FormSubmit.
+                    Alternativt kan action byttes til deres egen backend eller Formspree-endepunkt.
+                -->
+                <form
+                    id="newsletterForm"
+                    class="newsletter-form"
+                    action="https://formsubmit.co/ajax/cams@lokilyd.no"
+                    method="POST"
+                >
+                    <div class="form-row">
+                        <input type="text" name="name" placeholder="DITT NAVN" autocomplete="name" required>
+                        <input type="email" name="email" placeholder="DIN E-POST" autocomplete="email" required>
+                    </div>
+
+                    <label class="consent-box" for="newsletter-consent">
+                        <input
+                            id="newsletter-consent"
+                            name="newsletter_consent"
+                            type="checkbox"
+                            value="Ja, jeg samtykker til å motta nyhetsbrev og markedsføring på e-post fra Loki Lydstudio."
+                            required
+                        >
+                        <span>
+                            Ja, jeg vil motta nyhetsbrev og markedsføring på e-post fra Loki Lydstudio.
+                            Jeg forstår at jeg kan trekke samtykket tilbake når som helst ved å melde meg av.
+                        </span>
+                    </label>
+
+                    <p class="privacy-note">
+                        Vi bruker opplysningene dine til å sende deg nyhetsbrev og relevante oppdateringer.
+                        Les mer i <a href="/personvern.html">personvernerklæringen</a>.
+                    </p>
+
+                    <input type="hidden" name="_subject" value="Ny påmelding til mailingliste">
+                    <input type="hidden" name="_template" value="table">
+                    <input type="hidden" name="_captcha" value="false">
+                    <input type="hidden" name="source" value="mailingliste.html">
+
+                    <!-- Enkel spamfelle: skal stå tom -->
+                    <input class="hidden-field" type="text" name="_honey" tabindex="-1" autocomplete="off">
+
+                    <button type="submit" class="btn-submit">MELD MEG PÅ</button>
+                </form>
+
+                <p id="newsletter-status" role="status" aria-live="polite"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="templatemo-footer">
+        <p>Copyright &copy; 2026 LOKI LYDSTUDIO. ORG NR: 929001761</p>
+    </footer>
+
+    <script src="templatemo-parallax-script.js"></script>
+    <script>
+        document.getElementById("newsletterForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const form = e.target;
+            const status = document.getElementById("newsletter-status");
+            const formData = new FormData(form);
+
+            if (!form.newsletter_consent.checked) {
+                status.textContent = "Du må samtykke for å melde deg på mailinglisten.";
+                return;
+            }
+
+            status.textContent = "Sender påmelding...";
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    body: formData,
+                    headers: {
+                        "Accept": "application/json"
+                    }
+                });
+
+                if (response.ok) {
+                    status.textContent = "Takk! Du er meldt på mailinglisten.";
+                    form.reset();
+                } else {
+                    status.textContent = "Noe gikk galt. Prøv igjen, eller kontakt oss direkte.";
+                }
+            } catch (error) {
+                status.textContent = "Kunne ikke sende påmeldingen. Sjekk nettverket og prøv igjen.";
+            }
+        });
+    </script>
+</body>
+</html>
