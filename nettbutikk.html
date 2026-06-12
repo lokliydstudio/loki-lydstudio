@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nettbutikk | LOKI LYDSTUDIO</title>
+    <link rel="icon" type="image/png" href="images/logo.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="templatemo-parallax-starter.css">
+    <style>
+        :root {
+            --store-bg: #080808;
+            --store-card: rgba(255, 255, 255, 0.08);
+            --store-border: rgba(255, 255, 255, 0.18);
+            --store-text-muted: rgba(255, 255, 255, 0.78);
+        }
+
+        body {
+            background: var(--store-bg);
+            color: #fff;
+        }
+
+        .store-section {
+            min-height: 100vh;
+            padding: 140px 20px 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .store-bg {
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(0,0,0,.72), rgba(0,0,0,.82)), url('images/parallax-bg-03.jpg');
+            background-position: center;
+            background-size: cover;
+            z-index: -2;
+        }
+
+        .store-container {
+            width: min(1180px, 100%);
+            margin: 0 auto;
+        }
+
+        .store-header {
+            text-align: center;
+            margin-bottom: 42px;
+        }
+
+        .store-header .section-title {
+            margin-bottom: 10px;
+        }
+
+        .store-intro {
+            max-width: 720px;
+            margin: 0 auto;
+            color: var(--store-text-muted);
+            font-size: 1.1rem;
+            line-height: 1.65;
+        }
+
+        .store-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 360px;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 22px;
+        }
+
+        .product-card,
+        .cart-panel {
+            background: var(--store-card);
+            border: 1px solid var(--store-border);
+            border-radius: 18px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+        }
+
+        .product-card {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .product-card h2 {
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.06em;
+            font-size: 1.55rem;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        .product-card p {
+            margin: 0;
+            color: var(--store-text-muted);
+            line-height: 1.55;
+        }
+
+        .product-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding-top: 4px;
+        }
+
+        .product-price {
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.35rem;
+            letter-spacing: 0.04em;
+        }
+
+        .product-unit {
+            color: var(--store-text-muted);
+            font-size: 0.95rem;
+        }
+
+        .quantity-row {
+            display: grid;
+            grid-template-columns: 1fr 92px;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .quantity-row label,
+        .field-label {
+            color: var(--store-text-muted);
+            font-size: 0.95rem;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            width: 100%;
+            border: 1px solid var(--store-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            background: rgba(0, 0, 0, 0.35);
+            color: #fff;
+            font-family: 'Source Sans 3', sans-serif;
+            font-size: 1rem;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 92px;
+        }
+
+        .store-button,
+        .checkout-button,
+        .ghost-button {
+            border: 1px solid rgba(255,255,255,.85);
+            border-radius: 999px;
+            padding: 12px 20px;
+            color: #fff;
+            background: transparent;
+            font-family: 'Oswald', sans-serif;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background .2s ease, color .2s ease, transform .2s ease;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .store-button:hover,
+        .checkout-button:hover,
+        .ghost-button:hover {
+            background: #fff;
+            color: #000;
+            transform: translateY(-1px);
+        }
+
+        .cart-panel {
+            padding: 22px;
+            position: sticky;
+            top: 96px;
+        }
+
+        .cart-panel h2 {
+            font-family: 'Oswald', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            margin: 0 0 16px;
+        }
+
+        .cart-empty {
+            color: var(--store-text-muted);
+            line-height: 1.55;
+        }
+
+        .cart-items {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .cart-item {
+            border-bottom: 1px solid var(--store-border);
+            padding-bottom: 14px;
+        }
+
+        .cart-item-title {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .cart-item-controls {
+            display: grid;
+            grid-template-columns: 82px 1fr;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .remove-button {
+            background: none;
+            border: none;
+            color: var(--store-text-muted);
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0;
+            text-align: right;
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.35rem;
+            letter-spacing: .04em;
+            margin: 18px 0;
+        }
+
+        .checkout-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .checkout-help {
+            color: var(--store-text-muted);
+            font-size: .93rem;
+            line-height: 1.45;
+            margin: 8px 0 0;
+        }
+
+        .checkout-status {
+            color: #fff;
+            margin-top: 12px;
+            min-height: 24px;
+        }
+
+        .store-footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+
+        @media (max-width: 980px) {
+            .store-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-panel {
+                position: static;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .store-section {
+                padding-top: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav id="templatemo-nav">
+        <div class="nav-container">
+            <a href="index.html#home" class="nav-logo">
+                <img src="images/logosmall.png" alt="Loki Lydstudio Logo" class="nav-logo-img">
+            </a>
+            <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html#home">HJEM</a></li>
+                <li><a href="index.html#services">TJENESTER</a></li>
+                <li><a href="nettbutikk.html" class="active">NETTBUTIKK</a></li>
+                <li><a href="mailingliste.html">PÅMELDING</a></li>
+                <li><a href="index.html#contact">KONTAKT</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="store-section">
+        <div class="store-bg" aria-hidden="true"></div>
+        <div class="store-container">
+            <header class="store-header">
+                <h1 class="section-title hero-title">NETTBUTIKK</h1>
+                <p class="store-intro caps">Bestill miksing, mastring, innspilling og produksjon direkte. Velg antall timer eller antall låter, legg i handlevogn og gå videre til sikker betaling.</p>
+            </header>
+
+            <div class="store-layout">
+                <section class="product-grid" aria-label="Tjenester">
+                    <article class="product-card" data-product-card="mixing-hour">
+                        <h2>Miksing</h2>
+                        <p>Profesjonell miksing av låt eller prosjekt. Velg antall timer du ønsker å booke.</p>
+                        <div class="product-meta">
+                            <div>
+                                <div class="product-price" data-price="mixing-hour">950 kr</div>
+                                <div class="product-unit">per time</div>
+                            </div>
+                        </div>
+                        <div class="quantity-row">
+                            <label for="qty-mixing-hour">Antall timer</label>
+                            <input id="qty-mixing-hour" type="number" min="1" max="100" value="1">
+                        </div>
+                        <button class="store-button" type="button" data-add-to-cart="mixing-hour">Legg i handlevogn</button>
+                    </article>
+
+                    <article class="product-card" data-product-card="mastering-song">
+                        <h2>Mastring</h2>
+                        <p>Ferdigstilling og klargjøring av låt for streaming og utgivelse. Velg antall låter.</p>
+                        <div class="product-meta">
+                            <div>
+                                <div class="product-price" data-price="mastering-song">700 kr</div>
+                                <div class="product-unit">per låt</div>
+                            </div>
+                        </div>
+                        <div class="quantity-row">
+                            <label for="qty-mastering-song">Antall låter</label>
+                            <input id="qty-mastering-song" type="number" min="1" max="50" value="1">
+                        </div>
+                        <button class="store-button" type="button" data-add-to-cart="mastering-song">Legg i handlevogn</button>
+                    </article>
+
+                    <article class="product-card" data-product-card="recording-hour">
+                        <h2>Innspilling</h2>
+                        <p>Book studiotid for vokal, instrumenter, demoer eller full produksjon. Velg antall timer.</p>
+                        <div class="product-meta">
+                            <div>
+                                <div class="product-price" data-price="recording-hour">850 kr</div>
+                                <div class="product-unit">per time</div>
+                            </div>
+                        </div>
+                        <div class="quantity-row">
+                            <label for="qty-recording-hour">Antall timer</label>
+                            <input id="qty-recording-hour" type="number" min="1" max="100" value="1">
+                        </div>
+                        <button class="store-button" type="button" data-add-to-cart="recording-hour">Legg i handlevogn</button>
+                    </article>
+
+                    <article class="product-card" data-product-card="production-hour">
+                        <h2>Produksjon</h2>
+                        <p>Produksjon, arrangement, låtutvikling og kreativ sparring med produsent.</p>
+                        <div class="product-meta">
+                            <div>
+                                <div class="product-price" data-price="production-hour">950 kr</div>
+                                <div class="product-unit">per time</div>
+                            </div>
+                        </div>
+                        <div class="quantity-row">
+                            <label for="qty-production-hour">Antall timer</label>
+                            <input id="qty-production-hour" type="number" min="1" max="100" value="1">
+                        </div>
+                        <button class="store-button" type="button" data-add-to-cart="production-hour">Legg i handlevogn</button>
+                    </article>
+                </section>
+
+                <aside class="cart-panel" aria-label="Handlevogn">
+                    <h2>Handlevogn</h2>
+                    <div id="cartItems" class="cart-items"></div>
+                    <p id="cartEmpty" class="cart-empty">Handlevognen er tom. Legg til en tjeneste for å starte bestillingen.</p>
+
+                    <div class="cart-total" aria-live="polite">
+                        <span>Totalt</span>
+                        <span id="cartTotal">0 kr</span>
+                    </div>
+
+                    <form id="checkoutForm" class="checkout-form">
+                        <label class="field-label" for="customerName">Navn</label>
+                        <input id="customerName" name="customerName" type="text" placeholder="Ditt navn" autocomplete="name">
+
+                        <label class="field-label" for="customerEmail">E-post</label>
+                        <input id="customerEmail" name="customerEmail" type="email" placeholder="din@epost.no" autocomplete="email">
+
+                        <label class="field-label" for="projectNotes">Kort om prosjektet</label>
+                        <textarea id="projectNotes" name="projectNotes" placeholder="F.eks. artistnavn, låttittel, ønsket dato, referanselåt eller annen info."></textarea>
+
+                        <button id="checkoutButton" class="checkout-button" type="submit">Gå til betaling</button>
+                        <button id="clearCartButton" class="ghost-button" type="button">Tøm handlevogn</button>
+                        <p class="checkout-help">Betaling skjer via Stripe Checkout når API-filen er koblet til Stripe-kontoen deres.</p>
+                        <p id="checkoutStatus" class="checkout-status" role="status"></p>
+                    </form>
+                </aside>
+            </div>
+
+            <div class="store-footer-links">
+                <a class="ghost-button" href="index.html#contact">Spørsmål? Kontakt oss</a>
+                <a class="ghost-button" href="index.html#services">Se tjenester</a>
+            </div>
+        </div>
+    </main>
+
+    <script src="assets/js/butikk.js"></script>
+    <script src="templatemo-parallax-script.js"></script>
+</body>
+</html>
