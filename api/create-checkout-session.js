@@ -11,28 +11,28 @@ const PRODUCTS = {
   'mixing-hour': {
     name: 'Miksing',
     unit: 'time',
-    priceId: 'price_1ThPte20c7bh8VknlLLXDxFN',
+    priceId: 'price_1ThPxM20c7bh8VknUEA85FJ7',
     min: 1,
     max: 100
   },
   'mastering-song': {
     name: 'Mastring',
     unit: 'låt',
-    priceId: 'price_1ThPu120c7bh8Vkn9TuTXuKw',
+    priceId: 'price_1ThPxg20c7bh8VknaKgLCj4L',
     min: 1,
     max: 50
   },
   'recording-hour': {
     name: 'Innspilling',
     unit: 'time',
-    priceId: 'price_1ThPuL20c7bh8Vkn75OVo4X6',
+    priceId: 'price_1ThPyF20c7bh8VknfEFSkEyp',
     min: 1,
     max: 100
   },
   'production-hour': {
     name: 'Produksjon',
     unit: 'time',
-    priceId: 'price_1ThPuh20c7bh8VknqCTY1W4L',
+    priceId: 'price_1ThPxy20c7bh8VkngC3KKDzG',
     min: 1,
     max: 100
   }
