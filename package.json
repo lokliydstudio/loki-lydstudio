@@ -4,6 +4,7 @@
   "private": true,
   "description": "Loki Lydstudio nettbutikk med Stripe Checkout",
   "dependencies": {
-    "stripe": "^18.0.0"
+    "stripe": "^18.0.0",
+    "next": "latest"
   }
 }
