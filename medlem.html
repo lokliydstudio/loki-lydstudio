@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Loki Medlem</title>
+  <title>Loki Medlem | Loki Lydstudio</title>
   <link rel="icon" type="image/png" href="images/logo.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,127 +14,876 @@
   <link rel="stylesheet" href="templatemo-parallax-starter.css">
 
   <style>
+    :root {
+      --bg: #050505;
+      --panel: rgba(0, 0, 0, .68);
+      --panel-soft: rgba(255, 255, 255, .065);
+      --border: rgba(255, 255, 255, .18);
+      --text: #ffffff;
+      --muted: rgba(255,255,255,.74);
+      --gold: #d9b35f;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
     body {
       margin: 0;
-      background: #050505;
-      color: white;
+      background: var(--bg);
+      color: var(--text);
       font-family: "Source Sans 3", sans-serif;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 12%, rgba(217,179,95,.18), transparent 28%),
+        radial-gradient(circle at 78% 22%, rgba(255,255,255,.09), transparent 24%),
+        radial-gradient(circle at 48% 88%, rgba(217,179,95,.12), transparent 32%);
+      z-index: 0;
     }
 
     .member-page {
+      position: relative;
+      z-index: 1;
       min-height: 100vh;
-      background-image: linear-gradient(rgba(0,0,0,.72), rgba(0,0,0,.82)), url("images/parallax-bg-01.jpg");
+      background-image:
+        linear-gradient(rgba(0,0,0,.62), rgba(0,0,0,.92)),
+        url("images/parallax-bg-01.jpg");
       background-size: cover;
       background-position: center;
+      background-attachment: fixed;
+      padding: 38px 20px 80px;
+    }
+
+    .topbar {
+      max-width: 1180px;
+      margin: 0 auto 48px;
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      padding: 80px 20px;
-    }
-
-    .member-card {
-      max-width: 850px;
-      width: 100%;
-      background: rgba(0,0,0,.65);
-      border: 1px solid rgba(255,255,255,.18);
-      padding: 42px;
-      border-radius: 18px;
-      backdrop-filter: blur(8px);
-    }
-
-    .member-card h1,
-    .member-card h2 {
-      font-family: "Oswald", sans-serif;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .member-card h1 {
-      font-size: clamp(2rem, 5vw, 4rem);
-      margin: 0 0 18px;
-    }
-
-    .member-card p,
-    .member-card li {
-      font-size: 1.1rem;
-      line-height: 1.6;
-    }
-
-    .member-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 18px;
-      margin-top: 30px;
     }
 
-    .member-box {
-      border: 1px solid rgba(255,255,255,.18);
-      padding: 22px;
-      border-radius: 14px;
-      background: rgba(255,255,255,.06);
-    }
-
-    .btn-member {
-      display: inline-block;
-      margin-top: 28px;
-      padding: 13px 26px;
-      border: 1px solid white;
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 13px;
       color: white;
       text-decoration: none;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 1.4px;
       font-family: "Oswald", sans-serif;
+      font-size: .95rem;
     }
 
-    .btn-member:hover {
+    .brand img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .ghost-btn,
+    .gold-btn {
+      display: inline-block;
+      padding: 11px 18px;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-family: "Oswald", sans-serif;
+      font-size: .9rem;
+      transition: .25s ease;
+      border-radius: 999px;
+    }
+
+    .ghost-btn {
+      color: white;
+      border: 1px solid rgba(255,255,255,.36);
+      background: rgba(0,0,0,.35);
+    }
+
+    .ghost-btn:hover {
       background: white;
       color: black;
+    }
+
+    .gold-btn {
+      color: black;
+      border: 1px solid var(--gold);
+      background: var(--gold);
+    }
+
+    .gold-btn:hover {
+      filter: brightness(1.12);
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .hero-card,
+    .side-card,
+    .section-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 28px 90px rgba(0,0,0,.48);
+    }
+
+    .hero-card {
+      padding: clamp(32px, 5vw, 58px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::after {
+      content: "MEMBER";
+      position: absolute;
+      right: -16px;
+      bottom: -22px;
+      font-family: "Oswald", sans-serif;
+      font-weight: 700;
+      font-size: clamp(5rem, 14vw, 12rem);
+      letter-spacing: -4px;
+      color: rgba(255,255,255,.035);
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      font-family: "Oswald", sans-serif;
+      font-size: .95rem;
+      margin: 0 0 14px;
+    }
+
+    h1, h2, h3 {
+      font-family: "Oswald", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      line-height: 1.05;
+    }
+
+    h1 {
+      font-size: clamp(2.8rem, 8vw, 6.8rem);
+      margin: 0 0 18px;
+    }
+
+    h2 {
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      margin: 0 0 18px;
+    }
+
+    h3 {
+      font-size: 1.28rem;
+      margin: 0 0 12px;
+    }
+
+    p, li {
+      font-size: 1.08rem;
+      line-height: 1.65;
+    }
+
+    .lead {
+      max-width: 760px;
+      color: rgba(255,255,255,.88);
+      font-size: 1.22rem;
+    }
+
+    .hero-meta {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 13px;
+      margin-top: 34px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .meta-box {
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      background: rgba(255,255,255,.055);
+    }
+
+    .meta-number {
+      display: block;
+      font-family: "Oswald", sans-serif;
+      color: var(--gold);
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .meta-label {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-size: .85rem;
+    }
+
+    .side-card {
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 24px;
+      background:
+        linear-gradient(135deg, rgba(217,179,95,.16), rgba(0,0,0,.64)),
+        var(--panel);
+    }
+
+    .member-badge {
+      border: 1px solid rgba(217,179,95,.46);
+      border-radius: 22px;
+      padding: 24px;
+      background: linear-gradient(135deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+      min-height: 230px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .member-badge::before {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      right: -80px;
+      top: -80px;
+      border-radius: 50%;
+      background: rgba(217,179,95,.18);
+      filter: blur(3px);
+    }
+
+    .badge-label {
+      position: relative;
+      z-index: 2;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-family: "Oswald", sans-serif;
+      font-size: .9rem;
+    }
+
+    .badge-title {
+      position: relative;
+      z-index: 2;
+      font-family: "Oswald", sans-serif;
+      text-transform: uppercase;
+      font-size: 2.3rem;
+      line-height: .95;
+      margin: 24px 0;
+    }
+
+    .badge-foot {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      color: rgba(255,255,255,.78);
+      font-size: .92rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section-card {
+      max-width: 1180px;
+      margin: 28px auto 0;
+      padding: clamp(28px, 4vw, 46px);
+    }
+
+    .benefit-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 26px;
+    }
+
+    .benefit {
+      padding: 24px;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+    }
+
+    .benefit .icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border-radius: 50%;
+      color: black;
+      background: var(--gold);
+      font-family: "Oswald", sans-serif;
+      font-weight: 700;
+    }
+
+    .scratch-intro {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-end;
+      margin-bottom: 24px;
+    }
+
+    .scratch-intro p {
+      max-width: 720px;
+      color: rgba(255,255,255,.82);
+      margin-bottom: 0;
+    }
+
+    .scratch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .scratch-card {
+      position: relative;
+      min-height: 250px;
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid rgba(217,179,95,.36);
+      background:
+        radial-gradient(circle at top left, rgba(217,179,95,.22), transparent 34%),
+        linear-gradient(145deg, rgba(255,255,255,.09), rgba(255,255,255,.035));
+      box-shadow: 0 18px 50px rgba(0,0,0,.34);
+    }
+
+    .scratch-content {
+      position: absolute;
+      inset: 0;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      text-align: center;
+      z-index: 1;
+    }
+
+    .deal-type {
+      color: var(--gold);
+      font-family: "Oswald", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-size: .95rem;
+    }
+
+    .deal-main {
+      font-family: "Oswald", sans-serif;
+      text-transform: uppercase;
+      font-size: 2.55rem;
+      line-height: .95;
+      margin: 10px 0;
+    }
+
+    .deal-desc {
+      margin: 0 auto;
+      max-width: 260px;
+      color: rgba(255,255,255,.82);
+      font-size: .98rem;
+    }
+
+    .code-pill {
+      display: inline-block;
+      margin: 16px auto 0;
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px dashed rgba(217,179,95,.76);
+      color: var(--gold);
+      background: rgba(0,0,0,.28);
+      font-family: "Oswald", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-size: 1.05rem;
+    }
+
+    .scratch-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 3;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .scratch-card.revealed .scratch-canvas {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .45s ease;
+    }
+
+    .scratch-hint {
+      position: absolute;
+      inset: auto 18px 18px;
+      z-index: 4;
+      pointer-events: none;
+      text-align: center;
+      font-family: "Oswald", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1.4px;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 2px 12px rgba(0,0,0,.72);
+      font-size: .92rem;
+    }
+
+    .scratch-card.revealed .scratch-hint {
+      opacity: 0;
+      transition: opacity .25s ease;
+    }
+
+    .member-tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-top: 26px;
+    }
+
+    .tool-box {
+      padding: 24px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 18px;
+      background: rgba(255,255,255,.055);
+    }
+
+    .tool-box p { color: rgba(255,255,255,.82); }
+
+    .copy-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 14px;
+    }
+
+    .copy-row input {
+      width: 100%;
+      padding: 13px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.2);
+      background: rgba(0,0,0,.34);
+      color: white;
+      font-family: "Source Sans 3", sans-serif;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .copy-row button {
+      border: 1px solid var(--gold);
+      background: var(--gold);
+      color: black;
+      padding: 13px 16px;
+      border-radius: 12px;
+      font-family: "Oswald", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .fine-print {
+      color: rgba(255,255,255,.62);
+      font-size: .92rem;
+      margin-top: 18px;
+    }
+
+    .footer-note {
+      max-width: 1180px;
+      margin: 28px auto 0;
+      color: rgba(255,255,255,.55);
+      text-align: center;
+      font-size: .92rem;
+    }
+
+    @media (max-width: 980px) {
+      .hero, .benefit-grid, .scratch-grid, .member-tools {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-meta { grid-template-columns: 1fr; }
+
+      .scratch-intro { display: block; }
+    }
+
+    @media (max-width: 640px) {
+      .member-page { padding: 24px 14px 56px; }
+
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        margin-bottom: 28px;
+      }
+
+      .top-actions { justify-content: flex-start; }
+
+      .hero-card, .side-card, .section-card { border-radius: 18px; }
+
+      .scratch-card { min-height: 235px; }
+
+      .deal-main { font-size: 2.15rem; }
+
+      .copy-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
 
 <body>
   <main class="member-page">
-    <section class="member-card">
-      <h1>Loki Medlem</h1>
+    <header class="topbar">
+      <a href="/" class="brand">
+        <img src="images/logosmall.png" alt="Loki Lydstudio Logo">
+        <span>Loki Lydstudio</span>
+      </a>
 
-      <p>
-        Velkommen til medlemssiden for Loki Lydstudio.
-        Her kan du legge inn eksklusivt innhold, rabatter, camp-info,
-        bookingfordeler og ressurser for betalende medlemmer.
-      </p>
+      <div class="top-actions">
+        <a href="/" class="ghost-btn">Forside</a>
+        <a href="/blimedlem.html" class="gold-btn">Medlemsinfo</a>
+      </div>
+    </header>
 
-      <div class="member-grid">
-        <div class="member-box">
-          <h2>Medlemsfordeler</h2>
-          <ul>
-            <li>Tidlig info om låtskrivercamps</li>
-            <li>Medlemspris på utvalgte sessions</li>
-            <li>Invitasjoner til workshops og events</li>
-          </ul>
-        </div>
+    <section class="hero">
+      <div class="hero-card">
+        <p class="eyebrow">Eksklusivt medlemsområde</p>
+        <h1>Velkommen inn</h1>
+        <p class="lead">
+          Dette er medlemssiden for Loki Lydstudio. Her finner du fordeler,
+          rabattkoder, tidlig info og eksklusivt innhold for medlemmer.
+        </p>
 
-        <div class="member-box">
-          <h2>Rabattkode</h2>
-          <p>
-            Eksempel: <strong>LOKIMEDLEM10</strong>
-          </p>
-          <p>
-            Bytt dette til en ekte rabattkode når du er klar.
-          </p>
-        </div>
-
-        <div class="member-box">
-          <h2>Kommende</h2>
-          <p>
-            Legg inn datoer, lenker, videoer, dokumenter eller annet innhold
-            som kun betalende medlemmer skal se.
-          </p>
+        <div class="hero-meta">
+          <div class="meta-box">
+            <span class="meta-number">01</span>
+            <span class="meta-label">Medlemsrabatter</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-number">02</span>
+            <span class="meta-label">Camp-fordeler</span>
+          </div>
+          <div class="meta-box">
+            <span class="meta-number">03</span>
+            <span class="meta-label">Studio perks</span>
+          </div>
         </div>
       </div>
 
-      <a href="/" class="btn-member">Tilbake til forsiden</a>
+      <aside class="side-card">
+        <div class="member-badge">
+          <div class="badge-label">Digitalt medlemskort</div>
+          <div class="badge-title">Loki<br>Member</div>
+          <div class="badge-foot">
+            <span>Aktiv tilgang</span>
+            <span>2026</span>
+          </div>
+        </div>
+
+        <p>
+          Takk for at du er med og bygger et kreativt miljø rundt Loki Lydstudio.
+          Denne siden oppdateres med nye fordeler og nytt innhold.
+        </p>
+      </aside>
     </section>
+
+    <section class="section-card">
+      <p class="eyebrow">Hva du får</p>
+      <h2>Medlemsfordeler</h2>
+
+      <div class="benefit-grid">
+        <div class="benefit">
+          <div class="icon">1</div>
+          <h3>Tidlig tilgang</h3>
+          <p>
+            Få informasjon om låtskrivercamps, workshops og sessions før offentlig lansering.
+          </p>
+        </div>
+
+        <div class="benefit">
+          <div class="icon">2</div>
+          <h3>Rabattkoder</h3>
+          <p>
+            Bruk egne medlemskoder på utvalgte tjenester, camp-plasser og sessions.
+          </p>
+        </div>
+
+        <div class="benefit">
+          <div class="icon">3</div>
+          <h3>Ressurser</h3>
+          <p>
+            Her kan vi legge inn templates, guides, bookinglenker, videoer og annet medlemsinnhold.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-card">
+      <div class="scratch-intro">
+        <div>
+          <p class="eyebrow">Skrap og avslør</p>
+          <h2>Medlemskoder</h2>
+        </div>
+        <p>
+          Dra fingeren eller musa over kortene for å avsløre månedens fordeler.
+          Kodene kan byttes ut når du vil i HTML-filen.
+        </p>
+      </div>
+
+      <div class="scratch-grid">
+        <article class="scratch-card">
+          <div class="scratch-content">
+            <div>
+              <div class="deal-type">Studio</div>
+              <div class="deal-main">10% avslag</div>
+              <p class="deal-desc">På utvalgte studio-bookinger.</p>
+            </div>
+            <span class="code-pill">LOKIMEDLEM10</span>
+          </div>
+          <canvas class="scratch-canvas" aria-label="Skrap for å avsløre rabattkode"></canvas>
+          <div class="scratch-hint">Skrap her</div>
+        </article>
+
+        <article class="scratch-card">
+          <div class="scratch-content">
+            <div>
+              <div class="deal-type">Loki Songs</div>
+              <div class="deal-main">Early access</div>
+              <p class="deal-desc">Få første mulighet på neste camp.</p>
+            </div>
+            <span class="code-pill">CAMPFIRST</span>
+          </div>
+          <canvas class="scratch-canvas" aria-label="Skrap for å avsløre rabattkode"></canvas>
+          <div class="scratch-hint">Skrap her</div>
+        </article>
+
+        <article class="scratch-card">
+          <div class="scratch-content">
+            <div>
+              <div class="deal-type">Feedback</div>
+              <div class="deal-main">Medlemspris</div>
+              <p class="deal-desc">På utvalgt låtfeedback eller demo-gjennomgang.</p>
+            </div>
+            <span class="code-pill">DEMOBOOST</span>
+          </div>
+          <canvas class="scratch-canvas" aria-label="Skrap for å avsløre rabattkode"></canvas>
+          <div class="scratch-hint">Skrap her</div>
+        </article>
+      </div>
+
+      <p class="fine-print">
+        Merk: Skrapeeffekten er en visuell medlemsopplevelse. Selve siden er beskyttet av innloggingen du har satt opp i Vercel.
+      </p>
+    </section>
+
+    <section class="section-card">
+      <p class="eyebrow">Medlemsverktøy</p>
+      <h2>Lenker og info</h2>
+
+      <div class="member-tools">
+        <div class="tool-box">
+          <h3>Booking</h3>
+          <p>
+            Bruk denne lenken når du vil bestille tid eller sjekke aktuelle tjenester.
+          </p>
+          <a href="/nettbutikk.html" class="ghost-btn">Gå til bestilling</a>
+        </div>
+
+        <div class="tool-box">
+          <h3>Kopier hovedkode</h3>
+          <p>
+            Trykk for å kopiere månedens hovedkode.
+          </p>
+          <div class="copy-row">
+            <input id="mainCode" value="LOKIMEDLEM10" readonly>
+            <button type="button" id="copyCodeBtn">Kopier</button>
+          </div>
+          <p id="copyStatus" class="fine-print" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">
+      Loki Lydstudio &middot; Medlemsområde. Ikke del innloggingsinformasjon eller rabattkoder offentlig.
+    </p>
   </main>
+
+  <script>
+    function setupScratchCard(card) {
+      const canvas = card.querySelector(".scratch-canvas");
+      const ctx = canvas.getContext("2d");
+      let isDrawing = false;
+      let hasDrawn = false;
+
+      function resizeCanvas() {
+        const rect = card.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+
+        canvas.width = Math.floor(rect.width * dpr);
+        canvas.height = Math.floor(rect.height * dpr);
+        canvas.style.width = rect.width + "px";
+        canvas.style.height = rect.height + "px";
+
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drawCover(rect.width, rect.height);
+      }
+
+      function drawCover(width, height) {
+        const gradient = ctx.createLinearGradient(0, 0, width, height);
+        gradient.addColorStop(0, "#c9c9c9");
+        gradient.addColorStop(0.38, "#777777");
+        gradient.addColorStop(0.72, "#e6e6e6");
+        gradient.addColorStop(1, "#9a9a9a");
+
+        ctx.globalCompositeOperation = "source-over";
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.fillStyle = "rgba(0,0,0,.18)";
+        for (let i = 0; i < 120; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const r = Math.random() * 1.8 + .4;
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.save();
+        ctx.globalAlpha = .24;
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1;
+        for (let x = -width; x < width * 2; x += 18) {
+          ctx.beginPath();
+          ctx.moveTo(x, 0);
+          ctx.lineTo(x + width, height);
+          ctx.stroke();
+        }
+        ctx.restore();
+
+        ctx.fillStyle = "rgba(0,0,0,.52)";
+        ctx.font = "700 24px Oswald, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("SKRAP FOR Å AVSLØRE", width / 2, height / 2 - 8);
+
+        ctx.font = "400 15px Source Sans 3, sans-serif";
+        ctx.fillText("dra over kortet", width / 2, height / 2 + 22);
+      }
+
+      function getPointerPosition(event) {
+        const rect = canvas.getBoundingClientRect();
+
+        return {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        };
+      }
+
+      function scratch(event) {
+        if (!isDrawing) return;
+        event.preventDefault();
+
+        const pos = getPointerPosition(event);
+
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 25, 0, Math.PI * 2);
+        ctx.fill();
+
+        hasDrawn = true;
+
+        if (hasDrawn) {
+          maybeReveal();
+        }
+      }
+
+      function maybeReveal() {
+        const sampleCanvas = document.createElement("canvas");
+        const sampleCtx = sampleCanvas.getContext("2d");
+        const sampleWidth = 80;
+        const sampleHeight = 80;
+
+        sampleCanvas.width = sampleWidth;
+        sampleCanvas.height = sampleHeight;
+        sampleCtx.drawImage(canvas, 0, 0, sampleWidth, sampleHeight);
+
+        const pixels = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
+        let transparentPixels = 0;
+
+        for (let i = 3; i < pixels.length; i += 4) {
+          if (pixels[i] < 20) transparentPixels++;
+        }
+
+        const clearedRatio = transparentPixels / (sampleWidth * sampleHeight);
+
+        if (clearedRatio > 0.42) {
+          card.classList.add("revealed");
+        }
+      }
+
+      canvas.addEventListener("pointerdown", (event) => {
+        isDrawing = true;
+        canvas.setPointerCapture(event.pointerId);
+        scratch(event);
+      });
+
+      canvas.addEventListener("pointermove", scratch);
+
+      canvas.addEventListener("pointerup", () => {
+        isDrawing = false;
+      });
+
+      canvas.addEventListener("pointercancel", () => {
+        isDrawing = false;
+      });
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas();
+    }
+
+    document.querySelectorAll(".scratch-card").forEach(setupScratchCard);
+
+    const copyButton = document.getElementById("copyCodeBtn");
+    const mainCode = document.getElementById("mainCode");
+    const copyStatus = document.getElementById("copyStatus");
+
+    copyButton.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(mainCode.value);
+        copyStatus.textContent = "Koden er kopiert.";
+      } catch {
+        mainCode.select();
+        document.execCommand("copy");
+        copyStatus.textContent = "Koden er kopiert.";
+      }
+    });
+  </script>
 </body>
 </html>
