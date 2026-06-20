@@ -1,7 +1,5 @@
-import { NextResponse } from "next/server";
-
 function unauthorized() {
-  return new NextResponse("Innlogging kreves for Loki Medlem.", {
+  return new Response("Innlogging kreves for Loki Medlem.", {
     status: 401,
     headers: {
       "WWW-Authenticate": 'Basic realm="Loki Medlem"',
@@ -9,12 +7,13 @@ function unauthorized() {
   });
 }
 
-export function middleware(request) {
-  const pathname = request.nextUrl.pathname;
+export default function middleware(request) {
+  const url = new URL(request.url);
+  const pathname = url.pathname;
 
   // Beskytt kun medlemssiden
   if (pathname !== "/medlem.html" && pathname !== "/medlem") {
-    return NextResponse.next();
+    return;
   }
 
   const authHeader = request.headers.get("authorization");
@@ -31,6 +30,7 @@ export function middleware(request) {
   try {
     const decoded = atob(encoded);
     const parts = decoded.split(":");
+
     email = parts[0]?.trim().toLowerCase();
     password = parts.slice(1).join(":").trim();
   } catch {
@@ -59,7 +59,8 @@ export function middleware(request) {
     return unauthorized();
   }
 
-  return NextResponse.next();
+  // Gi tilgang
+  return;
 }
 
 export const config = {
