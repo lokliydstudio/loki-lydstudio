@@ -8,28 +8,28 @@ const PRODUCTS = {
   'mixing-hour': {
     name: 'Miksing',
     unit: 'time',
-    priceNok: 950,
+    priceNok: 550,
     min: 1,
     max: 100
   },
   'mastering-song': {
     name: 'Mastring',
     unit: 'låt',
-    priceNok: 700,
+    priceNok: 750,
     min: 1,
     max: 50
   },
   'recording-hour': {
     name: 'Innspilling',
     unit: 'time',
-    priceNok: 850,
+    priceNok: 550,
     min: 1,
     max: 100
   },
   'production-hour': {
     name: 'Produksjon',
     unit: 'time',
-    priceNok: 950,
+    priceNok: 650,
     min: 1,
     max: 100
   }
