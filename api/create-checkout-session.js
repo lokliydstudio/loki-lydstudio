@@ -11,7 +11,7 @@ const PRODUCTS = {
   'mixing-hour': {
     name: 'Miksing',
     unit: 'time',
-    priceId: 'price_1ThPxM20c7bh8VknUEA85FJ7',
+    priceId: 'price_1TuCD620c7bh8VknKkVWHrAW',
     min: 1,
     max: 100
   },
@@ -25,14 +25,14 @@ const PRODUCTS = {
   'recording-hour': {
     name: 'Innspilling',
     unit: 'time',
-    priceId: 'price_1ThPyF20c7bh8VknfEFSkEyp',
+    priceId: 'price_1TuCBd20c7bh8VknC5ZkRHj4',
     min: 1,
     max: 100
   },
   'production-hour': {
     name: 'Produksjon',
     unit: 'time',
-    priceId: 'price_1ThPxy20c7bh8VkngC3KKDzG',
+    priceId: 'price_1TuCCd20c7bh8Vkn0AJ9oulw',
     min: 1,
     max: 100
   }
