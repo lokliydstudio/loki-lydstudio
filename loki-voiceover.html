@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Loki Voice tilbyr norsk voiceover, dubbing, ADR, casting, regi og lydetterarbeid fra Bergen.">
+    <meta name="theme-color" content="#090909">
+    <title>LOKI VOICE | Voiceover, dubbing og casting</title>
+
+    <link rel="icon" type="image/png" href="images/logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --black: #090909;
+            --black-soft: #121212;
+            --panel: rgba(18, 18, 18, 0.86);
+            --panel-solid: #181818;
+            --white: #ffffff;
+            --text: #eeeeee;
+            --muted: #b7b7b7;
+            --line: rgba(255, 255, 255, 0.15);
+            --line-strong: rgba(255, 255, 255, 0.34);
+            --accent: #ffffff;
+            --success: #9fe4bd;
+            --warning: #f2d58a;
+            --danger: #ffadad;
+            --radius: 18px;
+            --radius-small: 10px;
+            --shadow: 0 24px 70px rgba(0, 0, 0, 0.38);
+            --max-width: 1180px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background: var(--black);
+        }
+
+        body {
+            margin: 0;
+            background: var(--black);
+            color: var(--text);
+            font-family: "Source Sans 3", sans-serif;
+            font-size: 17px;
+            line-height: 1.65;
+            overflow-x: hidden;
+        }
+
+        body.modal-open {
+            overflow: hidden;
+        }
+
+        img,
+        svg {
+            display: block;
+            max-width: 100%;
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        button,
+        a {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .skip-link {
+            position: fixed;
+            top: -80px;
+            left: 16px;
+            z-index: 3000;
+            padding: 12px 16px;
+            background: var(--white);
+            color: var(--black);
+            border-radius: 6px;
+            font-weight: 700;
+            text-decoration: none;
+            transition: top 0.2s ease;
+        }
+
+        .skip-link:focus {
+            top: 16px;
+        }
+
+        .container {
+            width: min(calc(100% - 40px), var(--max-width));
+            margin: 0 auto;
+        }
+
+        .caps {
+            font-family: "Oswald", sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.13em;
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 14px;
+            color: var(--muted);
+            font-family: "Oswald", sans-serif;
+            font-size: 0.83rem;
+            font-weight: 500;
+            letter-spacing: 0.17em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            width: 28px;
+            height: 1px;
+            background: currentColor;
+            content: "";
+        }
+
+        .section-heading {
+            max-width: 780px;
+            margin-bottom: 42px;
+        }
+
+        .section-title {
+            margin: 0;
+            font-family: "Oswald", sans-serif;
+            font-size: clamp(2.3rem, 6vw, 5.2rem);
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            line-height: 0.98;
+            text-transform: uppercase;
+        }
+
+        .section-intro {
+            max-width: 700px;
+            margin: 20px 0 0;
+            color: var(--muted);
+            font-size: clamp(1.03rem, 1.7vw, 1.25rem);
+        }
+
+        .section {
+            position: relative;
+            padding: 110px 0;
+            overflow: hidden;
+        }
+
+        .section-dark {
+            background:
+                radial-gradient(circle at 12% 15%, rgba(255, 255, 255, 0.06), transparent 28%),
+                linear-gradient(180deg, #0e0e0e 0%, #090909 100%);
+        }
+
+        .section-photo {
+            background-attachment: fixed;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .section-photo::before {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(5, 5, 5, 0.94) 0%, rgba(5, 5, 5, 0.72) 50%, rgba(5, 5, 5, 0.82) 100%);
+            content: "";
+        }
+
+        .section-photo > .container {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation */
+        .site-nav {
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            z-index: 1000;
+            border-bottom: 1px solid transparent;
+            background: rgba(7, 7, 7, 0.58);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            transition: border-color 0.25s ease, background 0.25s ease;
+        }
+
+        .site-nav.scrolled {
+            border-color: var(--line);
+            background: rgba(7, 7, 7, 0.92);
+        }
+
+        .nav-inner {
+            display: flex;
+            min-height: 76px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 26px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--white);
+            text-decoration: none;
+        }
+
+        .brand img {
+            width: auto;
+            height: 42px;
+            object-fit: contain;
+        }
+
+        .brand-copy {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+
+        .brand-copy strong {
+            font-family: "Oswald", sans-serif;
+            font-size: 1.02rem;
+            letter-spacing: 0.1em;
+        }
+
+        .brand-copy span {
+            margin-top: 5px;
+            color: var(--muted);
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .nav-links a {
+            display: block;
+            padding: 11px 12px;
+            border-radius: 999px;
+            color: rgba(255, 255, 255, 0.78);
+            font-family: "Oswald", sans-serif;
+            font-size: 0.78rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-decoration: none;
+            text-transform: uppercase;
+            transition: color 0.2s ease, background 0.2s ease;
+        }
+
+        .nav-links a:hover,
+        .nav-links a:focus-visible,
+        .nav-links a.active {
+            background: rgba(255, 255, 255, 0.11);
+            color: var(--white);
+        }
+
+        .nav-cta {
+            border: 1px solid rgba(255, 255, 255, 0.6) !important;
+            color: var(--white) !important;
+        }
+
+        .nav-toggle {
+            display: none;
+            width: 46px;
+            height: 46px;
+            padding: 0;
+            border: 1px solid var(--line-strong);
+            border-radius: 50%;
+            background: transparent;
+            color: var(--white);
+            cursor: pointer;
+        }
+
+        .nav-toggle span {
+            display: block;
+            width: 18px;
+            height: 1px;
+            margin: 5px auto;
+            background: currentColor;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        /* Buttons */
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            min-height: 48px;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border: 1px solid var(--white);
+            border-radius: 999px;
+            background: var(--white);
+            color: var(--black);
+            font-family: "Oswald", sans-serif;
+            font-size: 0.84rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            line-height: 1;
+            text-decoration: none;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        }
+
+        .btn:hover,
+        .btn:focus-visible {
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            border-color: rgba(255, 255, 255, 0.62);
+            background: transparent;
+            color: var(--white);
+        }
+
+        .btn-outline:hover,
+        .btn-outline:focus-visible {
+            border-color: var(--white);
+            background: rgba(255, 255, 255, 0.09);
+        }
+
+        .btn-small {
+            min-height: 40px;
+            padding: 9px 15px;
+            font-size: 0.74rem;
+        }
+
+        .btn-icon {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Hero */
+        .hero {
+            position: relative;
+            display: grid;
+            min-height: 100svh;
+            align-items: end;
+            overflow: hidden;
+            background: #050505;
+        }
+
+        .hero-bg {
+            position: absolute;
+            inset: -5%;
+            background-image: url("images/parallax-bg-01.jpg");
+            background-position: center;
+            background-size: cover;
+            transform: scale(1.03);
+        }
+
+        .hero::before {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background:
+                linear-gradient(180deg, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.48) 46%, rgba(0, 0, 0, 0.94) 100%),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.76) 0%, transparent 65%);
+            content: "";
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+            gap: 46px;
+            align-items: end;
+            padding-top: 170px;
+            padding-bottom: 80px;
+        }
+
+        .hero-kicker {
+            display: inline-flex;
+            width: fit-content;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            padding: 9px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.32);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            font-family: "Oswald", sans-serif;
+            font-size: 0.76rem;
+            letter-spacing: 0.13em;
+            text-transform: uppercase;
+        }
+
+        .hero-kicker::before {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--white);
+            box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.14);
+            content: "";
+        }
+
+        .hero h1 {
+            max-width: 850px;
+            margin: 0;
+            font-family: "Oswald", sans-serif;
+            font-size: clamp(4rem, 10vw, 8.8rem);
+            font-weight: 600;
+            letter-spacing: -0.04em;
+            line-height: 0.82;
+            text-transform: uppercase;
+        }
+
+        .hero h1 span {
+            display: block;
+            color: rgba(255, 255, 255, 0.48);
+            font-weight: 300;
+        }
+
+        .hero-lead {
+            max-width: 650px;
+            margin: 28px 0 32px;
+            color: rgba(255, 255, 255, 0.82);
+            font-size: clamp(1.1rem, 2vw, 1.35rem);
+        }
+
+        .hero-panel {
+            padding: 28px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: rgba(12, 12, 12, 0.64);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+        }
+
+        .hero-panel h2 {
+            margin: 0 0 8px;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.25rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .hero-panel p {
+            margin: 0 0 22px;
+            color: var(--muted);
+            font-size: 0.96rem;
+        }
+
+        .hero-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 26px;
+        }
+
+        .hero-stat {
+            padding-top: 17px;
+            border-top: 1px solid var(--line);
+        }
+
+        .hero-stat strong {
+            display: block;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 500;
+        }
+
+        .hero-stat span {
+            display: block;
+            margin-top: 3px;
+            color: var(--muted);
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            line-height: 1.3;
+            text-transform: uppercase;
+        }
+
+        /* Service cards */
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        .service-card {
+            position: relative;
+            min-height: 320px;
+            padding: 30px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: linear-gradient(150deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.015));
+            overflow: hidden;
+            transition: transform 0.25s ease, border-color 0.25s ease;
+        }
+
+        .service-card:hover {
+            border-color: var(--line-strong);
+            transform: translateY(-5px);
+        }
+
+        .service-number {
+            position: absolute;
+            top: 18px;
+            right: 24px;
+            color: rgba(255, 255, 255, 0.13);
+            font-family: "Oswald", sans-serif;
+            font-size: 4.4rem;
+            font-weight: 600;
+            line-height: 1;
+        }
+
+        .service-icon {
+            display: grid;
+            width: 50px;
+            height: 50px;
+            place-items: center;
+            margin-bottom: 58px;
+            border: 1px solid var(--line-strong);
+            border-radius: 50%;
+        }
+
+        .service-icon svg {
+            width: 23px;
+            height: 23px;
+        }
+
+        .service-card h3 {
+            margin: 0 0 12px;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.45rem;
+            font-weight: 500;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .service-card p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .feature-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            margin-top: 24px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .feature-strip div {
+            padding: 22px;
+            border-right: 1px solid var(--line);
+        }
+
+        .feature-strip div:last-child {
+            border-right: 0;
+        }
+
+        .feature-strip strong {
+            display: block;
+            margin-bottom: 5px;
+            font-family: "Oswald", sans-serif;
+            font-size: 0.95rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .feature-strip span {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* Voice archive */
+        .archive-shell {
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: calc(var(--radius) + 4px);
+            background: rgba(255, 255, 255, 0.025);
+        }
+
+        .archive-toolbar {
+            display: grid;
+            grid-template-columns: 1.4fr repeat(3, minmax(150px, 0.7fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+        .field label {
+            color: var(--muted);
+            font-family: "Oswald", sans-serif;
+            font-size: 0.72rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            min-height: 48px;
+            padding: 12px 14px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-small);
+            outline: none;
+            background: rgba(255, 255, 255, 0.045);
+            color: var(--white);
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .field textarea {
+            min-height: 130px;
+            resize: vertical;
+        }
+
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: #868686;
+        }
+
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: rgba(255, 255, 255, 0.65);
+            background: rgba(255, 255, 255, 0.065);
+        }
+
+        .field select {
+            color-scheme: dark;
+        }
+
+        .archive-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 22px;
+            padding: 14px 0;
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .archive-count {
+            color: var(--muted);
+        }
+
+        .archive-count strong {
+            color: var(--white);
+        }
+
+        .shortlist-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .shortlist-badge {
+            display: inline-grid;
+            min-width: 28px;
+            height: 28px;
+            place-items: center;
+            padding: 0 7px;
+            border-radius: 999px;
+            background: var(--white);
+            color: var(--black);
+            font-family: "Oswald", sans-serif;
+            font-weight: 600;
+        }
+
+        .voice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .voice-card {
+            display: flex;
+            min-height: 100%;
+            flex-direction: column;
+            padding: 22px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: var(--panel-solid);
+            transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+
+        .voice-card:hover {
+            border-color: var(--line-strong);
+            transform: translateY(-3px);
+        }
+
+        .voice-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+        }
+
+        .voice-avatar {
+            display: grid;
+            width: 54px;
+            height: 54px;
+            flex: 0 0 auto;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            border-radius: 50%;
+            background: linear-gradient(145deg, rgba(255,255,255,0.16), rgba(255,255,255,0.025));
+            font-family: "Oswald", sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+        }
+
+        .favorite-button {
+            display: grid;
+            width: 40px;
+            height: 40px;
+            place-items: center;
+            padding: 0;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .favorite-button:hover,
+        .favorite-button:focus-visible,
+        .favorite-button.selected {
+            border-color: var(--white);
+            background: var(--white);
+            color: var(--black);
+        }
+
+        .favorite-button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .voice-card h3 {
+            margin: 18px 0 3px;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.35rem;
+            font-weight: 500;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .voice-id {
+            color: var(--muted);
+            font-size: 0.83rem;
+        }
+
+        .tag-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin: 17px 0;
+        }
+
+        .tag {
+            padding: 5px 9px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            color: #d2d2d2;
+            font-size: 0.74rem;
+            line-height: 1.2;
+        }
+
+        .voice-description {
+            flex: 1;
+            margin: 0 0 20px;
+            color: var(--muted);
+            font-size: 0.93rem;
+        }
+
+        .voice-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .voice-actions .btn {
+            flex: 1;
+        }
+
+        .audio-button[disabled] {
+            border-color: var(--line);
+            background: rgba(255, 255, 255, 0.04);
+            color: #797979;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .empty-state {
+            display: none;
+            padding: 54px 20px;
+            border: 1px dashed var(--line-strong);
+            border-radius: var(--radius);
+            text-align: center;
+        }
+
+        .empty-state.visible {
+            display: block;
+        }
+
+        .empty-state h3 {
+            margin: 0 0 8px;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.4rem;
+            text-transform: uppercase;
+        }
+
+        .empty-state p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .demo-notice {
+            margin-top: 18px;
+            padding: 14px 16px;
+            border-left: 3px solid var(--warning);
+            background: rgba(242, 213, 138, 0.07);
+            color: #e6d8ad;
+            font-size: 0.92rem;
+        }
+
+        /* Process */
+        .process-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0;
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .process-step {
+            position: relative;
+            padding: 30px 24px 34px;
+            border-right: 1px solid var(--line);
+        }
+
+        .process-step:last-child {
+            border-right: 0;
+        }
+
+        .process-step span {
+            display: block;
+            margin-bottom: 52px;
+            color: rgba(255, 255, 255, 0.28);
+            font-family: "Oswald", sans-serif;
+            font-size: 2.7rem;
+            line-height: 1;
+        }
+
+        .process-step h3 {
+            margin: 0 0 8px;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.08rem;
+            font-weight: 500;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .process-step p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* Two-column content */
+        .split-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+            gap: 64px;
+            align-items: start;
+        }
+
+        .sticky-copy {
+            position: sticky;
+            top: 110px;
+        }
+
+        .check-list {
+            display: grid;
+            gap: 13px;
+            margin: 28px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .check-list li {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            color: #d9d9d9;
+        }
+
+        .check-list svg {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            margin-top: 5px;
+        }
+
+        .form-card {
+            padding: 30px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: rgba(12, 12, 12, 0.84);
+            box-shadow: var(--shadow);
+        }
+
+        .form-card h3 {
+            margin: 0 0 6px;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.55rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .form-card > p {
+            margin: 0 0 24px;
+            color: var(--muted);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 15px;
+        }
+
+        .field-full {
+            grid-column: 1 / -1;
+        }
+
+        .checkbox-field {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .checkbox-field input {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            margin-top: 4px;
+            accent-color: var(--white);
+        }
+
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-top: 22px;
+        }
+
+        .form-status {
+            min-height: 24px;
+            margin: 14px 0 0;
+            font-size: 0.94rem;
+        }
+
+        .form-status.success {
+            color: var(--success);
+        }
+
+        .form-status.error {
+            color: var(--danger);
+        }
+
+        .shortlist-box {
+            display: none;
+            margin-bottom: 16px;
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-small);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .shortlist-box.visible {
+            display: block;
+        }
+
+        .shortlist-box strong {
+            display: block;
+            margin-bottom: 8px;
+            font-family: "Oswald", sans-serif;
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .shortlist-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+        }
+
+        /* Rights / trust */
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+        }
+
+        .trust-card {
+            padding: 28px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: rgba(255, 255, 255, 0.035);
+        }
+
+        .trust-card svg {
+            width: 28px;
+            height: 28px;
+            margin-bottom: 42px;
+        }
+
+        .trust-card h3 {
+            margin: 0 0 10px;
+            font-family: "Oswald", sans-serif;
+            font-size: 1.18rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .trust-card p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        /* FAQ */
+        .faq-list {
+            max-width: 900px;
+            border-top: 1px solid var(--line);
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--line);
+        }
+
+        .faq-question {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 22px 0;
+            border: 0;
+            background: transparent;
+            color: var(--white);
+            text-align: left;
+            cursor: pointer;
+        }
+
+        .faq-question span:first-child {
+            font-family: "Oswald", sans-serif;
+            font-size: 1.12rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .faq-plus {
+            display: grid;
+            width: 32px;
+            height: 32px;
+            flex: 0 0 auto;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+            font-size: 1.15rem;
+            transition: transform 0.2s ease;
+        }
+
+        .faq-question[aria-expanded="true"] .faq-plus {
+            transform: rotate(45deg);
+        }
+
+        .faq-answer {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 0.25s ease;
+        }
+
+        .faq-answer > div {
+            overflow: hidden;
+        }
+
+        .faq-answer p {
+            max-width: 760px;
+            margin: 0;
+            padding: 0 0 24px;
+            color: var(--muted);
+        }
+
+        .faq-item.open .faq-answer {
+            grid-template-rows: 1fr;
+        }
+
+        /* CTA */
+        .final-cta {
+            padding: 96px 0;
+            text-align: center;
+        }
+
+        .final-cta .section-heading {
+            max-width: 850px;
+            margin: 0 auto 32px;
+        }
+
+        .final-cta .button-row {
+            justify-content: center;
+        }
+
+        /* Footer */
+        .site-footer {
+            padding: 38px 0;
+            border-top: 1px solid var(--line);
+            background: #050505;
+        }
+
+        .footer-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+        .footer-inner p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .footer-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 17px;
+        }
+
+        .footer-links a {
+            color: var(--muted);
+            font-size: 0.88rem;
+            text-decoration: none;
+        }
+
+        .footer-links a:hover,
+        .footer-links a:focus-visible {
+            color: var(--white);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: none;
+            place-items: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .modal.open {
+            display: grid;
+        }
+
+        .modal-dialog {
+            position: relative;
+            width: min(100%, 680px);
+            max-height: min(86vh, 760px);
+            padding: 30px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            background: #151515;
+            box-shadow: var(--shadow);
+            overflow: auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 18px;
+            right: 18px;
+            display: grid;
+            width: 40px;
+            height: 40px;
+            place-items: center;
+            padding: 0;
+            border: 1px solid var(--line);
+            border-radius: 50%;
+            background: transparent;
+            color: var(--white);
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        .modal-head {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            padding-right: 48px;
+        }
+
+        .modal-head .voice-avatar {
+            width: 72px;
+            height: 72px;
+        }
+
+        .modal-head h2 {
+            margin: 0;
+            font-family: "Oswald", sans-serif;
+            font-size: 2rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .modal-head p {
+            margin: 4px 0 0;
+            color: var(--muted);
+        }
+
+        .modal-body {
+            margin-top: 25px;
+        }
+
+        .profile-facts {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 22px 0;
+        }
+
+        .profile-fact {
+            padding: 14px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-small);
+        }
+
+        .profile-fact strong {
+            display: block;
+            color: var(--muted);
+            font-family: "Oswald", sans-serif;
+            font-size: 0.7rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .profile-fact span {
+            display: block;
+            margin-top: 4px;
+        }
+
+        .modal-audio {
+            width: 100%;
+            margin: 4px 0 20px;
+        }
+
+        .modal-audio-note {
+            padding: 13px 14px;
+            border: 1px dashed var(--line-strong);
+            border-radius: var(--radius-small);
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 2500;
+            max-width: min(380px, calc(100% - 40px));
+            padding: 14px 17px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius-small);
+            background: #f7f7f7;
+            color: #101010;
+            box-shadow: var(--shadow);
+            font-weight: 600;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(16px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive */
+        @media (max-width: 1080px) {
+            .nav-toggle {
+                display: block;
+            }
+
+            .nav-links {
+                position: absolute;
+                top: calc(100% + 1px);
+                right: 0;
+                left: 0;
+                display: none;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0;
+                padding: 15px 20px 22px;
+                border-bottom: 1px solid var(--line);
+                background: rgba(7, 7, 7, 0.98);
+            }
+
+            .nav-links.open {
+                display: flex;
+            }
+
+            .nav-links a {
+                padding: 13px 10px;
+                border-radius: 0;
+            }
+
+            .hero-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-panel {
+                max-width: 650px;
+            }
+
+            .archive-toolbar {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .voice-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .process-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .process-step {
+                border-bottom: 1px solid var(--line);
+            }
+
+            .process-step:nth-child(2n) {
+                border-right: 0;
+            }
+
+            .process-step:last-child {
+                grid-column: 1 / -1;
+                border-bottom: 0;
+            }
+        }
+
+        @media (max-width: 840px) {
+            .section {
+                padding: 82px 0;
+            }
+
+            .service-grid,
+            .trust-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .service-card {
+                min-height: 270px;
+            }
+
+            .feature-strip {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .feature-strip div:nth-child(2) {
+                border-right: 0;
+            }
+
+            .feature-strip div:nth-child(-n + 2) {
+                border-bottom: 1px solid var(--line);
+            }
+
+            .split-layout {
+                grid-template-columns: 1fr;
+                gap: 38px;
+            }
+
+            .sticky-copy {
+                position: static;
+            }
+
+            .section-photo {
+                background-attachment: scroll;
+            }
+        }
+
+        @media (max-width: 620px) {
+            body {
+                font-size: 16px;
+            }
+
+            .container {
+                width: min(calc(100% - 28px), var(--max-width));
+            }
+
+            .brand-copy {
+                display: none;
+            }
+
+            .hero-content {
+                padding-top: 140px;
+                padding-bottom: 46px;
+            }
+
+            .hero h1 {
+                font-size: clamp(3.6rem, 18vw, 5.2rem);
+            }
+
+            .button-row .btn {
+                width: 100%;
+            }
+
+            .hero-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .archive-shell {
+                padding: 14px;
+            }
+
+            .archive-toolbar,
+            .voice-grid,
+            .form-grid,
+            .profile-facts,
+            .process-grid,
+            .feature-strip {
+                grid-template-columns: 1fr;
+            }
+
+            .feature-strip div,
+            .feature-strip div:nth-child(2) {
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .feature-strip div:last-child {
+                border-bottom: 0;
+            }
+
+            .archive-meta {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .process-step,
+            .process-step:nth-child(2n) {
+                border-right: 0;
+                border-bottom: 1px solid var(--line);
+            }
+
+            .process-step:last-child {
+                grid-column: auto;
+            }
+
+            .form-card,
+            .modal-dialog {
+                padding: 22px;
+            }
+
+            .footer-inner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a class="skip-link" href="#main">Gå til hovedinnhold</a>
+
+    <nav class="site-nav" id="siteNav" aria-label="Hovedmeny">
+        <div class="container nav-inner">
+            <a href="index.html" class="brand" aria-label="Loki Lydstudio – tilbake til forsiden">
+                <img src="images/logosmall.png" alt="Loki Lydstudio-logo">
+                <span class="brand-copy">
+                    <strong>LOKI VOICE</strong>
+                    <span>by Loki Lydstudio</span>
+                </span>
+            </a>
+
+            <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="navLinks" aria-label="Åpne meny">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="#tjenester">Tjenester</a></li>
+                <li><a href="#stemmer">Stemmer</a></li>
+                <li><a href="#prosess">Prosess</a></li>
+                <li><a href="#talenter">For stemmer</a></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#casting" class="nav-cta">Send castingbrief</a></li>
+                <li><a href="index.html">Loki Lydstudio</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main id="main">
+        <header class="hero" id="hjem">
+            <div class="hero-bg" aria-hidden="true"></div>
+            <div class="container hero-content">
+                <div>
+                    <div class="hero-kicker">Norsk voiceover og dubbing fra Bergen</div>
+                    <h1>LOKI <span>VOICE</span></h1>
+                    <p class="hero-lead">Casting, regi, innspilling, ADR, dubbing og ferdig lydleveranse – samlet hos én profesjonell partner.</p>
+                    <div class="button-row">
+                        <a class="btn" href="#stemmer">Finn en stemme</a>
+                        <a class="btn btn-outline" href="#casting">Start et prosjekt</a>
+                    </div>
+                </div>
+
+                <aside class="hero-panel" aria-label="Rask prosjektforespørsel">
+                    <h2>Har du en produksjon på gang?</h2>
+                    <p>Send manus, referanse og ønsket uttrykk. Vi foreslår aktuelle stemmer og en tydelig produksjonsplan.</p>
+                    <a class="btn btn-small" href="#casting">Få castingforslag</a>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <strong>01</strong>
+                            <span>Kontaktpunkt</span>
+                        </div>
+                        <div class="hero-stat">
+                            <strong>NO / EN</strong>
+                            <span>Språk og dialekter</span>
+                        </div>
+                        <div class="hero-stat">
+                            <strong>REMOTE</strong>
+                            <span>Fjernregi mulig</span>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </header>
+
+        <section class="section section-dark" id="tjenester">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="eyebrow">Komplett lydpartner</p>
+                    <h2 class="section-title">Fra første brief til ferdig lyd</h2>
+                    <p class="section-intro">Loki Voice håndterer hele produksjonen, enten du trenger én fortellerstemme eller et komplett norsk dubbespor.</p>
+                </div>
+
+                <div class="service-grid">
+                    <article class="service-card">
+                        <span class="service-number">01</span>
+                        <div class="service-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 15a4 4 0 0 0 4-4V5a4 4 0 1 0-8 0v6a4 4 0 0 0 4 4Z"/>
+                                <path d="M5 10.5V11a7 7 0 0 0 14 0v-.5M12 18v4M8.5 22h7"/>
+                            </svg>
+                        </div>
+                        <h3>Voiceover</h3>
+                        <p>Reklame, bedriftsfilm, e-læring, podkast, lydbok, presentasjoner og forklaringsvideo.</p>
+                    </article>
+
+                    <article class="service-card">
+                        <span class="service-number">02</span>
+                        <div class="service-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 5.5h16v11H9l-5 4v-15Z"/>
+                                <path d="M8 10h8M8 13h5"/>
+                            </svg>
+                        </div>
+                        <h3>Dubbing og ADR</h3>
+                        <p>Opptak mot bilde, replikktilpasning, synkronisering, dialogregi og etterarbeid for film og serier.</p>
+                    </article>
+
+                    <article class="service-card">
+                        <span class="service-number">03</span>
+                        <div class="service-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="8" cy="8" r="3"/>
+                                <circle cx="16" cy="8" r="3"/>
+                                <path d="M2.5 20a5.5 5.5 0 0 1 11 0M10.5 20a5.5 5.5 0 0 1 11 0"/>
+                            </svg>
+                        </div>
+                        <h3>Casting og regi</h3>
+                        <p>Kuratert stemmeutvalg, spesialauditions, karakterutvikling og regi i studio eller på fjernlink.</p>
+                    </article>
+
+                    <article class="service-card">
+                        <span class="service-number">04</span>
+                        <div class="service-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 17V7M8 20V4M12 16V8M16 19V5M20 15V9"/>
+                            </svg>
+                        </div>
+                        <h3>Spill og karakter</h3>
+                        <p>Karakterstemmer, kampdialog, reaksjoner, systemstemmer og lokalisering for spill og animasjon.</p>
+                    </article>
+
+                    <article class="service-card">
+                        <span class="service-number">05</span>
+                        <div class="service-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M4 4h6v6H4zM14 14h6v6h-6zM14 4h6v6h-6zM4 14h6v6H4z"/>
+                                <path d="M10 7h4M17 10v4M14 17h-4M7 14v-4"/>
+                            </svg>
+                        </div>
+                        <h3>Lokalisering</h3>
+                        <p>Oversettelse, muntlig manustilpasning, terminologikontroll og koordinering av norske versjoner.</p>
+                    </article>
+
+                    <article class="service-card">
+                        <span class="service-number">06</span>
+                        <div class="service-icon" aria-hidden="true">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M3 12h3l2-5 4 10 3-7 2 4h4"/>
+                                <path d="M3 4h18v16H3z"/>
+                            </svg>
+                        </div>
+                        <h3>Etterarbeid</h3>
+                        <p>Redigering, rens, miks, loudness, filnavn, versjonering og levering etter kundens spesifikasjon.</p>
+                    </article>
+                </div>
+
+                <div class="feature-strip" aria-label="Produksjonsfordeler">
+                    <div><strong>Fjernregi</strong><span>Kunden kan følge og regissere live.</span></div>
+                    <div><strong>White-label</strong><span>Vi kan jobbe under deres byrå eller produksjon.</span></div>
+                    <div><strong>Rettigheter</strong><span>Tydelig bruk, periode, territorium og KI-vilkår.</span></div>
+                    <div><strong>Levering</strong><span>Ryddige filer, revisjoner og kvalitetssikring.</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="stemmer">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="eyebrow">Stemmer hos Loki</p>
+                    <h2 class="section-title">Finn riktig uttrykk</h2>
+                    <p class="section-intro">Filtrer på stemmetype, alder, dialekt og bruksområde. Lag en shortlist og legg den direkte ved castingforespørselen.</p>
+                </div>
+
+                <div class="archive-shell">
+                    <div class="archive-toolbar" role="search" aria-label="Filtrer stemmearkivet">
+                        <div class="field">
+                            <label for="voiceSearch">Søk</label>
+                            <input id="voiceSearch" type="search" placeholder="Søk etter uttrykk, dialekt eller språk">
+                        </div>
+                        <div class="field">
+                            <label for="voiceType">Stemmetype</label>
+                            <select id="voiceType">
+                                <option value="all">Alle</option>
+                                <option value="lys">Lys</option>
+                                <option value="mellom">Mellom</option>
+                                <option value="mork">Mørk</option>
+                                <option value="karakter">Karakter</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="voiceAge">Stemmealder</label>
+                            <select id="voiceAge">
+                                <option value="all">Alle</option>
+                                <option value="ung">Ung</option>
+                                <option value="voksen">Voksen</option>
+                                <option value="moden">Moden</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="voiceUse">Bruksområde</label>
+                            <select id="voiceUse">
+                                <option value="all">Alle</option>
+                                <option value="reklame">Reklame</option>
+                                <option value="forteller">Forteller</option>
+                                <option value="dubbing">Dubbing</option>
+                                <option value="spill">Spill</option>
+                                <option value="elearning">E-læring</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="archive-meta">
+                        <div class="archive-count"><strong id="voiceCount">0</strong> profiler vises</div>
+                        <div class="shortlist-indicator">
+                            Shortlist <span class="shortlist-badge" id="shortlistCount">0</span>
+                            <button class="btn btn-small btn-outline" type="button" id="useShortlistButton">Bruk i brief</button>
+                        </div>
+                    </div>
+
+                    <div class="voice-grid" id="voiceGrid" aria-live="polite"></div>
+
+                    <div class="empty-state" id="emptyState">
+                        <h3>Ingen treff</h3>
+                        <p>Prøv et annet søkeord eller nullstill ett av filtrene.</p>
+                    </div>
+
+                    <p class="demo-notice"><strong>Viktig:</strong> Profilene nedenfor er demonstrasjonsdata, ikke faktiske stemmeutøvere. Bytt dem ut i JavaScript-listen nederst i filen, og legg inn egne MP3-filer i mappen <code>audio/voices/</code>.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-dark" id="prosess">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="eyebrow">Arbeidsflyt</p>
+                    <h2 class="section-title">En ryddig produksjon</h2>
+                    <p class="section-intro">Vi gjør det lett å bestille – og lett å vite hva som skjer videre.</p>
+                </div>
+
+                <div class="process-grid">
+                    <article class="process-step">
+                        <span>01</span>
+                        <h3>Brief</h3>
+                        <p>Manus, målgruppe, kanal, ønsket uttrykk, deadline og referanser.</p>
+                    </article>
+                    <article class="process-step">
+                        <span>02</span>
+                        <h3>Casting</h3>
+                        <p>Vi foreslår aktuelle stemmer eller organiserer en kort spesialaudition.</p>
+                    </article>
+                    <article class="process-step">
+                        <span>03</span>
+                        <h3>Avtale</h3>
+                        <p>Pris, bruksrett, periode, territorium, eksklusivitet og leveranse avklares.</p>
+                    </article>
+                    <article class="process-step">
+                        <span>04</span>
+                        <h3>Opptak</h3>
+                        <p>Regissert sesjon i Bergen, med mulighet for kundedeltakelse på fjernlink.</p>
+                    </article>
+                    <article class="process-step">
+                        <span>05</span>
+                        <h3>Levering</h3>
+                        <p>Redigerte og kvalitetssikrede filer i avtalt format og filstruktur.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-photo" id="casting" style="background-image: url('images/parallax-bg-03.jpg');">
+            <div class="container split-layout">
+                <div class="sticky-copy">
+                    <p class="eyebrow">For kunder og produsenter</p>
+                    <h2 class="section-title">Send en castingbrief</h2>
+                    <p class="section-intro">Du trenger ikke ha alle svarene klare. Gi oss det du vet, så hjelper vi med casting, budsjett og produksjonsopplegg.</p>
+                    <ul class="check-list">
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                            Reklame, film, animasjon, spill, e-læring og bedriftsinnhold
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                            Norsk, engelsk og regionale dialekter
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                            Tydelig oppdeling av studio, stemmehonorar og bruksrett
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                            White-label samarbeid for byråer og produksjonsselskaper
+                        </li>
+                    </ul>
+                </div>
+
+                <form class="form-card ajax-form" id="castingForm" action="https://formspree.io/f/xvzbregv" method="POST">
+                    <h3>Prosjektforespørsel</h3>
+                    <p>Felter merket med * må fylles ut.</p>
+
+                    <div class="shortlist-box" id="shortlistBox">
+                        <strong>Valgte stemmer</strong>
+                        <div class="shortlist-items" id="shortlistItems"></div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="clientName">Navn *</label>
+                            <input id="clientName" name="name" type="text" autocomplete="name" required>
+                        </div>
+                        <div class="field">
+                            <label for="clientCompany">Firma</label>
+                            <input id="clientCompany" name="company" type="text" autocomplete="organization">
+                        </div>
+                        <div class="field">
+                            <label for="clientEmail">E-post *</label>
+                            <input id="clientEmail" name="email" type="email" autocomplete="email" required>
+                        </div>
+                        <div class="field">
+                            <label for="clientPhone">Telefon</label>
+                            <input id="clientPhone" name="phone" type="tel" autocomplete="tel">
+                        </div>
+                        <div class="field">
+                            <label for="projectType">Prosjekttype *</label>
+                            <select id="projectType" name="project_type" required>
+                                <option value="">Velg</option>
+                                <option>Reklame</option>
+                                <option>Bedriftsfilm / innholdsfilm</option>
+                                <option>Animasjon / dubbing</option>
+                                <option>Spill</option>
+                                <option>E-læring</option>
+                                <option>Lydbok / forteller</option>
+                                <option>ADR / dialogerstatning</option>
+                                <option>Annet</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="projectDeadline">Ønsket levering</label>
+                            <input id="projectDeadline" name="deadline" type="date">
+                        </div>
+                        <div class="field">
+                            <label for="projectUsage">Kanal / bruk</label>
+                            <input id="projectUsage" name="usage" type="text" placeholder="F.eks. sosiale medier, TV, internbruk">
+                        </div>
+                        <div class="field">
+                            <label for="projectTerritory">Territorium og periode</label>
+                            <input id="projectTerritory" name="territory_period" type="text" placeholder="F.eks. Norge, 12 måneder">
+                        </div>
+                        <div class="field field-full">
+                            <label for="projectVoice">Ønsket stemme og uttrykk</label>
+                            <input id="projectVoice" name="voice_direction" type="text" placeholder="F.eks. varm, troverdig, vestlandsk, voksen">
+                        </div>
+                        <div class="field field-full">
+                            <label for="projectMessage">Om prosjektet *</label>
+                            <textarea id="projectMessage" name="message" placeholder="Beskriv innhold, manuslengde, målgruppe, referanser og hva dere trenger hjelp til." required></textarea>
+                        </div>
+                        <div class="field field-full">
+                            <label for="projectLinks">Lenker</label>
+                            <input id="projectLinks" name="links" type="url" placeholder="Lenke til manus, video, referanse eller mappe">
+                        </div>
+                        <div class="field-full checkbox-field">
+                            <input id="clientConsent" name="consent" type="checkbox" value="Ja" required>
+                            <label for="clientConsent">Jeg samtykker til at Loki Lydstudio bruker opplysningene for å følge opp forespørselen. *</label>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="selected_voices" id="selectedVoicesInput">
+                    <input type="hidden" name="_subject" value="Ny castingbrief fra Loki Voice">
+                    <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+
+                    <div class="form-actions">
+                        <button class="btn" type="submit">Send forespørsel</button>
+                        <span class="caps" style="color:var(--muted);font-size:.72rem;">Uforpliktende</span>
+                    </div>
+                    <p class="form-status" aria-live="polite"></p>
+                </form>
+            </div>
+        </section>
+
+        <section class="section" id="talenter">
+            <div class="container split-layout">
+                <div class="sticky-copy">
+                    <p class="eyebrow">For skuespillere og stemmeutøvere</p>
+                    <h2 class="section-title">Bli en del av stemmearkivet</h2>
+                    <p class="section-intro">Vi ser etter profesjonelle og særpregede stemmer med ulike dialekter, språk, aldre og uttrykk.</p>
+                    <ul class="check-list">
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                            Skuespillere, sangere, formidlere og karakterstemmer
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                            Erfaring er en fordel, men særpreg og regisserbarhet er avgjørende
+                        </li>
+                        <li>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg>
+                            Ingen stemmekloning eller KI-trening uten separat avtale
+                        </li>
+                    </ul>
+                </div>
+
+                <form class="form-card ajax-form" id="talentForm" action="https://formspree.io/f/xvzbregv" method="POST">
+                    <h3>Registrer interesse</h3>
+                    <p>Send en kort presentasjon og lenke til demo. Vi kontakter aktuelle profiler ved behov.</p>
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="talentName">Navn *</label>
+                            <input id="talentName" name="name" type="text" autocomplete="name" required>
+                        </div>
+                        <div class="field">
+                            <label for="talentEmail">E-post *</label>
+                            <input id="talentEmail" name="email" type="email" autocomplete="email" required>
+                        </div>
+                        <div class="field">
+                            <label for="talentPhone">Telefon</label>
+                            <input id="talentPhone" name="phone" type="tel" autocomplete="tel">
+                        </div>
+                        <div class="field">
+                            <label for="talentLocation">Bosted</label>
+                            <input id="talentLocation" name="location" type="text" placeholder="By / område">
+                        </div>
+                        <div class="field">
+                            <label for="talentLanguages">Språk</label>
+                            <input id="talentLanguages" name="languages" type="text" placeholder="F.eks. norsk, engelsk, spansk">
+                        </div>
+                        <div class="field">
+                            <label for="talentDialects">Dialekter</label>
+                            <input id="talentDialects" name="dialects" type="text" placeholder="F.eks. bergensk, østnorsk">
+                        </div>
+                        <div class="field field-full">
+                            <label for="talentDemo">Lenke til demo / showreel *</label>
+                            <input id="talentDemo" name="demo_link" type="url" placeholder="YouTube, Vimeo, SoundCloud, Drive eller egen nettside" required>
+                        </div>
+                        <div class="field field-full">
+                            <label for="talentExperience">Erfaring og ferdigheter</label>
+                            <textarea id="talentExperience" name="experience" placeholder="Fortell kort om skuespill, voiceover, dubbing, sang, karakterarbeid eller annet relevant."></textarea>
+                        </div>
+                        <div class="field-full checkbox-field">
+                            <input id="talentConsent" name="consent" type="checkbox" value="Ja" required>
+                            <label for="talentConsent">Jeg samtykker til at Loki Lydstudio lagrer opplysningene for vurdering og fremtidige castingforespørsler. Jeg kan be om sletting når som helst. *</label>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="_subject" value="Ny stemmeprofil til Loki Voice">
+                    <input type="text" name="_gotcha" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true">
+
+                    <div class="form-actions">
+                        <button class="btn" type="submit">Send profil</button>
+                    </div>
+                    <p class="form-status" aria-live="polite"></p>
+                </form>
+            </div>
+        </section>
+
+        <section class="section section-dark" id="rettigheter">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="eyebrow">Trygg produksjon</p>
+                    <h2 class="section-title">Rettigheter og kvalitet</h2>
+                    <p class="section-intro">Profesjonell voiceover handler like mye om avtaler og leveranse som om selve stemmen.</p>
+                </div>
+
+                <div class="trust-grid">
+                    <article class="trust-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path d="M7 3h10l4 4v14H3V3h4Z"/><path d="M7 3v6h10V3M8 15h8M8 18h5"/>
+                        </svg>
+                        <h3>Tydelige bruksavtaler</h3>
+                        <p>Medier, territorium, periode, versjoner, eksklusivitet og pris ved forlengelse avklares skriftlig.</p>
+                    </article>
+                    <article class="trust-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path d="M12 2 4 5v6c0 5.2 3.4 9.4 8 11 4.6-1.6 8-5.8 8-11V5l-8-3Z"/><path d="m8.5 12 2.3 2.3 4.8-5"/>
+                        </svg>
+                        <h3>KI-beskyttelse</h3>
+                        <p>Opptak brukes ikke til stemmekloning, syntetisk tale eller modelltrening uten separat, uttrykkelig avtale.</p>
+                    </article>
+                    <article class="trust-card">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                            <path d="M4 4h16v16H4z"/><path d="M8 8h8v8H8zM2 9h2M2 15h2M20 9h2M20 15h2M9 2v2M15 2v2M9 20v2M15 20v2"/>
+                        </svg>
+                        <h3>Teknisk kvalitetssikring</h3>
+                        <p>Vi kontrollerer opptak, klipp, støy, nivå, filnavn og format før prosjektet leveres.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section" id="faq">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="eyebrow">Ofte stilte spørsmål</p>
+                    <h2 class="section-title">Greit å vite</h2>
+                </div>
+
+                <div class="faq-list">
+                    <article class="faq-item">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>Hva trenger dere for å gi et pristilbud?</span>
+                            <span class="faq-plus" aria-hidden="true">+</span>
+                        </button>
+                        <div class="faq-answer"><div><p>Helst manus eller estimert ordmengde, ønsket stemme, kanal, territorium, bruksperiode, deadline og om kunden ønsker å delta i opptaket. Vi kan også starte med en uferdig brief.</p></div></div>
+                    </article>
+                    <article class="faq-item">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>Kan kunden være med på opptaket?</span>
+                            <span class="faq-plus" aria-hidden="true">+</span>
+                        </button>
+                        <div class="faq-answer"><div><p>Ja. Kunden kan delta i studio eller følge sesjonen på en fjernlink og gi regi og godkjenninger underveis.</p></div></div>
+                    </article>
+                    <article class="faq-item">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>Hvordan prises en voiceover?</span>
+                            <span class="faq-plus" aria-hidden="true">+</span>
+                        </button>
+                        <div class="faq-answer"><div><p>Tilbudet kan bestå av casting/prosjektledelse, studio og tekniker, stemmeutøverens arbeidshonorar, bruksrettigheter og etterarbeid. Prisen påvirkes blant annet av kanal, rekkevidde, periode og eksklusivitet.</p></div></div>
+                    </article>
+                    <article class="faq-item">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>Kan dere dubbe en hel animasjonsfilm eller serie?</span>
+                            <span class="faq-plus" aria-hidden="true">+</span>
+                        </button>
+                        <div class="faq-answer"><div><p>Ja, prosjektet kan organiseres som en komplett produksjon med oversettelse/manustilpasning, casting, regi, opptak, synkronisering, miks og kvalitetskontroll. Kapasitet og leveranseplan avtales per prosjekt.</p></div></div>
+                    </article>
+                    <article class="faq-item">
+                        <button class="faq-question" type="button" aria-expanded="false">
+                            <span>Bruker dere stemmer til KI eller stemmekloning?</span>
+                            <span class="faq-plus" aria-hidden="true">+</span>
+                        </button>
+                        <div class="faq-answer"><div><p>Ikke uten en egen, uttrykkelig og skriftlig avtale med stemmeutøveren. Vanlige opptaks- og bruksavtaler gir ikke rett til kloning, modelltrening eller syntetisk tale.</p></div></div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section section-photo final-cta" style="background-image: url('images/parallax-bg-05.jpg');">
+            <div class="container">
+                <div class="section-heading">
+                    <p class="eyebrow">Loki Voice</p>
+                    <h2 class="section-title">La oss finne stemmen prosjektet trenger</h2>
+                    <p class="section-intro">Send en kort brief. Vi hjelper med stemmevalg, avtaler, opptak og ferdig leveranse.</p>
+                </div>
+                <div class="button-row">
+                    <a class="btn" href="#casting">Send castingbrief</a>
+                    <a class="btn btn-outline" href="index.html#contact">Kontakt Loki Lydstudio</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-inner">
+            <p>Copyright &copy; <span id="currentYear">2026</span> Loki Lydstudio · Org.nr. 929 001 761</p>
+            <div class="footer-links">
+                <a href="index.html">Hovedside</a>
+                <a href="#rettigheter">Rettigheter og KI</a>
+                <a href="#talenter">Registrer stemme</a>
+                <a href="#casting">Kontakt</a>
+            </div>
+        </div>
+    </footer>
+
+    <div class="modal" id="voiceModal" role="dialog" aria-modal="true" aria-labelledby="modalVoiceName">
+        <div class="modal-dialog">
+            <button class="modal-close" type="button" id="modalClose" aria-label="Lukk profil">×</button>
+            <div class="modal-head">
+                <div class="voice-avatar" id="modalAvatar">LV</div>
+                <div>
+                    <h2 id="modalVoiceName">Stemmeprofil</h2>
+                    <p id="modalVoiceId"></p>
+                </div>
+            </div>
+            <div class="modal-body">
+                <p id="modalDescription"></p>
+                <div class="tag-list" id="modalTags"></div>
+                <div class="profile-facts" id="modalFacts"></div>
+                <div id="modalAudioWrap"></div>
+                <div class="button-row">
+                    <button class="btn" type="button" id="modalFavorite">Legg i shortlist</button>
+                    <button class="btn btn-outline" type="button" id="modalRequest">Bruk i brief</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        /*
+         * DEMODATA FOR STEMMEARKIVET
+         * ------------------------------------------------------------
+         * Bytt ut profilene under med ekte stemmeutøvere.
+         * audio: "audio/voices/filnavn.mp3" aktiverer avspillingsknappen.
+         * La audio stå som tom streng dersom det ikke finnes en demo ennå.
+         * Ikke publiser private kontaktopplysninger i denne listen.
+         */
+        const voiceProfiles = [
+            {
+                id: "LV-001",
+                name: "Loki Voice 01",
+                initials: "01",
+                type: "mellom",
+                age: "voksen",
+                uses: ["reklame", "forteller", "elearning"],
+                dialect: "Bergensk",
+                languages: ["Norsk", "Engelsk"],
+                tones: ["Varm", "Troverdig", "Naturlig"],
+                skills: ["Reklame", "Bedriftsfilm", "E-læring"],
+                description: "En varm og nær stemme med tydelig formidling. Passer godt til troverdige reklamer, forklaringsfilmer og opplæring.",
+                audio: ""
+            },
+            {
+                id: "LV-002",
+                name: "Loki Voice 02",
+                initials: "02",
+                type: "mork",
+                age: "moden",
+                uses: ["reklame", "forteller", "dubbing"],
+                dialect: "Standard østnorsk",
+                languages: ["Norsk"],
+                tones: ["Autoritativ", "Rolig", "Filmisk"],
+                skills: ["Dokumentar", "Trailer", "Dubbing"],
+                description: "Dyp og kontrollert stemme med tyngde. Egnet til dokumentar, premiumreklame, trailere og modne karakterroller.",
+                audio: ""
+            },
+            {
+                id: "LV-003",
+                name: "Loki Voice 03",
+                initials: "03",
+                type: "lys",
+                age: "ung",
+                uses: ["reklame", "dubbing", "spill"],
+                dialect: "Sørvestlandsk",
+                languages: ["Norsk", "Engelsk"],
+                tones: ["Energisk", "Leken", "Ung"],
+                skills: ["SoMe", "Animasjon", "Spill"],
+                description: "Frisk og energisk stemme som fungerer godt i sosiale medier, ungdomsinnhold, animasjon og spillkarakterer.",
+                audio: ""
+            },
+            {
+                id: "LV-004",
+                name: "Loki Voice 04",
+                initials: "04",
+                type: "karakter",
+                age: "voksen",
+                uses: ["dubbing", "spill"],
+                dialect: "Flere dialekter",
+                languages: ["Norsk", "Engelsk"],
+                tones: ["Komisk", "Fleksibel", "Ekspressiv"],
+                skills: ["Karakterer", "Creature", "Improvisasjon"],
+                description: "Ekspressiv og svært fleksibel karakterstemme med komisk timing, improvisasjon og tydelig skuespillerfokus.",
+                audio: ""
+            },
+            {
+                id: "LV-005",
+                name: "Loki Voice 05",
+                initials: "05",
+                type: "mellom",
+                age: "voksen",
+                uses: ["forteller", "elearning", "reklame"],
+                dialect: "Trøndersk",
+                languages: ["Norsk"],
+                tones: ["Vennlig", "Tydelig", "Folkelig"],
+                skills: ["E-læring", "Informasjon", "Reklame"],
+                description: "Vennlig og direkte formidler med tydelig uttale. God til instruksjon, offentlig informasjon og folkelig reklame.",
+                audio: ""
+            },
+            {
+                id: "LV-006",
+                name: "Loki Voice 06",
+                initials: "06",
+                type: "lys",
+                age: "voksen",
+                uses: ["reklame", "forteller", "dubbing"],
+                dialect: "Bergensk / standard norsk",
+                languages: ["Norsk", "Engelsk", "Tysk"],
+                tones: ["Elegant", "Presis", "Rolig"],
+                skills: ["Premium", "Museumslyd", "Dubbing"],
+                description: "Presis og elegant stemme med bred språkerfaring. Passer til premiummerker, kulturinnhold og internasjonale produksjoner.",
+                audio: ""
+            },
+            {
+                id: "LV-007",
+                name: "Loki Voice 07",
+                initials: "07",
+                type: "mork",
+                age: "voksen",
+                uses: ["spill", "dubbing", "reklame"],
+                dialect: "Nordnorsk",
+                languages: ["Norsk", "Engelsk"],
+                tones: ["Rå", "Intens", "Karismatisk"],
+                skills: ["Spill", "Action", "Karakter"],
+                description: "Rå og karismatisk stemme med kraftig karakterpreg. Egnet til action, spillroller, trailere og tydelige kampanjer.",
+                audio: ""
+            },
+            {
+                id: "LV-008",
+                name: "Loki Voice 08",
+                initials: "08",
+                type: "mellom",
+                age: "moden",
+                uses: ["forteller", "elearning", "dubbing"],
+                dialect: "Standard norsk",
+                languages: ["Norsk", "Engelsk", "Fransk"],
+                tones: ["Trygg", "Kunnskapsrik", "Behagelig"],
+                skills: ["Dokumentar", "Lydbok", "E-læring"],
+                description: "Trygg, behagelig og kunnskapsrik fortellerstemme med god utholdenhet for lengre manus og krevende terminologi.",
+                audio: ""
+            }
+        ];
+
+        function loadSavedShortlist() {
+            try {
+                const saved = JSON.parse(localStorage.getItem("lokiVoiceShortlist") || "[]");
+                return Array.isArray(saved) ? saved : [];
+            } catch (error) {
+                return [];
+            }
+        }
+
+        const state = {
+            shortlist: new Set(loadSavedShortlist()),
+            activeProfileId: null,
+            playingAudio: null
+        };
+
+        const voiceGrid = document.getElementById("voiceGrid");
+        const voiceCount = document.getElementById("voiceCount");
+        const shortlistCount = document.getElementById("shortlistCount");
+        const shortlistBox = document.getElementById("shortlistBox");
+        const shortlistItems = document.getElementById("shortlistItems");
+        const selectedVoicesInput = document.getElementById("selectedVoicesInput");
+        const emptyState = document.getElementById("emptyState");
+        const toast = document.getElementById("toast");
+
+        const normalize = (value) => String(value || "")
+            .toLocaleLowerCase("nb-NO")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+
+        function profileMatches(profile) {
+            const search = normalize(document.getElementById("voiceSearch").value);
+            const type = document.getElementById("voiceType").value;
+            const age = document.getElementById("voiceAge").value;
+            const use = document.getElementById("voiceUse").value;
+
+            const haystack = normalize([
+                profile.id,
+                profile.name,
+                profile.type,
+                profile.age,
+                profile.dialect,
+                ...profile.languages,
+                ...profile.tones,
+                ...profile.skills,
+                profile.description
+            ].join(" "));
+
+            return (!search || haystack.includes(search))
+                && (type === "all" || profile.type === type)
+                && (age === "all" || profile.age === age)
+                && (use === "all" || profile.uses.includes(use));
+        }
+
+        function renderVoices() {
+            const filtered = voiceProfiles.filter(profileMatches);
+            voiceGrid.innerHTML = filtered.map(profile => {
+                const selected = state.shortlist.has(profile.id);
+                const tags = [profile.dialect, ...profile.tones.slice(0, 2)];
+                return `
+                    <article class="voice-card" data-profile-id="${profile.id}">
+                        <div class="voice-card-top">
+                            <div class="voice-avatar" aria-hidden="true">${profile.initials}</div>
+                            <button class="favorite-button ${selected ? "selected" : ""}" type="button" data-favorite="${profile.id}" aria-pressed="${selected}" aria-label="${selected ? "Fjern" : "Legg"} ${profile.id} ${selected ? "fra" : "i"} shortlist">
+                                <svg viewBox="0 0 24 24" fill="${selected ? "currentColor" : "none"}" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                                    <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2L12 17.3l-5.6 2.9 1.1-6.2L3 9.6l6.2-.9L12 3Z"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <h3>${profile.name}</h3>
+                        <span class="voice-id">${profile.id} · ${capitalize(profile.age)} stemmealder</span>
+                        <div class="tag-list">${tags.map(tag => `<span class="tag">${tag}</span>`).join("")}</div>
+                        <p class="voice-description">${profile.description}</p>
+                        <div class="voice-actions">
+                            <button class="btn btn-small btn-outline audio-button" type="button" data-audio="${profile.id}" ${profile.audio ? "" : "disabled"}>${profile.audio ? "Spill demo" : "Demo kommer"}</button>
+                            <button class="btn btn-small" type="button" data-profile="${profile.id}">Se profil</button>
+                        </div>
+                    </article>
+                `;
+            }).join("");
+
+            voiceCount.textContent = filtered.length;
+            emptyState.classList.toggle("visible", filtered.length === 0);
+            updateShortlistUI();
+        }
+
+        const displayLabels = {
+            mork: "Mørk",
+            elearning: "E-læring"
+        };
+
+        function capitalize(value) {
+            if (displayLabels[value]) return displayLabels[value];
+            return value.charAt(0).toUpperCase() + value.slice(1);
+        }
+
+        function persistShortlist() {
+            localStorage.setItem("lokiVoiceShortlist", JSON.stringify([...state.shortlist]));
+        }
+
+        function toggleShortlist(profileId) {
+            if (state.shortlist.has(profileId)) {
+                state.shortlist.delete(profileId);
+                showToast(`${profileId} ble fjernet fra shortlisten.`);
+            } else {
+                state.shortlist.add(profileId);
+                showToast(`${profileId} ble lagt til i shortlisten.`);
+            }
+            persistShortlist();
+            renderVoices();
+            updateModalFavoriteButton();
+        }
+
+        function updateShortlistUI() {
+            const selectedProfiles = voiceProfiles.filter(profile => state.shortlist.has(profile.id));
+            shortlistCount.textContent = selectedProfiles.length;
+            selectedVoicesInput.value = selectedProfiles.map(profile => `${profile.id} – ${profile.name}`).join(", ");
+            shortlistBox.classList.toggle("visible", selectedProfiles.length > 0);
+            shortlistItems.innerHTML = selectedProfiles.map(profile => `<span class="tag">${profile.id}</span>`).join("");
+        }
+
+        function useShortlistInBrief() {
+            if (state.shortlist.size === 0) {
+                showToast("Velg minst én stemme før du bruker shortlisten.");
+                document.getElementById("stemmer").scrollIntoView({ behavior: "smooth" });
+                return;
+            }
+            updateShortlistUI();
+            document.getElementById("casting").scrollIntoView({ behavior: "smooth" });
+            setTimeout(() => document.getElementById("projectMessage").focus({ preventScroll: true }), 500);
+        }
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add("visible");
+            clearTimeout(showToast.timeout);
+            showToast.timeout = setTimeout(() => toast.classList.remove("visible"), 2600);
+        }
+
+        function openProfile(profileId) {
+            const profile = voiceProfiles.find(item => item.id === profileId);
+            if (!profile) return;
+
+            state.activeProfileId = profileId;
+            document.getElementById("modalAvatar").textContent = profile.initials;
+            document.getElementById("modalVoiceName").textContent = profile.name;
+            document.getElementById("modalVoiceId").textContent = `${profile.id} · ${capitalize(profile.age)} stemmealder`;
+            document.getElementById("modalDescription").textContent = profile.description;
+            document.getElementById("modalTags").innerHTML = [...profile.tones, ...profile.skills].map(tag => `<span class="tag">${tag}</span>`).join("");
+            document.getElementById("modalFacts").innerHTML = `
+                <div class="profile-fact"><strong>Dialekt</strong><span>${profile.dialect}</span></div>
+                <div class="profile-fact"><strong>Språk</strong><span>${profile.languages.join(", ")}</span></div>
+                <div class="profile-fact"><strong>Stemmetype</strong><span>${capitalize(profile.type)}</span></div>
+                <div class="profile-fact"><strong>Bruksområder</strong><span>${profile.uses.map(capitalize).join(", ")}</span></div>
+            `;
+
+            const audioWrap = document.getElementById("modalAudioWrap");
+            audioWrap.innerHTML = profile.audio
+                ? `<audio class="modal-audio" controls preload="none"><source src="${profile.audio}" type="audio/mpeg">Nettleseren støtter ikke lydavspilling.</audio>`
+                : `<p class="modal-audio-note">Denne demonstrasjonsprofilen har ingen lydfil ennå. Legg inn filsti i <code>voiceProfiles</code>-listen for å aktivere avspilling.</p>`;
+
+            updateModalFavoriteButton();
+            document.getElementById("voiceModal").classList.add("open");
+            document.body.classList.add("modal-open");
+            document.getElementById("modalClose").focus();
+        }
+
+        function updateModalFavoriteButton() {
+            const button = document.getElementById("modalFavorite");
+            const selected = state.shortlist.has(state.activeProfileId);
+            button.textContent = selected ? "Fjern fra shortlist" : "Legg i shortlist";
+        }
+
+        function closeProfile() {
+            document.getElementById("voiceModal").classList.remove("open");
+            document.body.classList.remove("modal-open");
+            const trigger = document.querySelector(`[data-profile="${state.activeProfileId}"]`);
+            if (trigger) trigger.focus();
+        }
+
+        function playCardAudio(profileId, button) {
+            const profile = voiceProfiles.find(item => item.id === profileId);
+            if (!profile || !profile.audio) return;
+
+            if (state.playingAudio) {
+                state.playingAudio.audio.pause();
+                state.playingAudio.button.textContent = "Spill demo";
+                if (state.playingAudio.profileId === profileId) {
+                    state.playingAudio = null;
+                    return;
+                }
+            }
+
+            const audio = new Audio(profile.audio);
+            button.textContent = "Pause";
+            audio.play().catch(() => {
+                button.textContent = "Spill demo";
+                showToast("Lydfilen kunne ikke spilles av. Kontroller filstien.");
+            });
+            audio.addEventListener("ended", () => {
+                button.textContent = "Spill demo";
+                state.playingAudio = null;
+            });
+            state.playingAudio = { audio, button, profileId };
+        }
+
+        voiceGrid.addEventListener("click", (event) => {
+            const favorite = event.target.closest("[data-favorite]");
+            const profile = event.target.closest("[data-profile]");
+            const audio = event.target.closest("[data-audio]");
+
+            if (favorite) toggleShortlist(favorite.dataset.favorite);
+            if (profile) openProfile(profile.dataset.profile);
+            if (audio && !audio.disabled) playCardAudio(audio.dataset.audio, audio);
+        });
+
+        ["voiceSearch", "voiceType", "voiceAge", "voiceUse"].forEach(id => {
+            document.getElementById(id).addEventListener(id === "voiceSearch" ? "input" : "change", renderVoices);
+        });
+
+        document.getElementById("useShortlistButton").addEventListener("click", useShortlistInBrief);
+        document.getElementById("modalClose").addEventListener("click", closeProfile);
+        document.getElementById("modalFavorite").addEventListener("click", () => toggleShortlist(state.activeProfileId));
+        document.getElementById("modalRequest").addEventListener("click", () => {
+            if (!state.shortlist.has(state.activeProfileId)) toggleShortlist(state.activeProfileId);
+            closeProfile();
+            useShortlistInBrief();
+        });
+
+        document.getElementById("voiceModal").addEventListener("click", (event) => {
+            if (event.target.id === "voiceModal") closeProfile();
+        });
+
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Escape" && document.getElementById("voiceModal").classList.contains("open")) closeProfile();
+        });
+
+        /* FAQ */
+        document.querySelectorAll(".faq-question").forEach(button => {
+            button.addEventListener("click", () => {
+                const item = button.closest(".faq-item");
+                const isOpen = item.classList.toggle("open");
+                button.setAttribute("aria-expanded", String(isOpen));
+            });
+        });
+
+        /* Mobile navigation */
+        const navToggle = document.getElementById("navToggle");
+        const navLinks = document.getElementById("navLinks");
+        navToggle.addEventListener("click", () => {
+            const open = navLinks.classList.toggle("open");
+            navToggle.setAttribute("aria-expanded", String(open));
+            navToggle.setAttribute("aria-label", open ? "Lukk meny" : "Åpne meny");
+        });
+        navLinks.addEventListener("click", (event) => {
+            if (event.target.closest("a")) {
+                navLinks.classList.remove("open");
+                navToggle.setAttribute("aria-expanded", "false");
+            }
+        });
+
+        /* Nav style and active section */
+        const siteNav = document.getElementById("siteNav");
+        const sectionLinks = [...document.querySelectorAll('.nav-links a[href^="#"]')];
+        const observedSections = sectionLinks
+            .map(link => document.querySelector(link.getAttribute("href")))
+            .filter(Boolean);
+
+        window.addEventListener("scroll", () => siteNav.classList.toggle("scrolled", window.scrollY > 20), { passive: true });
+
+        if ("IntersectionObserver" in window) {
+            const sectionObserver = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+                    sectionLinks.forEach(link => {
+                        link.classList.toggle("active", link.getAttribute("href") === `#${entry.target.id}`);
+                    });
+                });
+            }, { rootMargin: "-40% 0px -50%", threshold: 0 });
+            observedSections.forEach(section => sectionObserver.observe(section));
+        }
+
+        /* Subtle hero parallax */
+        const heroBg = document.querySelector(".hero-bg");
+        if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            window.addEventListener("scroll", () => {
+                const offset = Math.min(window.scrollY * 0.16, 100);
+                heroBg.style.transform = `translateY(${offset}px) scale(1.08)`;
+            }, { passive: true });
+        }
+
+        /* Forms */
+        document.querySelectorAll(".ajax-form").forEach(form => {
+            form.addEventListener("submit", async (event) => {
+                event.preventDefault();
+                const status = form.querySelector(".form-status");
+                const submitButton = form.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+
+                status.className = "form-status";
+                status.textContent = "Sender …";
+                submitButton.disabled = true;
+                submitButton.textContent = "Sender …";
+
+                try {
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        body: new FormData(form),
+                        headers: { "Accept": "application/json" }
+                    });
+
+                    if (!response.ok) throw new Error("Formspree returnerte en feil.");
+
+                    status.className = "form-status success";
+                    status.textContent = form.id === "castingForm"
+                        ? "Takk! Castingforespørselen er sendt."
+                        : "Takk! Profilen din er sendt inn.";
+                    form.reset();
+
+                    if (form.id === "castingForm") {
+                        state.shortlist.clear();
+                        persistShortlist();
+                        renderVoices();
+                    }
+                } catch (error) {
+                    status.className = "form-status error";
+                    status.textContent = "Kunne ikke sende skjemaet. Kontroller nettverket og prøv igjen.";
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
+                }
+            });
+        });
+
+        document.getElementById("currentYear").textContent = new Date().getFullYear();
+        document.getElementById("projectDeadline").min = new Date().toISOString().split("T")[0];
+        renderVoices();
+    </script>
+</body>
+</html>
