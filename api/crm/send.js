@@ -1,5 +1,5 @@
 const { requireUser } = require("../../lib/crm-auth");
-const { createSmtpClient } = require("../../lib/crm-mail");
+const { sendMail } = require("../../lib/crm-mail");
 
 function validEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
@@ -19,7 +19,7 @@ module.exports = async function handler(req, res) {
   const inReplyTo = headerText(req.body?.inReplyTo, 500);
   if (!validEmail(to) || !subject || !text) return res.status(400).json({ error: "Mottaker, emne eller melding er ugyldig." });
   try {
-    const info = await createSmtpClient().sendMail({
+    const info = await sendMail({
       from: `Loki Lydstudio <${process.env.MAIL_ADDRESS}>`,
       replyTo: process.env.MAIL_ADDRESS,
       to,

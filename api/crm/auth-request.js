@@ -1,5 +1,5 @@
 const { createToken, allowedUsers } = require("../../lib/crm-auth");
-const { createSmtpClient } = require("../../lib/crm-mail");
+const { sendMail } = require("../../lib/crm-mail");
 
 const attempts = new Map();
 
@@ -17,8 +17,9 @@ module.exports = async function handler(req, res) {
   const baseUrl = String(process.env.CRM_BASE_URL || "https://www.lokilyd.no").replace(/\/$/, "");
   const link = `${baseUrl}/api/crm/auth-callback?token=${encodeURIComponent(token)}`;
   try {
-    await createSmtpClient().sendMail({
+    await sendMail({
       from: `Loki Studio <${process.env.MAIL_ADDRESS}>`,
+      replyTo: process.env.MAIL_ADDRESS,
       to: email,
       subject: "Logg inn i Loki Studio",
       text: `Bruk denne lenken for å logge inn i Loki Studio. Lenken er gyldig i 15 minutter:\n\n${link}\n\nHvis du ikke ba om lenken, kan du ignorere meldingen.`,
