@@ -3,8 +3,19 @@
   "version": "1.0.0",
   "private": true,
   "description": "Loki Lydstudio nettbutikk med Stripe Checkout",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
   "dependencies": {
-    "stripe": "^18.0.0",
-    "next": "latest"
+    "@vercel/blob": "^2.8.0",
+    "ai": "^7.0.97",
+    "imapflow": "^2.0.2",
+    "mailparser": "^3.9.24",
+    "next": "latest",
+    "nodemailer": "^10.0.6",
+    "stripe": "^18.0.0"
   }
 }
