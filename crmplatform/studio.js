@@ -98,7 +98,7 @@
         <label class="field field-wide">Prosjektnotater<textarea id="project-notes" placeholder="Leveranse, referanser, tidsplan og andre avtaler …">${esc(project.notes)}</textarea></label>
       </div>
       <section class="studio-section">
-        <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>32-kanals patcheliste</h3><p>Fysisk input → mikrofon / DI → preamp → lydkortets input.</p></div><span class="state green">32 kanaler</span></div>
+        <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>32-kanals patcheliste</h3><p>Fysisk input → mikrofon / DI → preamp → lydkortets input.</p></div><div class="button-row"><button class="secondary" id="print-patch" type="button">⎙ Skriv ut patcheliste</button><span class="state green">32 kanaler</span></div></div>
         <div class="patch-wrap"><table class="patch-table"><thead><tr><th>CH</th><th>KILDE</th><th>FYSISK INPUT</th><th>MIK / DI</th><th>PREAMP</th><th>ROUTING</th><th>+48V</th><th>NOTAT</th></tr></thead><tbody id="patch-body">${patchRows(project)}</tbody></table></div>
       </section>
       <section class="studio-section">
@@ -140,6 +140,8 @@
     if (save) save.onclick = saveProject;
     const exportProject = document.getElementById("export-project");
     if (exportProject) exportProject.onclick = () => exportProjects(selectedProjectId, exportProject);
+    const printPatch = document.getElementById("print-patch");
+    if (printPatch) printPatch.onclick = printPatchList;
     const deleteButton = document.getElementById("delete-project");
     if (deleteButton) deleteButton.onclick = deleteProject;
     const upload = document.getElementById("audio-upload-form");
@@ -172,6 +174,67 @@
         notes: value("notes").value,
       };
     });
+  }
+
+  function printPatchList() {
+    const project = projects.find((item) => item.id === selectedProjectId);
+    if (!project) return;
+
+    document.querySelector(".patch-print-sheet")?.remove();
+    const currentName = document.getElementById("project-name").value.trim() || project.name;
+    const currentClient = document.getElementById("project-client").value.trim() || "—";
+    const currentStatus = document.getElementById("project-status").value || project.status;
+    const currentDate = document.getElementById("project-date").value;
+    const sessionDate = currentDate
+      ? new Date(`${currentDate}T12:00:00`).toLocaleDateString("nb-NO", { day: "2-digit", month: "2-digit", year: "numeric" })
+      : "—";
+    const printedAt = new Date().toLocaleString("nb-NO", {
+      day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit",
+    });
+    const rows = collectPatch().map((row) => `
+      <tr>
+        <td>${row.channel}</td>
+        <td>${esc(row.source)}</td>
+        <td>${esc(row.connection)}</td>
+        <td>${esc(row.microphone)}</td>
+        <td>${esc(row.preamp)}</td>
+        <td>${esc(row.destination)}</td>
+        <td class="print-phantom">${row.phantom ? "JA" : ""}</td>
+        <td>${esc(row.notes)}</td>
+      </tr>`).join("");
+
+    const sheet = document.createElement("section");
+    sheet.className = "patch-print-sheet";
+    sheet.setAttribute("aria-hidden", "true");
+    sheet.innerHTML = `
+      <header class="patch-print-header">
+        <div class="patch-print-brand"><img src="/assets/brand/loki-symbol.png" alt=""><div><strong>LOKI</strong><span>LYDSTUDIO · PATCHELISTE</span></div></div>
+        <div class="patch-print-title"><span>PROSJEKT</span><h1>${esc(currentName)}</h1></div>
+      </header>
+      <dl class="patch-print-meta">
+        <div><dt>Kunde / artist</dt><dd>${esc(currentClient)}</dd></div>
+        <div><dt>Dato</dt><dd>${esc(sessionDate)}</dd></div>
+        <div><dt>Status</dt><dd>${esc(currentStatus)}</dd></div>
+        <div><dt>Skrevet ut</dt><dd>${esc(printedAt)}</dd></div>
+      </dl>
+      <table class="patch-print-table">
+        <thead><tr><th>CH</th><th>KILDE</th><th>FYSISK INPUT</th><th>MIK / DI</th><th>PREAMP</th><th>ROUTING</th><th>+48V</th><th>NOTAT</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <footer>Loki Lydstudio · Frydenbølien 17 · lokilyd.no</footer>`;
+    document.body.appendChild(sheet);
+    document.body.classList.add("printing-patch");
+
+    const cleanup = () => {
+      document.body.classList.remove("printing-patch");
+      sheet.remove();
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.print();
+    setTimeout(() => {
+      if (document.body.contains(sheet) && !window.matchMedia("print").matches) cleanup();
+    }, 1_000);
   }
 
   async function saveProject() {
