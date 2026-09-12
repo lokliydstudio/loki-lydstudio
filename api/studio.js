@@ -5,6 +5,7 @@ const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeT
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadFikenSummary } = require("../lib/crm-fiken");
+const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
 const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
@@ -38,7 +39,41 @@ async function projectsHandler(req, res) {
     return res.status(200).json({ project: projects[index] });
   }
 
+  if (req.method === "DELETE") {
+    const id = cleanText(req.query?.id || req.body?.id, 120);
+    const [projects, tracks] = await Promise.all([
+      readCollection("projects"),
+      readCollection("audio"),
+    ]);
+    const deletion = planProjectDeletion(projects, tracks, id);
+    if (!deletion) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
+
+    const pathnames = deletion.attachedTracks.map((track) => track.pathname).filter(Boolean);
+    if (pathnames.length) await del(pathnames);
+    await writeCollection("audio", deletion.remainingTracks);
+    await writeCollection("projects", deletion.remainingProjects);
+
+    return res.status(200).json({
+      ok: true,
+      deletedProjectId: id,
+      deletedTrackCount: deletion.attachedTracks.length,
+    });
+  }
+
   return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function projectExportHandler(req, res) {
+  if (!requireUser(req, res)) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const [projects, tracks] = await Promise.all([
+    readCollection("projects"),
+    readCollection("audio"),
+  ]);
+  const requestedId = cleanText(req.query?.id, 120);
+  const manifest = createProjectExport(projects, tracks, requestedId);
+  if (!manifest) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
+  return res.status(200).json(manifest);
 }
 
 async function uploadHandler(req, res) {
@@ -270,6 +305,7 @@ module.exports = async function handler(req, res) {
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert." });
   try {
     if (action === "projects") return await projectsHandler(req, res);
+    if (action === "project-export") return await projectExportHandler(req, res);
     if (action === "upload") return await uploadHandler(req, res);
     if (action === "audio") return await audioHandler(req, res);
     if (action === "internal-stream") return await internalStreamHandler(req, res);

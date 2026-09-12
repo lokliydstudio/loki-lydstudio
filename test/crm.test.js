@@ -12,6 +12,7 @@ const { dateMentions, plainText } = require("../lib/crm-funding");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { summarizeFiken } = require("../lib/crm-fiken");
+const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
 const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 
@@ -58,6 +59,46 @@ test("projects sanitize status, email and patch data", () => {
   assert.equal(project.clientEmail, "artist@example.com");
   assert.equal(project.status, "Planlegges");
   assert.equal(project.patch[1].source, "Kick in");
+});
+
+test("project exports include only selected project files and no private blob details", () => {
+  const projects = [
+    { id: "project-1", name: "Første", patch: [] },
+    { id: "project-2", name: "Andre", patch: [] },
+  ];
+  const tracks = [
+    { id: "track-1", projectId: "project-1", filename: "miks.wav", title: "Miks", version: "V1", size: 120, contentType: "audio/wav", pathname: "loki-crm/private/track-1", uploadedBy: "leon@lokilyd.no" },
+    { id: "track-2", projectId: "project-2", filename: "demo.mp3", title: "Demo", version: "V2", size: 80, contentType: "audio/mpeg", pathname: "loki-crm/private/track-2", uploadedBy: "charles@lokilyd.no" },
+  ];
+  const manifest = createProjectExport(projects, tracks, "project-1");
+  assert.equal(manifest.scope, "project");
+  assert.deepEqual(manifest.projects.map((project) => project.id), ["project-1"]);
+  assert.deepEqual(manifest.files.map((file) => file.trackId), ["track-1"]);
+  assert.equal(manifest.files[0].downloadUrl, "/api/studio?action=internal-stream&id=track-1");
+  assert.equal("pathname" in manifest.projects[0].tracks[0], false);
+  assert.equal("uploadedBy" in manifest.projects[0].tracks[0], false);
+  assert.equal(JSON.stringify(manifest).includes("loki-crm/private"), false);
+});
+
+test("project deletion cascades to its audio metadata only", () => {
+  const projects = [{ id: "project-1" }, { id: "project-2" }];
+  const tracks = [
+    { id: "track-1", projectId: "project-1" },
+    { id: "track-2", projectId: "project-1" },
+    { id: "track-3", projectId: "project-2" },
+  ];
+  const deletion = planProjectDeletion(projects, tracks, "project-1");
+  assert.deepEqual(deletion.attachedTracks.map((track) => track.id), ["track-1", "track-2"]);
+  assert.deepEqual(deletion.remainingProjects.map((project) => project.id), ["project-2"]);
+  assert.deepEqual(deletion.remainingTracks.map((track) => track.id), ["track-3"]);
+  assert.equal(planProjectDeletion(projects, tracks, "missing"), null);
+});
+
+test("client ZIP creates a valid archive response", async () => {
+  const { downloadZip } = await import("client-zip");
+  const archive = new Uint8Array(await downloadZip([{ name: "README.txt", input: "Hei", size: 4 }]).arrayBuffer());
+  assert.deepEqual([...archive.slice(0, 4)], [0x50, 0x4b, 0x03, 0x04]);
+  assert.equal(new TextDecoder().decode(archive).includes("README.txt"), true);
 });
 
 test("audio metadata must match a private CRM pathname and supported audio type", () => {

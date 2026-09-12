@@ -87,7 +87,7 @@
     return `
       <div class="project-toolbar">
         <div><span class="kicker">STUDIOPROSJEKT</span><h2>${esc(project.name)}</h2></div>
-        <div class="button-row"><span class="save-state" id="project-save-state">Lagret ${new Date(project.updatedAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span><button class="primary" id="save-project">Lagre prosjekt</button></div>
+        <div class="button-row"><span class="save-state" id="project-save-state">Lagret ${new Date(project.updatedAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span><button class="secondary" id="export-project" title="Eksporter sist lagrede versjon">⇩ Eksporter ZIP</button><button class="secondary danger-button" id="delete-project">Slett prosjekt</button><button class="primary" id="save-project">Lagre prosjekt</button><span class="export-progress" id="project-export-state" hidden></span></div>
       </div>
       <div class="project-fields">
         <label class="field">Prosjektnavn<input id="project-name" value="${esc(project.name)}"></label>
@@ -127,6 +127,8 @@
 
     const project = projects.find((item) => item.id === selectedProjectId);
     workspace.innerHTML = project ? editorMarkup(project) : '<div class="project-empty">Opprett et prosjekt for å sette opp de 32 kanalene og laste opp lyd.</div>';
+    const exportAll = document.getElementById("export-all-projects");
+    if (exportAll) exportAll.disabled = projects.length === 0;
     bindRenderedControls();
   }
 
@@ -136,6 +138,10 @@
     });
     const save = document.getElementById("save-project");
     if (save) save.onclick = saveProject;
+    const exportProject = document.getElementById("export-project");
+    if (exportProject) exportProject.onclick = () => exportProjects(selectedProjectId, exportProject);
+    const deleteButton = document.getElementById("delete-project");
+    if (deleteButton) deleteButton.onclick = deleteProject;
     const upload = document.getElementById("audio-upload-form");
     if (upload) upload.onsubmit = uploadAudio;
     document.querySelectorAll("[data-share-track]").forEach((button) => {
@@ -207,6 +213,178 @@
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
       .slice(0, 180);
+  }
+
+  function archiveSegment(value, fallback = "prosjekt") {
+    return safeFilename(value).replace(/[^\p{L}\p{N}._-]/gu, "-").slice(0, 120) || fallback;
+  }
+
+  function csvCell(value) {
+    let text = String(value ?? "");
+    if (/^[=+\-@]/.test(text)) text = `'${text}`;
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  function patchCsv(patch) {
+    const headings = ["Kanal", "Kilde", "Fysisk input", "Mikrofon / DI", "Preamp", "Routing", "+48V", "Notat"];
+    const lines = [headings, ...(patch || []).map((row) => [
+      row.channel,
+      row.source,
+      row.connection,
+      row.microphone,
+      row.preamp,
+      row.destination,
+      row.phantom ? "Ja" : "Nei",
+      row.notes,
+    ])];
+    return `\ufeff${lines.map((row) => row.map(csvCell).join(";")).join("\r\n")}\r\n`;
+  }
+
+  function exportEntries(manifest) {
+    const encoder = new TextEncoder();
+    const textEntry = (name, input) => ({ name, input, size: encoder.encode(input).byteLength });
+    const readme = [
+      "LOKI LYDSTUDIO – COLD STORAGE-BACKUP",
+      "",
+      `Eksportert: ${new Date(manifest.exportedAt).toLocaleString("nb-NO")}`,
+      `Omfang: ${manifest.scope === "project" ? "Ett prosjekt" : "Alle prosjekter"}`,
+      `Antall prosjekter: ${manifest.projects.length}`,
+      `Antall lydfiler: ${manifest.files.length}`,
+      "",
+      "Hver prosjektmappe inneholder prosjekt.json, patcheliste.csv og mappen Lydfiler.",
+      "Arkivet inneholder kundeopplysninger og kan inneholde upublisert lyd. Oppbevar det sikkert og kryptert.",
+      "Lydfilene lagres uten ekstra ZIP-komprimering for effektiv eksport og tapsfri bevaring.",
+      "",
+    ].join("\r\n");
+    const entries = [textEntry("README.txt", readme)];
+
+    manifest.projects.forEach((project) => {
+      const projectSuffix = archiveSegment(project.id, "id").slice(-12);
+      const root = `${archiveSegment(project.name) || "prosjekt"}-${projectSuffix}`;
+      const projectData = { ...project };
+      entries.push(textEntry(`${root}/prosjekt.json`, `${JSON.stringify(projectData, null, 2)}\n`));
+      entries.push(textEntry(`${root}/patcheliste.csv`, patchCsv(project.patch)));
+      const projectFiles = manifest.files.filter((file) => file.projectId === project.id);
+      projectFiles.forEach((file, index) => {
+        entries.push({
+          kind: "audio",
+          name: `${root}/Lydfiler/${String(index + 1).padStart(2, "0")}-${archiveSegment(file.version, "versjon")}-${archiveSegment(file.filename, "lydfil")}`,
+          size: Number(file.size) || 0,
+          url: file.downloadUrl,
+        });
+      });
+    });
+
+    return entries;
+  }
+
+  async function* zipInputs(entries, statusNode) {
+    for (let index = 0; index < entries.length; index += 1) {
+      const entry = entries[index];
+      if (statusNode) statusNode.textContent = `Pakker ${index + 1} av ${entries.length}: ${entry.name.split("/").pop()}`;
+      if (entry.kind !== "audio") {
+        yield { name: entry.name, input: entry.input, size: entry.size, lastModified: new Date() };
+        continue;
+      }
+      const response = await fetch(entry.url, { credentials: "same-origin" });
+      if (response.status === 401) {
+        location.replace("/crm-login.html");
+        throw new Error("Innlogging kreves.");
+      }
+      if (!response.ok) throw new Error(`Kunne ikke hente ${entry.name.split("/").pop()}.`);
+      yield { name: entry.name, input: response, size: entry.size, lastModified: new Date() };
+    }
+  }
+
+  async function exportProjects(projectId, button) {
+    if (!projects.length || !window.LokiZip?.downloadZip) return toast("ZIP-modulen kunne ikke lastes.");
+    const selected = projectId ? projects.find((project) => project.id === projectId) : null;
+    const hasUnsavedChanges = document.getElementById("project-save-state")?.textContent === "Ulagrede endringer";
+    if (hasUnsavedChanges && !confirm("Backupen inneholder sist lagrede versjon. Fortsett uten de ulagrede endringene?")) return;
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = projectId
+      ? `Loki-${archiveSegment(selected?.name)}-${date}.zip`
+      : `Loki-alle-prosjekter-${date}.zip`;
+    const originalText = button.textContent;
+    const statusNode = projectId ? document.getElementById("project-export-state") : null;
+    let fileHandle = null;
+
+    try {
+      if (window.showSaveFilePicker) {
+        try {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: "ZIP-arkiv", accept: { "application/zip": [".zip"] } }],
+          });
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+          throw error;
+        }
+      }
+
+      button.disabled = true;
+      button.textContent = "Forbereder …";
+      if (statusNode) {
+        statusNode.hidden = false;
+        statusNode.textContent = "Henter eksportoversikt …";
+      }
+      const query = projectId ? `&id=${encodeURIComponent(projectId)}` : "";
+      const manifest = await request(`/api/studio?action=project-export${query}`);
+      const entries = exportEntries(manifest);
+      const totalAudioSize = manifest.files.reduce((sum, file) => sum + (Number(file.size) || 0), 0);
+
+      if (!fileHandle && totalAudioSize > 750 * 1024 * 1024 && !confirm(`Denne backupen inneholder ${formatBytes(totalAudioSize)} lyd. Nettleseren må holde hele ZIP-filen i minnet før nedlasting. Fortsett?`)) return;
+
+      button.textContent = "Eksporterer …";
+      const metadata = entries.map(({ name, size }) => ({ name, size }));
+      const zipResponse = window.LokiZip.downloadZip(zipInputs(entries, statusNode), { metadata });
+      if (fileHandle) {
+        const writable = await fileHandle.createWritable();
+        await zipResponse.body.pipeTo(writable);
+      } else {
+        const blob = await zipResponse.blob();
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      }
+      toast(projectId ? "Prosjektbackupen er lagret som ZIP." : "Full prosjektbackup er lagret som ZIP.");
+    } catch (error) {
+      toast(error.message || "ZIP-backupen kunne ikke opprettes.");
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+      if (statusNode) statusNode.hidden = true;
+    }
+  }
+
+  async function deleteProject() {
+    const project = projects.find((item) => item.id === selectedProjectId);
+    if (!project) return;
+    const attachedCount = projectTracks().length;
+    const audioWarning = attachedCount
+      ? ` og ${attachedCount} ${attachedCount === 1 ? "tilknyttet lydfil" : "tilknyttede lydfiler"}`
+      : "";
+    if (!confirm(`Slett «${project.name}»${audioWarning} permanent?\n\nEksporter gjerne en ZIP-backup først. Handlingen kan ikke angres.`)) return;
+
+    const button = document.getElementById("delete-project");
+    button.disabled = true;
+    button.textContent = "Sletter …";
+    try {
+      const result = await request(`/api/studio?action=projects&id=${encodeURIComponent(project.id)}`, { method: "DELETE" });
+      projects = projects.filter((item) => item.id !== project.id);
+      tracks = tracks.filter((track) => track.projectId !== project.id);
+      selectedProjectId = projects[0]?.id || null;
+      render();
+      const trackText = result.deletedTrackCount ? ` og ${result.deletedTrackCount} lydfil${result.deletedTrackCount === 1 ? "" : "er"}` : "";
+      toast(`Prosjektet${trackText} er slettet permanent.`);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "Slett prosjekt";
+      toast(error.message || "Prosjektet kunne ikke slettes.");
+    }
   }
 
   async function uploadAudio(event) {
@@ -297,6 +475,7 @@
     const modal = document.getElementById("project-modal");
     const close = () => modal.classList.remove("open");
     document.getElementById("new-project").onclick = () => modal.classList.add("open");
+    document.getElementById("export-all-projects").onclick = (event) => exportProjects(null, event.currentTarget);
     document.getElementById("close-project-modal").onclick = close;
     document.getElementById("cancel-project-modal").onclick = close;
     document.getElementById("project-form").onsubmit = async (event) => {

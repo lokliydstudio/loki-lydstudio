@@ -7,12 +7,15 @@
     "node": ">=20"
   },
   "scripts": {
-    "build:crm": "esbuild build/blob-upload-entry.js --bundle --minify --format=iife --global-name=LokiBlob --platform=browser --outfile=crmplatform/blob-upload.js",
+    "build:blob": "esbuild build/blob-upload-entry.js --bundle --minify --format=iife --global-name=LokiBlob --platform=browser --outfile=crmplatform/blob-upload.js",
+    "build:zip": "esbuild build/zip-export-entry.js --bundle --minify --format=iife --global-name=LokiZip --platform=browser --target=es2020 --outfile=crmplatform/zip-export.js",
+    "build:crm": "npm run build:blob && npm run build:zip",
     "test": "node --test"
   },
   "dependencies": {
     "@vercel/blob": "^2.8.0",
     "ai": "^7.0.97",
+    "client-zip": "2.5.0",
     "imapflow": "^2.0.2",
     "mailparser": "^3.9.24",
     "next": "latest",
