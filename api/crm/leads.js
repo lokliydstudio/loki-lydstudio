@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { requireUser } = require("../../lib/crm-auth");
+const { classifyEnvelope } = require("../../lib/crm-mail-sort");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 
 const STAGES = new Set(["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Tapt"]);
@@ -32,7 +33,15 @@ function sanitizeLead(input, existing = {}) {
 }
 
 async function readLeads() {
-  return readCollection("leads");
+  const leads = await readCollection("leads");
+  return leads.filter((lead) => classifyEnvelope({
+    uid: lead.id,
+    envelope: {
+      from: [{ name: lead.name, address: lead.email }],
+      subject: lead.project,
+      messageId: `lead:${lead.id}`,
+    },
+  }).category !== "irrelevant");
 }
 
 module.exports = async function handler(req, res) {

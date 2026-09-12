@@ -9,8 +9,11 @@ process.env.MAIL_PASSWORD = "test-only-password";
 const auth = require("../lib/crm-auth");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { dateMentions, plainText } = require("../lib/crm-funding");
+const { classifyEnvelope } = require("../lib/crm-mail-sort");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
+const { summarizeFiken } = require("../lib/crm-fiken");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
+const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 
 test("only active owners can receive CRM tokens", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
@@ -115,4 +118,61 @@ test("transactional email uses Resend when its secret is configured", async () =
 test("funding monitor extracts Norwegian deadline mentions", () => {
   assert.deepEqual(dateMentions("Frist 15. september 2026 og 01.10.26"), ["15. september 2026", "01.10.26"]);
   assert.equal(plainText("<style>x</style><p>Søknadsfrist&nbsp;snart</p>"), "Søknadsfrist snart");
+});
+
+test("Formspree submissions are prioritized and use the customer's reply-to address", () => {
+  const message = classifyEnvelope({
+    uid: 42,
+    envelope: {
+      from: [{ name: "Formspree", address: "noreply@formspree.io" }],
+      replyTo: [{ name: "Ny Artist", address: "artist@example.com" }],
+      subject: "New submission from Loki Lydstudio",
+      messageId: "<form-42@example.com>",
+      date: new Date("2026-09-12T08:00:00Z"),
+    },
+  });
+  assert.equal(message.category, "formspree");
+  assert.equal(message.email, "artist@example.com");
+  assert.equal(message.isLead, true);
+  assert.equal(message.priority, 100);
+});
+
+test("Jottacloud and DNB notifications are filtered unless restored manually", () => {
+  const raw = {
+    uid: 7,
+    envelope: {
+      from: [{ name: "Jottacloud", address: "notifications@jottacloud.com" }],
+      subject: "Storage notification",
+      messageId: "<jotta-7@example.com>",
+    },
+  };
+  assert.equal(classifyEnvelope(raw).category, "irrelevant");
+  assert.equal(classifyEnvelope(raw).isLead, false);
+  assert.equal(classifyEnvelope(raw, "inbox").category, "customer");
+});
+
+test("shared tasks and meeting notes are normalized", () => {
+  const task = sanitizeTask({ title: "  Følg opp artist  ", assignee: "Leon", priority: "Høy", dueDate: "2026-09-20" }, {}, "leon@lokilyd.no");
+  assert.equal(task.title, "Følg opp artist");
+  assert.equal(task.assignee, "Leon");
+  assert.equal(task.priority, "Høy");
+  const note = sanitizeNote({ type: "møte", title: "Ukemøte", content: "Neste steg", attendees: "Leon, Charles" }, {}, "charles@lokilyd.no");
+  assert.equal(note.type, "møte");
+  assert.equal(note.attendees, "Leon, Charles");
+});
+
+test("Fiken summary remains read-only and totals unpaid invoices in øre", () => {
+  const summary = summarizeFiken(
+    { name: "Loki Lydstudio", slug: "loki", organizationNumber: "123456789" },
+    [
+      { invoiceId: 1, invoiceNumber: 1001, customer: { name: "Artist" }, gross: 125000, dueDate: "2020-01-01", settled: false },
+      { invoiceId: 2, invoiceNumber: 1002, customer: { name: "Band" }, gross: 50000, dueDate: "2020-01-02", settled: true },
+    ],
+    [{ contactId: 1 }],
+  );
+  assert.equal(summary.readOnly, true);
+  assert.equal(summary.metrics.unpaidCount, 1);
+  assert.equal(summary.metrics.overdueCount, 1);
+  assert.equal(summary.metrics.outstandingOre, 125000);
+  assert.equal(summary.metrics.contactCount, 1);
 });

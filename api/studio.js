@@ -4,8 +4,10 @@ const { createScopedToken, requireUser, verifyScopedToken } = require("../lib/cr
 const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeTrack } = require("../lib/crm-audio");
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
+const { loadFikenSummary } = require("../lib/crm-fiken");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
+const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 
 function publicBaseUrl(req) {
   const configured = String(process.env.CRM_BASE_URL || "").replace(/\/$/, "");
@@ -205,6 +207,62 @@ async function jottaDownloadHandler(req, res) {
   return streamPrivateBlob(req, res, track.pathname, track.filename);
 }
 
+async function workspaceHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const items = await readCollection("workspace");
+
+  if (req.method === "GET") {
+    return res.status(200).json({
+      tasks: items.filter((item) => item.kind === "task"),
+      notes: items.filter((item) => item.kind === "note"),
+    });
+  }
+
+  if (req.method === "POST") {
+    const kind = req.body?.kind;
+    const sanitized = kind === "task"
+      ? sanitizeTask(req.body?.item, {}, user.email)
+      : kind === "note" ? sanitizeNote(req.body?.item, {}, user.email) : null;
+    if (!sanitized) return res.status(400).json({ error: "Fyll ut de obligatoriske feltene." });
+    const item = { ...sanitized, kind };
+    items.unshift(item);
+    await writeCollection("workspace", items);
+    return res.status(201).json({ item });
+  }
+
+  if (req.method === "PATCH") {
+    const id = cleanText(req.body?.id, 120);
+    const index = items.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Elementet ble ikke funnet." });
+    const current = items[index];
+    const updated = current.kind === "task"
+      ? sanitizeTask(req.body?.changes, current, user.email)
+      : sanitizeNote(req.body?.changes, current, user.email);
+    if (!updated) return res.status(400).json({ error: "Fyll ut de obligatoriske feltene." });
+    items[index] = { ...updated, kind: current.kind };
+    await writeCollection("workspace", items);
+    return res.status(200).json({ item: items[index] });
+  }
+
+  if (req.method === "DELETE") {
+    const id = cleanText(req.query?.id || req.body?.id, 120);
+    const index = items.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Elementet ble ikke funnet." });
+    items.splice(index, 1);
+    await writeCollection("workspace", items);
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function fikenHandler(req, res) {
+  if (!requireUser(req, res)) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  return res.status(200).json(await loadFikenSummary());
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "private, no-store, max-age=0");
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -219,6 +277,8 @@ module.exports = async function handler(req, res) {
     if (action === "public-stream") return await publicStreamHandler(req, res);
     if (action === "jotta-sync") return await jottaSyncHandler(req, res);
     if (action === "jotta-download") return await jottaDownloadHandler(req, res);
+    if (action === "workspace") return await workspaceHandler(req, res);
+    if (action === "fiken") return await fikenHandler(req, res);
     return res.status(404).json({ error: "Ukjent studiohandling." });
   } catch (error) {
     console.error(`Studio API failed (${action})`, error?.message);
