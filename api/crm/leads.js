@@ -15,6 +15,14 @@ function cleanEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : "";
 }
 
+function cleanLongText(value, max = 4000) {
+  return String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim().slice(0, max);
+}
+
+function optionalValue(input, existing, key) {
+  return Object.prototype.hasOwnProperty.call(input || {}, key) ? input[key] : existing[key];
+}
+
 function sanitizeLead(input, existing = {}) {
   const email = cleanEmail(input?.email || existing.email);
   if (!email) return null;
@@ -36,6 +44,17 @@ function sanitizeLead(input, existing = {}) {
     messageKey: /^[a-f0-9]{32}$/.test(messageKey) ? messageKey : "",
     receivedAt: Number.isNaN(receivedAt.getTime()) ? new Date().toISOString() : receivedAt.toISOString(),
     nextAction: cleanText(input?.nextAction || existing.nextAction || "Ta første kontakt", 180),
+    phone: cleanText(optionalValue(input, existing, "phone"), 40),
+    role: cleanText(optionalValue(input, existing, "role"), 60),
+    artistName: cleanText(optionalValue(input, existing, "artistName"), 160),
+    company: cleanText(optionalValue(input, existing, "company"), 160),
+    website: cleanText(optionalValue(input, existing, "website"), 300),
+    social: cleanText(optionalValue(input, existing, "social"), 300),
+    location: cleanText(optionalValue(input, existing, "location"), 160),
+    notes: cleanLongText(optionalValue(input, existing, "notes"), 5000),
+    emailSummary: cleanLongText(optionalValue(input, existing, "emailSummary"), 4000),
+    messageUid: Math.max(0, Math.min(Number.parseInt(optionalValue(input, existing, "messageUid"), 10) || 0, Number.MAX_SAFE_INTEGER)),
+    profileCompleted: Boolean(optionalValue(input, existing, "profileCompleted")),
     firstSeenAt: existing.firstSeenAt || new Date().toISOString(),
     lastSeenAt: new Date().toISOString(),
   };

@@ -10,10 +10,11 @@ const auth = require("../lib/crm-auth");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { documentPathname, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
 const { dateMentions, plainText } = require("../lib/crm-funding");
+const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
 const { leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../lib/crm-leads");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
-const { summarizeFiken } = require("../lib/crm-fiken");
+const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
 const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
@@ -254,6 +255,20 @@ test("human studio enquiries remain in the customer pipeline", () => {
   assert.equal(message.isLead, true);
 });
 
+test("lead details are inferred conservatively from an email", () => {
+  const inferred = inferLeadDetails({
+    subject: "Forespørsel om produksjon",
+    body: "Artistnavn: Neon Fjord Telefon: +47 412 34 567 Rolle: artist og produsent Nettside: https://neonfjord.no Instagram: https://instagram.com/neonfjord Sted: Bergen",
+  });
+  assert.equal(inferred.phone, "+4741234567");
+  assert.equal(inferred.role, "Artist og produsent");
+  assert.equal(inferred.artistName, "Neon Fjord");
+  assert.equal(inferred.location, "Bergen");
+  assert.equal(inferred.website, "https://neonfjord.no");
+  assert.equal(inferred.social, "https://instagram.com/neonfjord");
+  assert.equal(normalizePhone("ordre 123"), "");
+});
+
 test("lead pipeline follows inbox priority and keeps finished work below open leads", () => {
   const sorted = sortLeads([
     { id: "manual", source: "Manuelt", stage: "Nytt lead", receivedAt: "2026-09-12T12:00:00Z" },
@@ -303,4 +318,11 @@ test("Fiken summary remains read-only and totals unpaid invoices in øre", () =>
   assert.equal(summary.metrics.overdueCount, 1);
   assert.equal(summary.metrics.outstandingOre, 125000);
   assert.equal(summary.metrics.contactCount, 1);
+});
+
+test("Fiken OAuth grants are encrypted before private storage", () => {
+  const grant = { access_token: "access-secret", refresh_token: "refresh-secret", expiresAt: Date.now() + 60_000 };
+  const sealed = sealGrant(grant);
+  assert.equal(sealed.includes("access-secret"), false);
+  assert.deepEqual(openGrant(sealed), grant);
 });

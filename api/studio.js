@@ -1,10 +1,10 @@
 const { del, head } = require("@vercel/blob");
 const { handleUpload } = require("@vercel/blob/client");
-const { createScopedToken, requireUser, verifyScopedToken } = require("../lib/crm-auth");
+const { createScopedToken, createToken, requireUser, verifyScopedToken, verifyToken } = require("../lib/crm-auth");
 const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeTrack } = require("../lib/crm-audio");
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
-const { loadFikenSummary } = require("../lib/crm-fiken");
+const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
@@ -298,6 +298,37 @@ async function fikenHandler(req, res) {
   return res.status(200).json(await loadFikenSummary());
 }
 
+function fikenRedirectUri(req) {
+  return `${publicBaseUrl(req)}/api/studio?action=fiken-callback`;
+}
+
+async function fikenConnectHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  if (!oauthConfigured()) return res.status(503).json({ error: "Fiken OAuth-appen er ikke konfigurert ennå." });
+  const state = createToken(user.email, "fiken-oauth", 600);
+  return res.redirect(302, authorizationUrl(fikenRedirectUri(req), state));
+}
+
+async function fikenCallbackHandler(req, res) {
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const baseUrl = publicBaseUrl(req);
+  const state = String(req.query?.state || "");
+  const verified = verifyToken(state, "fiken-oauth");
+  const code = String(req.query?.code || "");
+  if (!verified || !code || req.query?.error) {
+    return res.redirect(302, `${baseUrl}/crmplatform/?fiken=cancelled#economy`);
+  }
+  try {
+    await exchangeAuthorizationCode(code, fikenRedirectUri(req), state);
+    return res.redirect(302, `${baseUrl}/crmplatform/?fiken=connected#economy`);
+  } catch (error) {
+    console.error("Fiken OAuth callback failed", error?.message);
+    return res.redirect(302, `${baseUrl}/crmplatform/?fiken=failed#economy`);
+  }
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "private, no-store, max-age=0");
   res.setHeader("X-Content-Type-Options", "nosniff");
@@ -315,6 +346,8 @@ module.exports = async function handler(req, res) {
     if (action === "jotta-download") return await jottaDownloadHandler(req, res);
     if (action === "workspace") return await workspaceHandler(req, res);
     if (action === "fiken") return await fikenHandler(req, res);
+    if (action === "fiken-connect") return await fikenConnectHandler(req, res);
+    if (action === "fiken-callback") return await fikenCallbackHandler(req, res);
     return res.status(404).json({ error: "Ukjent studiohandling." });
   } catch (error) {
     console.error(`Studio API failed (${action})`, error?.message);

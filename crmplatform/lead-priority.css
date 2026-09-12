@@ -32,10 +32,114 @@
   color: #276982;
 }
 
+.crm-row[data-open-lead] {
+  cursor: pointer;
+  transition: background-color .16s ease, box-shadow .16s ease;
+}
+
+.crm-row[data-open-lead]:hover,
+.crm-row[data-open-lead]:focus-visible {
+  background: #f7f5ee;
+  box-shadow: inset 3px 0 #cbc5b9;
+  outline: none;
+}
+
+.crm-row.priority-lead:hover,
+.crm-row.priority-lead:focus-visible {
+  background: #f5ffe3;
+  box-shadow: inset 3px 0 var(--lime);
+}
+
+.lead-profile-modal {
+  width: min(920px, calc(100vw - 32px));
+  max-width: 920px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.lead-profile-modal .modal-head p {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.lead-profile-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 13px;
+}
+
+.lead-profile-grid label {
+  display: grid;
+  gap: 6px;
+  color: #6e6a62;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.lead-profile-grid input,
+.lead-profile-grid select,
+.lead-profile-grid textarea {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #d5d0c6;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 11px;
+  line-height: 1.45;
+  text-transform: none;
+}
+
+.lead-profile-grid textarea {
+  min-height: 78px;
+  resize: vertical;
+}
+
+.lead-profile-grid .span-2 {
+  grid-column: 1 / -1;
+}
+
+.lead-email-source {
+  padding: 15px;
+  border: 1px solid #dcd7cc;
+  border-radius: 10px;
+  background: #f2efe8;
+}
+
+.lead-email-source > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.lead-email-source textarea {
+  min-height: 130px;
+  background: #fffefa;
+  color: #56524b;
+}
+
+.lead-form-actions {
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
 @media (max-width: 640px) {
   .lead-tools {
     width: 100%;
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .lead-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .lead-profile-grid .span-2 {
+    grid-column: auto;
   }
 }

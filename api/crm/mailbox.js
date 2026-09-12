@@ -1,6 +1,7 @@
 const { simpleParser } = require("mailparser");
 const { requireUser } = require("../../lib/crm-auth");
 const { createImapClient } = require("../../lib/crm-mail");
+const { inferLeadDetails } = require("../../lib/crm-lead-enrichment");
 const { classifyEnvelope, cleanEmail, sortMessages } = require("../../lib/crm-mail-sort");
 const { readCollection, writeCollection } = require("../../lib/crm-store");
 
@@ -58,7 +59,9 @@ module.exports = async function handler(req, res) {
       if (metadata.size > 2_000_000) return res.status(413).json({ ...envelopeToMessage(metadata, preferences), error: "Meldingen er for stor til å forhåndsvise." });
       const full = await client.fetchOne(requestedUid, { uid: true, envelope: true, source: true, headers: SORT_HEADERS }, { uid: true });
       const parsed = await simpleParser(full.source, { skipHtmlToText: false, skipTextToHtml: true });
-      return res.status(200).json({ message: { ...envelopeToMessage(full, preferences), summary: String(parsed.text || parsed.html || "").replace(/\s+/g, " ").trim().slice(0, 4000), messageId: parsed.messageId || full.envelope?.messageId || null } });
+      const summary = String(parsed.text || parsed.html || "").replace(/\s+/g, " ").trim().slice(0, 4000);
+      const publicMessage = envelopeToMessage(full, preferences);
+      return res.status(200).json({ message: { ...publicMessage, summary, enrichment: inferLeadDetails({ subject: publicMessage.subject, body: summary }), messageId: parsed.messageId || full.envelope?.messageId || null } });
     }
 
     const allUids = await client.search({ all: true }, { uid: true });

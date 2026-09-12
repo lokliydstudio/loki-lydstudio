@@ -112,9 +112,14 @@
     const root = document.getElementById("fiken-content");
     const status = document.getElementById("fiken-status");
     if (!data.connected) {
-      status.textContent = "Klar for tilkobling";
+      status.textContent = data.authorizationRequired ? "Klar for godkjenning" : "Klar for tilkobling";
       status.className = "state amber";
-      root.innerHTML = `<section class="panel"><span class="kicker">ÉNGANGSOPPSETT</span><h2 style="margin:7px 0">Koble Loki CRM til Fiken</h2><p class="notice">Integrasjonen er ferdig bygget, men trenger en personlig API-nøkkel fra Loki Lydstudios Fiken-konto. Nøkkelen skal kun lagres som en hemmelig miljøvariabel i Vercel.</p><div class="setup-steps"><div><strong>1</strong><span>Aktiver API-modulen i Fiken.</span></div><div><strong>2</strong><span>Opprett en personlig API-nøkkel under kontoens API-innstillinger.</span></div><div><strong>3</strong><span>Legg nøkkelen inn som <b>FIKEN_API_TOKEN</b> i Vercel og redeploy.</span></div></div><p class="privacy-note">Tilkoblingen er skrivebeskyttet i CRM-et. Den kan lese foretak, kontakter og fakturaer, men ikke opprette eller endre regnskap.</p></section>`;
+      if (data.authorizationRequired) {
+        root.innerHTML = `<section class="panel"><span class="kicker">SIKKER TILKOBLING</span><h2 style="margin:7px 0">Godkjenn Loki CRM i Fiken</h2><p class="notice">Fiken-appen er konfigurert. Fullfør én godkjenning for å gi CRM-et skrivebeskyttet tilgang til foretak, kontakter og fakturaer.</p><div class="button-row" style="margin-top:16px"><button class="primary" id="connect-fiken">Koble til Fiken</button></div><p class="privacy-note">Tilgangs- og fornyelsesnøkkelen lagres kryptert i den private CRM-lagringen og sendes aldri til nettleseren.</p></section>`;
+        document.getElementById("connect-fiken").onclick = () => { location.assign("/api/studio?action=fiken-connect"); };
+      } else {
+        root.innerHTML = `<section class="panel"><span class="kicker">ÉNGANGSOPPSETT</span><h2 style="margin:7px 0">Koble Loki CRM til Fiken</h2><p class="notice">Integrasjonen er ferdig bygget for OAuth 2.0, men Fiken-appens Client ID og Client Secret må først legges inn som hemmelige miljøvariabler i Vercel.</p><div class="setup-steps"><div><strong>1</strong><span>Opprett appen «Loki CRM» i Fiken.</span></div><div><strong>2</strong><span>Lagre klientopplysningene som <b>FIKEN_CLIENT_ID</b> og <b>FIKEN_CLIENT_SECRET</b> i Vercel.</span></div><div><strong>3</strong><span>Godkjenn skrivebeskyttet visning fra denne siden.</span></div></div><p class="privacy-note">CRM-et bruker bare GET-kall mot Fiken og kan ikke opprette eller endre regnskap.</p></section>`;
+      }
       return;
     }
     status.textContent = "Tilkoblet · skrivebeskyttet";
