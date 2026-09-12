@@ -75,7 +75,7 @@
           <span>${esc(track.filename)} · ${formatBytes(track.size)}</span>
           <span>${esc(track.jottaStatus || "Venter på lokal synk")}</span>
         </div>
-        <audio controls preload="metadata" src="/api/crm/audio-stream?id=${encodeURIComponent(track.id)}">Nettleseren støtter ikke lydavspilling.</audio>
+        <audio controls preload="metadata" src="/api/studio?action=internal-stream&amp;id=${encodeURIComponent(track.id)}">Nettleseren støtter ikke lydavspilling.</audio>
         <div class="track-actions">
           <button class="tiny-button" data-share-track="${esc(track.id)}">Kopier kundelenke</button>
           <button class="tiny-button danger" data-delete-track="${esc(track.id)}">Slett</button>
@@ -173,7 +173,7 @@
     button.disabled = true;
     button.textContent = "Lagrer …";
     try {
-      const data = await request("/api/crm/projects", {
+      const data = await request("/api/studio?action=projects", {
         method: "PATCH",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
@@ -231,16 +231,16 @@
       const blob = await window.LokiBlob.upload(pathname, file, {
         access: "private",
         contentType: audioTypes[extension],
-        handleUploadUrl: "/api/crm/audio-upload",
+        handleUploadUrl: "/api/studio?action=upload",
         clientPayload: JSON.stringify({ projectId: selectedProjectId, trackId, filename }),
         multipart: true,
         onUploadProgress: ({ percentage }) => { bar.style.width = `${Math.max(2, percentage)}%`; },
       });
-      const data = await request("/api/crm/audio", {
+      const data = await request("/api/studio?action=audio", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          action: "register",
+          operation: "register",
           track: {
             id: trackId,
             projectId: selectedProjectId,
@@ -264,10 +264,10 @@
 
   async function shareTrack(id) {
     try {
-      const data = await request("/api/crm/audio", {
+      const data = await request("/api/studio?action=audio", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "share", id, days: 14 }),
+        body: JSON.stringify({ operation: "share", id, days: 14 }),
       });
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(data.url);
@@ -284,7 +284,7 @@
     const track = tracks.find((item) => item.id === id);
     if (!track || !confirm(`Slett «${track.title} · ${track.version}» permanent fra lydlageret?`)) return;
     try {
-      await request(`/api/crm/audio?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      await request(`/api/studio?action=audio&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       tracks = tracks.filter((item) => item.id !== id);
       render();
       toast("Lydfilen er slettet fra plattformen.");
@@ -306,7 +306,7 @@
       const button = form.querySelector("button[type=submit]");
       button.disabled = true;
       try {
-        const data = await request("/api/crm/projects", {
+        const data = await request("/api/studio?action=projects", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ project: Object.fromEntries(values) }),
@@ -331,8 +331,8 @@
     setupModal();
     try {
       const [projectData, audioData] = await Promise.all([
-        request("/api/crm/projects"),
-        request("/api/crm/audio"),
+        request("/api/studio?action=projects"),
+        request("/api/studio?action=audio"),
       ]);
       projects = projectData.projects || [];
       tracks = audioData.tracks || [];

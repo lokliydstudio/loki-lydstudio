@@ -7,7 +7,7 @@ const { pipeline } = require("stream/promises");
 const { Readable } = require("stream");
 
 const ROOT = process.env.JOTTA_AUDIO_ROOT || path.join(os.homedir(), "Jottacloud", "Loki Lydstudio", "Dokumenter (Cloud)", "CRM lydfiler");
-const ENDPOINT = process.env.CRM_AUDIO_SYNC_ENDPOINT || "https://www.lokilyd.no/api/crm/audio-sync";
+const ENDPOINT = process.env.CRM_AUDIO_SYNC_ENDPOINT || "https://www.lokilyd.no/api/studio?action=jotta-sync";
 const SECRET = process.env.JOTTA_BRIDGE_SECRET;
 const DRY_RUN = process.argv.includes("--dry-run");
 

@@ -34,7 +34,7 @@
     (async () => {
       try {
         if (!token) throw new Error("Denne lyttelenken mangler en sikker nøkkel.");
-        const response = await fetch(`/api/audio/share?token=${encodeURIComponent(token)}`, { credentials: "omit" });
+        const response = await fetch(`/api/studio?action=public-share&token=${encodeURIComponent(token)}`, { credentials: "omit" });
         const responseText = await response.text();
         let data = {};
         try { data = JSON.parse(responseText); } catch {}
@@ -45,7 +45,7 @@
         document.getElementById("track-notes").textContent = data.track.notes || "Lytt gjennom leveransen og send tilbakemeldingen din til post@lokilyd.no.";
         document.getElementById("file-meta").textContent = `${data.track.filename} · ${formatBytes(data.track.size)}`;
         document.getElementById("expires").textContent = `Gyldig til ${new Date(data.expiresAt).toLocaleDateString("nb-NO")}`;
-        document.getElementById("audio").src = `/api/audio/stream?token=${encodeURIComponent(token)}`;
+        document.getElementById("audio").src = `/api/studio?action=public-stream&token=${encodeURIComponent(token)}`;
         document.getElementById("loading").hidden = true;
         document.getElementById("player").hidden = false;
       } catch (error) {
