@@ -151,6 +151,38 @@ test("Jottacloud and DNB notifications are filtered unless restored manually", (
   assert.equal(classifyEnvelope(raw, "inbox").category, "customer");
 });
 
+test("generic suppliers, administrative subjects and mailing lists are filtered", () => {
+  const supplier = classifyEnvelope({
+    uid: 8,
+    envelope: { from: [{ name: "Tripletex", address: "varsling@tripletex.no" }], subject: "Månedsrapport" },
+  });
+  const invoice = classifyEnvelope({
+    uid: 9,
+    envelope: { from: [{ name: "Leverandør", address: "billing@unknown-service.example" }], subject: "Ny faktura" },
+  });
+  const newsletter = classifyEnvelope({
+    uid: 10,
+    envelope: { from: [{ name: "Bransjenytt", address: "hei@bransjenytt.example" }], subject: "Denne ukens nyheter" },
+    headers: Buffer.from("List-Unsubscribe: <https://bransjenytt.example/unsubscribe>\r\n"),
+  });
+  assert.equal(supplier.category, "irrelevant");
+  assert.equal(invoice.category, "irrelevant");
+  assert.equal(newsletter.category, "irrelevant");
+  assert.match(newsletter.filterReason, /Nyhetsbrev/);
+});
+
+test("human studio enquiries remain in the customer pipeline", () => {
+  const message = classifyEnvelope({
+    uid: 11,
+    envelope: {
+      from: [{ name: "Mina Artist", address: "mina@example.com" }],
+      subject: "Booking av innspilling og miks",
+    },
+  });
+  assert.equal(message.category, "customer");
+  assert.equal(message.isLead, true);
+});
+
 test("shared tasks and meeting notes are normalized", () => {
   const task = sanitizeTask({ title: "  Følg opp artist  ", assignee: "Leon", priority: "Høy", dueDate: "2026-09-20" }, {}, "leon@lokilyd.no");
   assert.equal(task.title, "Følg opp artist");
