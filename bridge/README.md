@@ -2,6 +2,8 @@
 
 Dokumentindeksen leser bare filmetadata fra Jottacloud-mappen på studio-Macen. Den laster ikke opp dokumentinnhold, endrer ikke filer og hopper alltid over `Mikser (Cloud)`, `Prosjekter (Cloud)`, `CRM lydfiler` og mapper med passord eller innlogginger.
 
+I CRM viser «Kun indeks» at bare metadata er tilgjengelig. Leon eller Charles kan bruke «Koble fil» på en rad, eller «Last opp filer», for å lagre en privat kopi i Vercel Blob. Først da vises «Åpne» og «Last ned». En ny indekskjøring beholder allerede koblede private filer.
+
 Test uten å sende data:
 
 ```sh

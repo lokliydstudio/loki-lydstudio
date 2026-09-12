@@ -1,78 +1,128 @@
-const crypto = require("crypto");
+const { head } = require("@vercel/blob");
+const { handleUpload } = require("@vercel/blob/client");
 const { currentUser } = require("../../lib/crm-auth");
+const { bridgeAuthorized } = require("../../lib/crm-bridge");
+const {
+  MAX_DOCUMENT_SIZE,
+  blocked,
+  documentContentType,
+  documentPathname,
+  mergeDocumentIndex,
+  publicDocument,
+  sanitizeUploadedDocument,
+  validDocumentId,
+} = require("../../lib/crm-documents");
+const { streamPrivateBlob } = require("../../lib/crm-audio-stream");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 
-const BLOCKED_SEGMENTS = new Set([
-  "mikser (cloud)",
-  "prosjekter (cloud)",
-  "passord",
-  "password",
-  "passwords",
-  "innlogging",
-  "innlogginger",
-  "login",
-  "logins",
-]);
-
-function safeEqual(left, right) {
-  const a = Buffer.from(String(left || ""));
-  const b = Buffer.from(String(right || ""));
-  return a.length === b.length && a.length > 0 && crypto.timingSafeEqual(a, b);
+function parsePayload(value) {
+  try {
+    return JSON.parse(value || "{}");
+  } catch {
+    throw new Error("Ugyldig dokumentdata.");
+  }
 }
 
-function bridgeAuthorized(req) {
-  const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
-  return safeEqual(token, process.env.JOTTA_BRIDGE_SECRET);
+async function uploadHandler(req, res, user) {
+  if (!user) return res.status(401).json({ error: "Innlogging kreves." });
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  try {
+    const result = await handleUpload({
+      body: req.body,
+      request: req,
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
+        const payload = parsePayload(clientPayload);
+        const id = validDocumentId(payload.id);
+        const expected = documentPathname(id, payload.name);
+        const size = Number(payload.size);
+        if (!expected || pathname !== expected || blocked(payload.path || payload.name)) throw new Error("Filtypen eller filstien er ikke tillatt.");
+        if (!Number.isFinite(size) || size < 0 || size > MAX_DOCUMENT_SIZE) throw new Error("Dokumentet kan være maksimalt 500 MB.");
+        const documents = await readCollection("documents");
+        const existing = documents.find((document) => document.id === id);
+        if (existing && String(existing.name || "").toLowerCase() !== String(payload.name || "").toLowerCase()) {
+          throw new Error("Filen matcher ikke den valgte dokumentraden.");
+        }
+        return {
+          allowedContentTypes: [documentContentType(payload.name)],
+          maximumSizeInBytes: MAX_DOCUMENT_SIZE,
+          addRandomSuffix: false,
+          allowOverwrite: true,
+          cacheControlMaxAge: 60,
+        };
+      },
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Document upload token failed", error?.message);
+    return res.status(400).json({ error: error?.message || "Kunne ikke starte dokumentopplastingen." });
+  }
 }
 
-function clean(value, max = 500) {
-  return String(value || "").replace(/[\u0000-\u001f]/g, "").trim().slice(0, max);
+async function downloadHandler(req, res, user) {
+  if (!user) return res.status(401).json({ error: "Innlogging kreves." });
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const documents = await readCollection("documents");
+  const id = validDocumentId(req.query?.id);
+  const document = documents.find((item) => item.id === id);
+  if (!document?.pathname) return res.status(404).json({ error: "Dokumentfilen er ikke lastet opp ennå." });
+  return streamPrivateBlob(req, res, document.pathname, document.name, {
+    download: String(req.query?.download || "") === "1",
+    notFoundMessage: "Dokumentfilen ble ikke funnet.",
+  });
 }
 
-function blocked(pathname) {
-  return clean(pathname, 1000)
-    .toLowerCase()
-    .split(/[\\/]+/)
-    .some((part) => BLOCKED_SEGMENTS.has(part));
-}
-
-function sanitizeDocument(input) {
-  const path = clean(input?.path, 1000).replace(/^\/+/, "");
-  if (!path || blocked(path)) return null;
-  const modifiedAt = new Date(input?.modifiedAt || 0);
-  return {
-    id: crypto.createHash("sha256").update(path).digest("hex").slice(0, 24),
-    path,
-    name: clean(input?.name || path.split("/").pop(), 250),
-    type: clean(input?.type || "Dokument", 80),
-    size: Math.max(0, Math.min(Number(input?.size) || 0, 100_000_000_000)),
-    modifiedAt: Number.isNaN(modifiedAt.getTime()) ? new Date(0).toISOString() : modifiedAt.toISOString(),
-    status: "Indeksert",
-    note: "Metadata fra skrivebeskyttet Jottacloud-bro. Filinnhold er ikke lastet opp.",
-  };
+async function registerUpload(req, res, user) {
+  const input = req.body?.document || {};
+  const id = validDocumentId(input.id);
+  const pathname = documentPathname(id, input.name);
+  if (!pathname || pathname !== input.pathname) return res.status(400).json({ error: "Ugyldig dokumentdata." });
+  const actualBlob = await head(pathname, { access: "private" });
+  const documents = await readCollection("documents");
+  const index = documents.findIndex((document) => document.id === id);
+  const document = sanitizeUploadedDocument(input, actualBlob, user.email, index >= 0 ? documents[index] : {});
+  if (!document) return res.status(400).json({ error: "Dokumentfilen kunne ikke verifiseres." });
+  if (index >= 0) documents[index] = document;
+  else documents.unshift(document);
+  await writeCollection("documents", documents);
+  return res.status(201).json({ document: publicDocument(document) });
 }
 
 module.exports = async function handler(req, res) {
+  res.setHeader("Cache-Control", "private, no-store, max-age=0");
+  res.setHeader("X-Content-Type-Options", "nosniff");
   const user = currentUser(req);
   const bridge = bridgeAuthorized(req);
-  if (!user && !bridge) return res.status(401).json({ error: "Innlogging kreves." });
+  const action = String(req.query?.action || "");
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert ennå." });
 
   try {
+    if (action === "upload") return await uploadHandler(req, res, user);
+    if (action === "download") return await downloadHandler(req, res, user);
+    if (!user && !bridge) return res.status(401).json({ error: "Innlogging kreves." });
+
     if (req.method === "GET") {
       if (!user) return res.status(403).json({ error: "Brukerinnlogging kreves." });
-      return res.status(200).json({ documents: await readCollection("documents") });
+      const documents = await readCollection("documents");
+      return res.status(200).json({ documents: documents.map(publicDocument) });
     }
+
+    if (req.method === "POST" && req.body?.operation === "register") {
+      if (!user) return res.status(403).json({ error: "Brukerinnlogging kreves." });
+      return await registerUpload(req, res, user);
+    }
+
     if (req.method === "POST") {
       if (!bridge) return res.status(403).json({ error: "Ugyldig brotilgang." });
       const input = Array.isArray(req.body?.documents) ? req.body.documents.slice(0, 5000) : [];
-      const documents = input.map(sanitizeDocument).filter(Boolean);
+      const existing = await readCollection("documents");
+      const documents = mergeDocumentIndex(input, existing);
       await writeCollection("documents", documents);
       return res.status(200).json({ ok: true, count: documents.length });
     }
+
     return res.status(405).json({ error: "Method not allowed" });
   } catch (error) {
-    console.error("Document index storage failed", error?.message);
-    return res.status(503).json({ error: "Kunne ikke oppdatere dokumentindeksen." });
+    console.error(`Document storage failed (${action || "index"})`, error?.message);
+    return res.status(503).json({ error: "Kunne ikke fullføre dokumenthandlingen." });
   }
 };

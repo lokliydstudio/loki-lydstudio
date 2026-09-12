@@ -8,6 +8,7 @@ process.env.MAIL_PASSWORD = "test-only-password";
 
 const auth = require("../lib/crm-auth");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
+const { documentPathname, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
@@ -59,6 +60,34 @@ test("projects sanitize status, email and patch data", () => {
   assert.equal(project.clientEmail, "artist@example.com");
   assert.equal(project.status, "Planlegges");
   assert.equal(project.patch[1].source, "Kick in");
+});
+
+test("document uploads use private safe paths and reject active web content", () => {
+  const id = "document-123e4567-e89b-12d3-a456-426614174000";
+  assert.equal(documentPathname(id, "Avtale 2026.pdf"), `loki-crm/documents/${id}/Avtale-2026.pdf`);
+  assert.equal(documentPathname(id, "nettside.html"), "");
+  assert.equal(documentPathname("short", "avtale.pdf"), "");
+  assert.equal(sanitizeIndexedDocument({ path: "Passord /hemmelig.pdf" }), null);
+  assert.equal(sanitizeIndexedDocument({ path: "Mikser (Cloud)/opptak.pdf" }), null);
+});
+
+test("document reindexing preserves private uploads without exposing storage metadata", () => {
+  const path = "Avtaler/Studioavtale.pdf";
+  const indexed = mergeDocumentIndex([{ path, name: "Studioavtale.pdf", type: "PDF", size: 100, modifiedAt: "2026-09-01" }], []);
+  const pathname = documentPathname(indexed[0].id, indexed[0].name);
+  const uploaded = sanitizeUploadedDocument(
+    { id: indexed[0].id, name: indexed[0].name, path },
+    { pathname, size: 100, contentType: "application/pdf" },
+    "leon@lokilyd.no",
+    indexed[0],
+  );
+  const refreshed = mergeDocumentIndex([{ path, name: "Studioavtale.pdf", type: "PDF", size: 100, modifiedAt: "2026-09-02" }], [uploaded]);
+  assert.equal(refreshed[0].pathname, pathname);
+  assert.equal(refreshed[0].status, "Tilgjengelig");
+  const visible = publicDocument(refreshed[0]);
+  assert.equal(visible.available, true);
+  assert.equal("pathname" in visible, false);
+  assert.equal("uploadedBy" in visible, false);
 });
 
 test("project exports include only selected project files and no private blob details", () => {
