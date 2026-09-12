@@ -393,7 +393,7 @@
     const extension = String(file?.name || "").split(".").pop().toLowerCase();
     if (!file || !audioTypes[extension]) return toast("Velg WAV, MP3, FLAC, AIFF, M4A, AAC, OGG eller WebM.");
     if (file.size > 750 * 1024 * 1024) return toast("Lydfilen kan være maksimalt 750 MB.");
-    if (!window.LokiBlob?.upload) return toast("Opplastingsmodulen kunne ikke lastes.");
+    if (!window.LokiBlob?.uploadPresigned) return toast("Opplastingsmodulen kunne ikke lastes.");
 
     const button = document.getElementById("upload-audio");
     const progress = document.getElementById("upload-progress");
@@ -406,7 +406,7 @@
     progress.classList.add("active");
 
     try {
-      const blob = await window.LokiBlob.upload(pathname, file, {
+      const blob = await window.LokiBlob.uploadPresigned(pathname, file, {
         access: "private",
         contentType: audioTypes[extension],
         handleUploadUrl: "/api/studio?action=upload",

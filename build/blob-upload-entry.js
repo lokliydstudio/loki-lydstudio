@@ -1,1 +1,1 @@
-export { upload } from "@vercel/blob/client";
+export { uploadPresigned } from "@vercel/blob/client";

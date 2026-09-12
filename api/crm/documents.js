@@ -1,5 +1,5 @@
-const { head } = require("@vercel/blob");
-const { handleUpload } = require("@vercel/blob/client");
+const { head, issueSignedToken } = require("@vercel/blob");
+const { handleUploadPresigned } = require("@vercel/blob/client");
 const { currentUser } = require("../../lib/crm-auth");
 const { bridgeAuthorized } = require("../../lib/crm-bridge");
 const {
@@ -27,10 +27,10 @@ async function uploadHandler(req, res, user) {
   if (!user) return res.status(401).json({ error: "Innlogging kreves." });
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   try {
-    const result = await handleUpload({
+    const result = await handleUploadPresigned({
       body: req.body,
       request: req,
-      onBeforeGenerateToken: async (pathname, clientPayload) => {
+      getSignedToken: async (pathname, clientPayload) => {
         const payload = parsePayload(clientPayload);
         const id = validDocumentId(payload.id);
         const expected = documentPathname(id, payload.name);
@@ -42,18 +42,32 @@ async function uploadHandler(req, res, user) {
         if (existing && String(existing.name || "").toLowerCase() !== String(payload.name || "").toLowerCase()) {
           throw new Error("Filen matcher ikke den valgte dokumentraden.");
         }
-        return {
-          allowedContentTypes: [documentContentType(payload.name)],
+
+        const allowedContentTypes = [documentContentType(payload.name)];
+        const validUntil = Date.now() + 15 * 60 * 1000;
+        const token = await issueSignedToken({
+          pathname,
+          operations: ["put"],
+          allowedContentTypes,
           maximumSizeInBytes: MAX_DOCUMENT_SIZE,
-          addRandomSuffix: false,
-          allowOverwrite: true,
-          cacheControlMaxAge: 60,
+          validUntil,
+        });
+        return {
+          token,
+          urlOptions: {
+            allowedContentTypes,
+            maximumSizeInBytes: MAX_DOCUMENT_SIZE,
+            validUntil,
+            addRandomSuffix: false,
+            allowOverwrite: true,
+            cacheControlMaxAge: 60,
+          },
         };
       },
     });
     return res.status(200).json(result);
   } catch (error) {
-    console.error("Document upload token failed", error?.message);
+    console.error("Document upload signing failed", error?.message);
     return res.status(400).json({ error: error?.message || "Kunne ikke starte dokumentopplastingen." });
   }
 }

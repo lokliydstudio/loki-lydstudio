@@ -154,7 +154,7 @@
     status.textContent = `Laster opp ${file.name} · 0 %`;
     bar.style.width = "2%";
 
-    const blob = await window.LokiBlob.upload(pathname, file, {
+    const blob = await window.LokiBlob.uploadPresigned(pathname, file, {
       access: "private",
       contentType: contentType(file.name),
       handleUploadUrl: "/api/crm/documents?action=upload",
@@ -179,7 +179,7 @@
   async function uploadSelected(event) {
     const files = [...event.currentTarget.files];
     if (!files.length) return;
-    if (!window.LokiBlob?.upload) return toast("Opplastingsmodulen kunne ikke lastes.");
+    if (!window.LokiBlob?.uploadPresigned) return toast("Opplastingsmodulen kunne ikke lastes.");
     const button = document.getElementById("document-upload-button");
     const progress = document.getElementById("document-upload-progress");
     const target = uploadTargetId ? documents.find((item) => item.id === uploadTargetId) : null;
