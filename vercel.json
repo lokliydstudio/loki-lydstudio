@@ -8,7 +8,7 @@
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "Referrer-Policy", "value": "no-referrer" },
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" }
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self' https://*.blob.vercel-storage.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" }
       ]
     },
     {
@@ -28,6 +28,17 @@
         { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
         { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" }
       ]
+    },
+    {
+      "source": "/lytt/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'" }
+      ]
     }
   ],
   "redirects": [
@@ -39,6 +50,14 @@
     "api/crm/auth-request.js": { "maxDuration": 30 },
     "api/crm/draft.js": { "maxDuration": 30 },
     "api/crm/leads.js": { "maxDuration": 30 },
+    "api/crm/projects.js": { "maxDuration": 30 },
+    "api/crm/audio.js": { "maxDuration": 30 },
+    "api/crm/audio-upload.js": { "maxDuration": 30 },
+    "api/crm/audio-stream.js": { "maxDuration": 30 },
+    "api/crm/audio-sync.js": { "maxDuration": 30 },
+    "api/crm/audio-download.js": { "maxDuration": 30 },
+    "api/audio/share.js": { "maxDuration": 30 },
+    "api/audio/stream.js": { "maxDuration": 30 },
     "api/crm/documents.js": { "maxDuration": 30 },
     "api/crm/funding-sync.js": { "maxDuration": 30 }
   },

@@ -7,8 +7,10 @@ process.env.MAIL_USERNAME = "lokilyd1";
 process.env.MAIL_PASSWORD = "test-only-password";
 
 const auth = require("../lib/crm-auth");
+const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
+const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
 
 test("only active owners can receive CRM tokens", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
@@ -20,6 +22,57 @@ test("only active owners can receive CRM tokens", () => {
 test("tokens cannot be reused for another purpose", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
   assert.equal(auth.verifyToken(token, "session"), null);
+});
+
+test("customer listening tokens are scoped and expire independently of owner access", () => {
+  const token = auth.createScopedToken("track-123", "audio-share", 60);
+  assert.equal(auth.verifyScopedToken(token, "audio-share").subject, "track-123");
+  assert.equal(auth.verifyScopedToken(token, "session"), null);
+  assert.equal(auth.verifyToken(token, "audio-share"), null);
+});
+
+test("project patches always contain exactly 32 numbered channels", () => {
+  const patch = sanitizePatch([
+    { channel: 1, source: "Vokal", microphone: "U87", phantom: true },
+    { channel: 32, source: "Talkback", destination: "ADAT 32" },
+    { channel: 33, source: "Skal avvises" },
+  ]);
+  assert.equal(patch.length, 32);
+  assert.deepEqual(patch.map((row) => row.channel), Array.from({ length: 32 }, (_, index) => index + 1));
+  assert.equal(patch[0].source, "Vokal");
+  assert.equal(patch[0].phantom, true);
+  assert.equal(patch[31].destination, "ADAT 32");
+});
+
+test("projects sanitize status, email and patch data", () => {
+  const project = sanitizeProject({
+    name: "  Ny   singel  ",
+    clientEmail: "ARTIST@EXAMPLE.COM",
+    status: "Ikke gyldig",
+    patch: [{ channel: 2, source: "Kick in" }],
+  });
+  assert.equal(project.name, "Ny singel");
+  assert.equal(project.clientEmail, "artist@example.com");
+  assert.equal(project.status, "Planlegges");
+  assert.equal(project.patch[1].source, "Kick in");
+});
+
+test("audio metadata must match a private CRM pathname and supported audio type", () => {
+  const id = "track-123e4567-e89b-12d3-a456-426614174000";
+  const pathname = audioPathname(id, "Min miks.wav");
+  assert.equal(pathname, `loki-crm/audio/${id}/Min-miks.wav`);
+  const track = sanitizeTrack(
+    { id, projectId: "project-1", filename: "Min miks.wav", pathname, title: "Min miks" },
+    { pathname, size: 12_000_000, contentType: "audio/wav" },
+    "leon@lokilyd.no",
+  );
+  assert.equal(track.filename, "Min-miks.wav");
+  assert.equal(track.jottaSyncedAt, null);
+  assert.equal(sanitizeTrack(
+    { id, projectId: "project-1", filename: "Min miks.wav", pathname: "public/min-miks.wav" },
+    { pathname: "public/min-miks.wav", size: 100, contentType: "audio/wav" },
+    "leon@lokilyd.no",
+  ), null);
 });
 
 test("mail defaults use TLS-compatible Domeneshop ports", () => {

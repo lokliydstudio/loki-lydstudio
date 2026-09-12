@@ -7,7 +7,7 @@ const ROOT = process.env.JOTTA_ROOT || path.join(os.homedir(), "Jottacloud", "Lo
 const ENDPOINT = process.env.CRM_DOCUMENTS_ENDPOINT || "https://www.lokilyd.no/api/crm/documents";
 const SECRET = process.env.JOTTA_BRIDGE_SECRET;
 const DRY_RUN = process.argv.includes("--dry-run");
-const BLOCKED = new Set(["mikser (cloud)", "prosjekter (cloud)", "passord", "password", "passwords", "innlogging", "innlogginger", "login", "logins"]);
+const BLOCKED = new Set(["mikser (cloud)", "prosjekter (cloud)", "crm lydfiler", "passord", "password", "passwords", "innlogging", "innlogginger", "login", "logins"]);
 
 function isBlocked(relativePath) {
   return relativePath.toLowerCase().split(path.sep).some((part) => BLOCKED.has(part));

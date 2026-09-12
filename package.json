@@ -7,6 +7,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "build:crm": "esbuild build/blob-upload-entry.js --bundle --minify --format=iife --global-name=LokiBlob --platform=browser --outfile=crmplatform/blob-upload.js",
     "test": "node --test"
   },
   "dependencies": {
@@ -17,5 +18,8 @@
     "next": "latest",
     "nodemailer": "^10.0.6",
     "stripe": "^18.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
   }
 }
