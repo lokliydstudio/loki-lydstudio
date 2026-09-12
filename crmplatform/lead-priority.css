@@ -1,0 +1,41 @@
+.lead-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.crm-row.priority-lead {
+  background: #fbfff1;
+  box-shadow: inset 3px 0 var(--lime);
+}
+
+.lead-source-badge {
+  display: inline-block;
+  width: max-content;
+  padding: 4px 7px;
+  border-radius: 999px;
+  background: #ebe9e3;
+  color: #656159;
+  font-size: 7px !important;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.lead-source-badge.formspree {
+  background: #e5ffc2;
+  color: #3d5a0e;
+}
+
+.lead-source-badge.email {
+  background: #e2f2fa;
+  color: #276982;
+}
+
+@media (max-width: 640px) {
+  .lead-tools {
+    width: 100%;
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

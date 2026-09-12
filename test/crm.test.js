@@ -11,6 +11,7 @@ const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { documentPathname, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
+const { leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../lib/crm-leads");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { summarizeFiken } = require("../lib/crm-fiken");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
@@ -251,6 +252,30 @@ test("human studio enquiries remain in the customer pipeline", () => {
   });
   assert.equal(message.category, "customer");
   assert.equal(message.isLead, true);
+});
+
+test("lead pipeline follows inbox priority and keeps finished work below open leads", () => {
+  const sorted = sortLeads([
+    { id: "manual", source: "Manuelt", stage: "Nytt lead", receivedAt: "2026-09-12T12:00:00Z" },
+    { id: "email", source: "E-post", stage: "Kontaktet", receivedAt: "2026-09-12T11:00:00Z" },
+    { id: "finished-form", source: "Formspree", category: "formspree", stage: "Booket", receivedAt: "2026-09-12T13:00:00Z" },
+    { id: "form", source: "Formspree", category: "formspree", stage: "Nytt lead", receivedAt: "2026-09-12T10:00:00Z" },
+  ]);
+  assert.deepEqual(sorted.map((lead) => lead.id), ["form", "email", "manual", "finished-form"]);
+  assert.equal(leadPriority(sorted[0]), 100);
+  assert.equal(leadPriority(sorted[1]), 50);
+});
+
+test("mailbox preferences also suppress matching CRM leads", () => {
+  const preferences = [
+    { key: "abc123", category: "irrelevant", sender: "" },
+    { key: "sender-rule", category: "irrelevant", sender: "varsling@example.com" },
+    { key: "restored", category: "inbox", sender: "artist@example.com" },
+  ];
+  assert.equal(suppressedByMailPreference({ messageKey: "abc123", email: "artist@example.com" }, preferences), true);
+  assert.equal(suppressedByMailPreference({ messageKey: "other", email: "VARSLING@example.com" }, preferences), true);
+  assert.equal(suppressedByMailPreference({ messageKey: "restored", email: "artist@example.com" }, preferences), false);
+  assert.equal(mailPreferenceForLead({ messageKey: "restored", email: "artist@example.com" }, preferences), "inbox");
 });
 
 test("shared tasks and meeting notes are normalized", () => {
