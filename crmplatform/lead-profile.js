@@ -43,6 +43,12 @@
     }
 
     function applyEnrichment(enrichment = {}) {
+      const currentName = String(form.elements.name.value || "").trim();
+      const currentEmail = String(form.elements.email.value || "").trim();
+      const currentProject = String(form.elements.project.value || "").trim();
+      if (enrichment.email && (!currentEmail || /@formspree\.io$/i.test(currentEmail))) setValue(form, "email", enrichment.email);
+      if (enrichment.name && (!currentName || currentName.includes("@") || currentName.toLowerCase() === currentEmail.toLowerCase())) setValue(form, "name", enrichment.name);
+      if (enrichment.project && (!currentProject || /^(?:ny melding fra kontaktskjema|new submission|ny henvendelse)$/i.test(currentProject))) setValue(form, "project", enrichment.project);
       ["phone", "role", "artistName", "company", "website", "social", "location"].forEach((field) => {
         if (!form.elements[field].value && enrichment[field]) setValue(form, field, enrichment[field]);
       });

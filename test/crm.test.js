@@ -209,6 +209,18 @@ test("Formspree submissions are prioritized and use the customer's reply-to addr
   assert.equal(message.priority, 100);
 });
 
+test("Formspree body fields enrich the editable lead profile", () => {
+  const enrichment = inferLeadDetails({
+    subject: "Ny melding fra kontaktskjema",
+    body: "Hey there. name: Cesilie Helen email: Cesilie_Helen@Hotmail.com phone: +47 912 34 567 message: Jeg synger og vil spille inn vokal og få ferdig en låt. Submitted 08:31 AM - 07 September 2026 You are receiving this because you confirmed this email address on Formspree.",
+  });
+  assert.equal(enrichment.name, "Cesilie Helen");
+  assert.equal(enrichment.email, "cesilie_helen@hotmail.com");
+  assert.equal(enrichment.phone, "+4791234567");
+  assert.equal(enrichment.role, "Artist");
+  assert.equal(enrichment.project, "Jeg synger og vil spille inn vokal og få ferdig en låt.");
+});
+
 test("Jottacloud and DNB notifications are filtered unless restored manually", () => {
   const raw = {
     uid: 7,
