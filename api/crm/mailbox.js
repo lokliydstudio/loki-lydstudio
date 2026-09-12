@@ -59,9 +59,11 @@ module.exports = async function handler(req, res) {
       if (metadata.size > 2_000_000) return res.status(413).json({ ...envelopeToMessage(metadata, preferences), error: "Meldingen er for stor til å forhåndsvise." });
       const full = await client.fetchOne(requestedUid, { uid: true, envelope: true, source: true, headers: SORT_HEADERS }, { uid: true });
       const parsed = await simpleParser(full.source, { skipHtmlToText: false, skipTextToHtml: true });
-      const summary = String(parsed.text || parsed.html || "").replace(/\s+/g, " ").trim().slice(0, 4000);
+      const parsedBody = String(parsed.text || parsed.html || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+      const body = parsedBody.slice(0, 100_000);
+      const summary = parsedBody.replace(/\s+/g, " ").trim().slice(0, 4000);
       const publicMessage = envelopeToMessage(full, preferences);
-      return res.status(200).json({ message: { ...publicMessage, summary, enrichment: inferLeadDetails({ subject: publicMessage.subject, body: summary }), messageId: parsed.messageId || full.envelope?.messageId || null } });
+      return res.status(200).json({ message: { ...publicMessage, body, bodyTruncated: parsedBody.length > body.length, summary, enrichment: inferLeadDetails({ subject: publicMessage.subject, body: summary }), messageId: parsed.messageId || full.envelope?.messageId || null } });
     }
 
     const allUids = await client.search({ all: true }, { uid: true });

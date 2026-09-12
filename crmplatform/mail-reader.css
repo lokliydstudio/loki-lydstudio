@@ -1,0 +1,84 @@
+.mail-reader {
+  margin: 18px 0;
+  padding: 16px;
+  border: 1px solid #d9d4ca;
+  border-radius: 11px;
+  background: #f3f0e9;
+}
+
+.mail-reader-head,
+.reply-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+}
+
+.mail-reader-head > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.mail-reader-head > div > span:last-child,
+.reply-head > span:last-child {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mail-reader-body {
+  max-height: 330px;
+  min-height: 130px;
+  margin-top: 13px;
+  padding: 17px;
+  overflow: auto;
+  border: 1px solid #ded9cf;
+  border-radius: 9px;
+  background: #fffefa;
+  color: #35332f;
+  font-size: 11px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.mail-reader.expanded .mail-reader-body {
+  max-height: 65vh;
+  min-height: 420px;
+}
+
+.mail-reader-note {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.reply-head {
+  margin: 22px 0 10px;
+}
+
+@media (max-width: 640px) {
+  .mail-reader {
+    padding: 12px;
+  }
+
+  .mail-reader-head {
+    align-items: flex-start;
+  }
+
+  .mail-reader-head > div > span:last-child {
+    white-space: normal;
+  }
+
+  .mail-reader-body {
+    max-height: 55vh;
+  }
+
+  .mail-reader.expanded .mail-reader-body {
+    min-height: 55vh;
+  }
+}
