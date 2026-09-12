@@ -258,10 +258,11 @@ test("lead pipeline follows inbox priority and keeps finished work below open le
   const sorted = sortLeads([
     { id: "manual", source: "Manuelt", stage: "Nytt lead", receivedAt: "2026-09-12T12:00:00Z" },
     { id: "email", source: "E-post", stage: "Kontaktet", receivedAt: "2026-09-12T11:00:00Z" },
+    { id: "older-email", source: "E-post", stage: "Nytt lead", receivedAt: "2026-09-12T09:00:00Z" },
     { id: "finished-form", source: "Formspree", category: "formspree", stage: "Booket", receivedAt: "2026-09-12T13:00:00Z" },
     { id: "form", source: "Formspree", category: "formspree", stage: "Nytt lead", receivedAt: "2026-09-12T10:00:00Z" },
   ]);
-  assert.deepEqual(sorted.map((lead) => lead.id), ["form", "email", "manual", "finished-form"]);
+  assert.deepEqual(sorted.map((lead) => lead.id), ["form", "email", "older-email", "manual", "finished-form"]);
   assert.equal(leadPriority(sorted[0]), 100);
   assert.equal(leadPriority(sorted[1]), 50);
 });
