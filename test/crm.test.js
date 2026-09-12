@@ -12,7 +12,7 @@ const { documentPathname, mergeDocumentIndex, publicDocument, sanitizeIndexedDoc
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
-const { leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../lib/crm-leads");
+const { isOpenLead, leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../lib/crm-leads");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
@@ -286,12 +286,15 @@ test("lead pipeline follows inbox priority and keeps finished work below open le
     { id: "manual", source: "Manuelt", stage: "Nytt lead", receivedAt: "2026-09-12T12:00:00Z" },
     { id: "email", source: "E-post", stage: "Kontaktet", receivedAt: "2026-09-12T11:00:00Z" },
     { id: "older-email", source: "E-post", stage: "Nytt lead", receivedAt: "2026-09-12T09:00:00Z" },
-    { id: "finished-form", source: "Formspree", category: "formspree", stage: "Booket", receivedAt: "2026-09-12T13:00:00Z" },
+    { id: "finished-form", source: "Formspree", category: "formspree", stage: "Ferdig", receivedAt: "2026-09-12T13:00:00Z" },
+    { id: "booked", source: "E-post", stage: "Booket", receivedAt: "2026-09-12T08:00:00Z" },
     { id: "form", source: "Formspree", category: "formspree", stage: "Nytt lead", receivedAt: "2026-09-12T10:00:00Z" },
   ]);
-  assert.deepEqual(sorted.map((lead) => lead.id), ["form", "email", "older-email", "manual", "finished-form"]);
+  assert.deepEqual(sorted.map((lead) => lead.id), ["form", "email", "older-email", "booked", "manual", "finished-form"]);
   assert.equal(leadPriority(sorted[0]), 100);
   assert.equal(leadPriority(sorted[1]), 50);
+  assert.equal(isOpenLead({ stage: "Booket" }), true);
+  assert.equal(isOpenLead({ stage: "Ferdig" }), false);
 });
 
 test("mailbox preferences also suppress matching CRM leads", () => {

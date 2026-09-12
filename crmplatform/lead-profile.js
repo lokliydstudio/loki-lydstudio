@@ -5,7 +5,7 @@
     if (form.elements[name]) form.elements[name].value = value ?? "";
   }
 
-  function init({ getLeads, setLeads, renderAll, toast }) {
+  function init({ getLeads, setLeads, renderAll, toast, onStageChange = () => {} }) {
     const modal = document.getElementById("lead-modal");
     const form = document.getElementById("lead-form");
     const title = document.getElementById("modal-title");
@@ -139,6 +139,7 @@
         if (!response.ok) throw new Error(data.error || "Leadet kunne ikke lagres.");
         if (id) setLeads(getLeads().map((item) => item.id === id ? data.lead : item));
         else setLeads(data.leads || getLeads());
+        onStageChange(lead.stage);
         close();
         renderAll();
         toast(id ? "Leadprofilen er oppdatert." : "Leadet er lagt til.");

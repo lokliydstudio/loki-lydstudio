@@ -4,7 +4,7 @@ const { leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreferen
 const { classifyEnvelope } = require("../../lib/crm-mail-sort");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 
-const STAGES = new Set(["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Tapt"]);
+const STAGES = new Set(["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig", "Tapt"]);
 
 function cleanText(value, max = 250) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, max);
