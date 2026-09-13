@@ -43,9 +43,9 @@
       quickActions.hidden = true;
       timeline.hidden = true;
       preview.value = "";
-      title.textContent = "Ny kunde";
-      subtitle.textContent = "Opprett en kundeprofil med kontakt- og prosjektinformasjon.";
-      submit.textContent = "Opprett kunde";
+      title.textContent = "Ny kontakt";
+      subtitle.textContent = "Opprett en kontaktprofil med kontakt- og prosjektinformasjon.";
+      submit.textContent = "Opprett kontakt";
       modal.classList.add("open");
       form.elements.name.focus();
     }
@@ -103,9 +103,9 @@
       if (customerMode && String(form.elements.name.value || "").includes("@")) setValue(form, "name", customerDisplayName(lead));
       title.textContent = customerMode ? customerDisplayName(lead) : lead.profileCompleted ? lead.name : "Kompletter leadprofil";
       subtitle.innerHTML = customerMode
-        ? `Kunderegister · ${esc(lead.stage || "Kunde")}`
+        ? `Kontaktregister · ${esc(lead.stage || "Kontakt")}`
         : `${esc(lead.source || "Manuelt")} · ${esc(lead.email || lead.phone || "Kontaktinfo kan legges til senere")}`;
-      submit.textContent = customerMode ? "Lagre kunde" : lead.profileCompleted ? "Lagre endringer" : "Legg til som lead";
+      submit.textContent = customerMode ? "Lagre kontakt" : lead.profileCompleted ? "Lagre endringer" : "Legg til som lead";
       enrichmentState.textContent = lead.emailSummary ? "Lagret fra e-post" : "Henter kilde";
       enrichmentState.className = lead.emailSummary ? "state green" : "state amber";
       if (customerMode) source.hidden = true;
@@ -154,7 +154,7 @@
       const id = String(values.id || "");
       const duplicate = !id && values.email && getLeads().find((item) => String(item.email || "").toLowerCase() === String(values.email).toLowerCase());
       if (duplicate) {
-        toast("Denne e-postadressen finnes allerede. Eksisterende kundeprofil åpnes.");
+        toast("Denne e-postadressen finnes allerede. Eksisterende kontaktprofil åpnes.");
         return openLead(duplicate.id);
       }
       const lead = {
@@ -197,12 +197,12 @@
         onCustomerSaved(data.lead || lead);
         close();
         renderAll();
-        toast(id ? "Kundeprofilen er oppdatert under «Kunder»." : "Kunden er lagt til under «Kunder».");
+        toast(id ? "Kontaktprofilen er oppdatert under «Kontakter»." : "Kontakten er lagt til under «Kontakter».");
       } catch (error) {
         toast(error.message || "Leadet kunne ikke lagres.");
       } finally {
         submit.disabled = false;
-        submit.textContent = id ? "Lagre endringer" : "Opprett kunde";
+        submit.textContent = id ? "Lagre endringer" : "Opprett kontakt";
       }
     };
 
@@ -214,7 +214,7 @@
     document.getElementById("lead-create-booking").onclick = () => activeLead && window.LokiOperations?.openBooking(activeLead);
     document.getElementById("lead-create-project").onclick = () => activeLead && window.LokiOperations?.createProjectForLead(activeLead);
     document.getElementById("lead-delete").onclick = async () => {
-      if (!activeLead || !confirm(`Slett «${activeLead.name}» permanent fra CRM?\n\nKundehistorikk, tilknyttede bookinger og tilbud slettes også. E-poster beholdes, men kontakten filtreres fra kunderelasjonene. Dokumenter og studioprosjekter påvirkes ikke.`)) return;
+      if (!activeLead || !confirm(`Slett «${activeLead.name}» permanent fra CRM?\n\nKontakthistorikk, tilknyttede bookinger og tilbud slettes også. E-poster beholdes, men kontakten filtreres fra relasjonsoversikten. Dokumenter og studioprosjekter påvirkes ikke.`)) return;
       const button = document.getElementById("lead-delete");
       button.disabled = true;
       try {
@@ -225,7 +225,7 @@
         close();
         renderAll();
         await window.LokiOperations?.reload?.();
-        toast("Kunderelasjonen og tilknyttet historikk er slettet.");
+        toast("Kontakten og tilknyttet historikk er slettet.");
       } catch (error) { toast(error.message); }
       finally { button.disabled = false; }
     };
