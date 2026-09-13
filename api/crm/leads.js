@@ -75,19 +75,34 @@ function sanitizeLead(input, existing = {}) {
   return { ...lead, priority: leadPriority(lead) };
 }
 
-function visibleLeads(leads, preferences) {
-  return sortLeads(leads.filter((lead) => {
-    if (suppressedByMailPreference(lead, preferences)) return false;
-    const override = mailPreferenceForLead(lead, preferences);
-    return classifyEnvelope({
+function leadIsIrrelevant(lead, preferences) {
+  if (suppressedByMailPreference(lead, preferences)) return true;
+  const override = mailPreferenceForLead(lead, preferences);
+  return classifyEnvelope({
       uid: lead.id,
       envelope: {
         from: [{ name: lead.name, address: lead.email }],
         subject: lead.project,
         messageId: `lead:${lead.id}`,
       },
-    }, override).category !== "irrelevant";
-  }).map((lead) => ({ ...lead, priority: leadPriority(lead) })));
+    }, override).category === "irrelevant";
+}
+
+function splitLeadViews(leads, preferences) {
+  const annotated = sortLeads(leads.map((lead) => ({
+    ...lead,
+    priority: leadPriority(lead),
+    relevance: leadIsIrrelevant(lead, preferences) ? "irrelevant" : "relevant",
+  })));
+  return {
+    leads: annotated.filter((lead) => lead.relevance === "relevant"),
+    irrelevantLeads: annotated.filter((lead) => lead.relevance === "irrelevant"),
+    all: annotated,
+  };
+}
+
+function visibleLeads(leads, preferences) {
+  return splitLeadViews(leads, preferences).leads;
 }
 
 async function readLeads(options = {}) {
@@ -99,6 +114,14 @@ async function readLeads(options = {}) {
   return options.includeHidden ? prioritized : visibleLeads(prioritized, preferences);
 }
 
+async function leadViews() {
+  const [leads, preferences] = await Promise.all([
+    readCollection("leads"),
+    readCollection("mail-sort"),
+  ]);
+  return splitLeadViews(leads, preferences);
+}
+
 module.exports = async function handler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
@@ -106,7 +129,8 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === "GET") {
-      return res.status(200).json({ leads: await readLeads(), persistent: true });
+      const views = await leadViews();
+      return res.status(200).json({ leads: views.leads, irrelevantLeads: views.irrelevantLeads, persistent: true });
     }
 
     if (req.method === "POST") {
@@ -161,7 +185,8 @@ module.exports = async function handler(req, res) {
           }
         }
       }
-      return res.status(200).json({ leads: await readLeads(), persistent: true });
+      const views = await leadViews();
+      return res.status(200).json({ leads: views.leads, irrelevantLeads: views.irrelevantLeads, persistent: true });
     }
 
     if (req.method === "PATCH") {
@@ -169,6 +194,42 @@ module.exports = async function handler(req, res) {
       const id = cleanText(req.body?.id, 120);
       const index = current.findIndex((lead) => lead.id === id);
       if (index < 0) return res.status(404).json({ error: "Leadet ble ikke funnet." });
+      if (req.body?.action === "setRelevance") {
+        const relevance = cleanText(req.body?.relevance, 20);
+        if (!new Set(["relevant", "irrelevant"]).has(relevance)) {
+          return res.status(400).json({ error: "Ugyldig sorteringsvalg." });
+        }
+        const lead = current[index];
+        const preferences = await readCollection("mail-sort");
+        const key = /^[a-f0-9]{32}$/.test(lead.messageKey || "")
+          ? lead.messageKey
+          : crypto.createHash("sha256").update(`lead:${lead.id}`).digest("hex").slice(0, 32);
+        const sender = cleanEmail(lead.email);
+        const nextPreferences = preferences.filter((item) => item.key !== key && (!sender || String(item.sender || "").toLowerCase() !== sender));
+        nextPreferences.unshift({
+          key,
+          category: relevance === "irrelevant" ? "irrelevant" : "inbox",
+          sender: relevance === "irrelevant" ? sender : "",
+          updatedAt: new Date().toISOString(),
+          updatedBy: user.email,
+        });
+        await writeCollection("mail-sort", nextPreferences.slice(0, 1000));
+        try {
+          const activities = await readCollection("activities");
+          const details = relevance === "irrelevant"
+            ? "Markert som ikke relevant. Nye meldinger fra avsenderen filtreres bort."
+            : "Gjenopprettet som relevant kunderelasjon.";
+          const activity = sanitizeActivity({ leadId: id, type: "Status", details }, {}, user.email);
+          if (activity) {
+            activities.unshift(activity);
+            await writeCollection("activities", activities.slice(0, 3000));
+          }
+        } catch (activityError) {
+          console.error("Lead relevance activity log failed", activityError?.message);
+        }
+        const views = await leadViews();
+        return res.status(200).json({ leads: views.leads, irrelevantLeads: views.irrelevantLeads, persistent: true });
+      }
       const previous = current[index];
       const updated = sanitizeLead(req.body?.changes || {}, current[index]);
       current[index] = { ...updated, id: current[index].id, firstSeenAt: current[index].firstSeenAt };
