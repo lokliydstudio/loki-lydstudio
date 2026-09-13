@@ -85,21 +85,25 @@
       }
     }
 
-    async function openLead(id) {
+    async function openLead(id, options = {}) {
       const lead = getLeads().find((item) => item.id === id);
       if (!lead) return;
+      const customerMode = options.customerMode === true;
       activeLead = lead;
       form.reset();
       populate(lead);
-      title.textContent = lead.profileCompleted ? lead.name : "Kompletter leadprofil";
-      subtitle.innerHTML = `${esc(lead.source || "Manuelt")} · ${esc(lead.email || lead.phone || "Kontaktinfo kan legges til senere")}`;
-      submit.textContent = lead.profileCompleted ? "Lagre endringer" : "Legg til som lead";
+      title.textContent = customerMode || lead.profileCompleted ? lead.name : "Kompletter leadprofil";
+      subtitle.innerHTML = customerMode
+        ? `Kunderegister · ${esc(lead.stage || "Kunde")}`
+        : `${esc(lead.source || "Manuelt")} · ${esc(lead.email || lead.phone || "Kontaktinfo kan legges til senere")}`;
+      submit.textContent = customerMode ? "Lagre kunde" : lead.profileCompleted ? "Lagre endringer" : "Legg til som lead";
       enrichmentState.textContent = lead.emailSummary ? "Lagret fra e-post" : "Henter kilde";
       enrichmentState.className = lead.emailSummary ? "state green" : "state amber";
+      if (customerMode) source.hidden = true;
       quickActions.hidden = false;
       timeline.hidden = false;
       modal.classList.add("open");
-      await Promise.all([loadSourceEmail(lead), loadActivities(lead.id)]);
+      await (customerMode ? loadActivities(lead.id) : Promise.all([loadSourceEmail(lead), loadActivities(lead.id)]));
     }
 
     function renderActivities(activities) {
@@ -180,7 +184,7 @@
         if (!response.ok) throw new Error(data.error || "Leadet kunne ikke lagres.");
         if (id) setLeads(getLeads().map((item) => item.id === id ? data.lead : item));
         else setLeads(data.leads || getLeads());
-        onStageChange(id ? lead.stage : "Alle kunder");
+        onStageChange(lead.stage);
         close();
         renderAll();
         toast(id ? "Leadprofilen er oppdatert." : "Leadet er lagt til.");
@@ -233,7 +237,7 @@
     };
     document.addEventListener("keydown", (event) => { if (event.key === "Escape") close(); });
 
-    return { bindRows, openLead, openNew };
+    return { bindRows, openLead, openNew, openCustomer: (id) => openLead(id, { customerMode: true }) };
   }
 
   window.LokiLeadProfile = { init };
