@@ -15,6 +15,7 @@ const { classifyEnvelope } = require("../lib/crm-mail-sort");
 const { isOpenLead, leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../lib/crm-leads");
 const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
+const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
 const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
@@ -317,6 +318,48 @@ test("shared tasks and meeting notes are normalized", () => {
   const note = sanitizeNote({ type: "møte", title: "Ukemøte", content: "Neste steg", attendees: "Leon, Charles" }, {}, "charles@lokilyd.no");
   assert.equal(note.type, "møte");
   assert.equal(note.attendees, "Leon, Charles");
+});
+
+test("studio bookings validate times and reject overlaps", () => {
+  const first = sanitizeBooking({
+    title: "Artist – innspilling",
+    date: "2026-09-20",
+    startTime: "10:00",
+    endTime: "14:00",
+    service: "Innspilling",
+    assignee: "Leon",
+  }, {}, "leon@lokilyd.no");
+  const overlap = sanitizeBooking({ title: "Ny økt", date: "2026-09-20", startTime: "13:30", endTime: "16:00" });
+  const after = sanitizeBooking({ title: "Sen økt", date: "2026-09-20", startTime: "14:00", endTime: "16:00" });
+  assert.equal(first.service, "Innspilling");
+  assert.equal(first.assignee, "Leon");
+  assert.equal(bookingConflict([first], overlap).id, first.id);
+  assert.equal(bookingConflict([first], after), null);
+  assert.equal(sanitizeBooking({ title: "Ugyldig", date: "2026-09-20", startTime: "15:00", endTime: "12:00" }), null);
+});
+
+test("quote totals are recalculated on the server", () => {
+  const quote = sanitizeQuote({
+    customerName: "Ny Artist",
+    customerEmail: "ARTIST@example.com",
+    projectName: "Singel",
+    items: [
+      { description: "Innspilling", quantity: 4, unit: "time", unitPrice: 550, lineTotal: 1 },
+      { description: "Mastering", quantity: 1, unit: "låt", unitPrice: 750, lineTotal: 1 },
+    ],
+  }, {}, "charles@lokilyd.no");
+  assert.equal(quote.customerEmail, "artist@example.com");
+  assert.equal(quote.items[0].lineTotal, 2200);
+  assert.equal(quote.total, 2950);
+  assert.match(quote.number, /^L-\d{8}-[A-F0-9]{4}$/);
+});
+
+test("customer activities require a lead and details", () => {
+  const activity = sanitizeActivity({ leadId: "lead-1", type: "Telefon", details: "Avtalte ny samtale fredag." }, {}, "leon@lokilyd.no");
+  assert.equal(activity.type, "Telefon");
+  assert.equal(activity.createdBy, "leon@lokilyd.no");
+  assert.equal(sanitizeActivity({ leadId: "lead-1", details: "" }), null);
+  assert.equal(sanitizeActivity({ details: "Mangler kunde" }), null);
 });
 
 test("Fiken summary remains read-only and totals unpaid invoices in øre", () => {

@@ -5,6 +5,7 @@ const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeT
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
+const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
@@ -305,6 +306,183 @@ async function workspaceHandler(req, res) {
   return res.status(405).json({ error: "Method not allowed" });
 }
 
+async function appendLeadActivity(activity, userEmail) {
+  if (!activity?.leadId) return;
+  try {
+    const activities = await readCollection("activities");
+    const sanitized = sanitizeActivity(activity, {}, userEmail);
+    if (!sanitized) return;
+    activities.unshift(sanitized);
+    await writeCollection("activities", activities.slice(0, 3000));
+  } catch (error) {
+    console.error("Lead activity log failed", error?.message);
+  }
+}
+
+async function activitiesHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const activities = await readCollection("activities");
+
+  if (req.method === "GET") {
+    const leadId = cleanText(req.query?.leadId, 120);
+    const limit = Math.max(1, Math.min(Number(req.query?.limit) || 100, 500));
+    const visible = activities
+      .filter((item) => !leadId || item.leadId === leadId)
+      .sort((left, right) => String(right.occurredAt).localeCompare(String(left.occurredAt)))
+      .slice(0, limit);
+    return res.status(200).json({ activities: visible });
+  }
+
+  if (req.method === "POST") {
+    const activity = sanitizeActivity(req.body?.activity || req.body, {}, user.email);
+    if (!activity) return res.status(400).json({ error: "Velg kunde og skriv hva som skjedde." });
+    activities.unshift(activity);
+    await writeCollection("activities", activities.slice(0, 3000));
+    return res.status(201).json({ activity });
+  }
+
+  if (req.method === "DELETE") {
+    const id = cleanText(req.query?.id || req.body?.id, 120);
+    const index = activities.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Aktiviteten ble ikke funnet." });
+    activities.splice(index, 1);
+    await writeCollection("activities", activities);
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function bookingsHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const bookings = await readCollection("bookings");
+
+  if (req.method === "GET") {
+    return res.status(200).json({
+      bookings: bookings.sort((left, right) => `${left.date} ${left.startTime}`.localeCompare(`${right.date} ${right.startTime}`)),
+    });
+  }
+
+  if (req.method === "POST") {
+    const booking = sanitizeBooking(req.body?.booking || req.body, {}, user.email);
+    if (!booking) return res.status(400).json({ error: "Fyll ut tittel, dato og et gyldig tidsrom." });
+    const conflict = bookingConflict(bookings, booking);
+    if (conflict) return res.status(409).json({ error: `Tiden overlapper med «${conflict.title}» (${conflict.startTime}–${conflict.endTime}).` });
+    bookings.push(booking);
+    await writeCollection("bookings", bookings);
+    await appendLeadActivity({ leadId: booking.leadId, type: "Booking", details: `${booking.service} booket ${booking.date} kl. ${booking.startTime}–${booking.endTime}.` }, user.email);
+    return res.status(201).json({ booking });
+  }
+
+  if (req.method === "PATCH") {
+    const id = cleanText(req.body?.id, 120);
+    const index = bookings.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Bookingen ble ikke funnet." });
+    const booking = sanitizeBooking(req.body?.changes || {}, bookings[index], user.email);
+    if (!booking) return res.status(400).json({ error: "Fyll ut tittel, dato og et gyldig tidsrom." });
+    const conflict = bookingConflict(bookings, booking);
+    if (conflict) return res.status(409).json({ error: `Tiden overlapper med «${conflict.title}» (${conflict.startTime}–${conflict.endTime}).` });
+    bookings[index] = booking;
+    await writeCollection("bookings", bookings);
+    return res.status(200).json({ booking });
+  }
+
+  if (req.method === "DELETE") {
+    const id = cleanText(req.query?.id || req.body?.id, 120);
+    const index = bookings.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Bookingen ble ikke funnet." });
+    bookings.splice(index, 1);
+    await writeCollection("bookings", bookings);
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function quotesHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const quotes = await readCollection("quotes");
+
+  if (req.method === "GET") {
+    return res.status(200).json({ quotes: quotes.sort((left, right) => String(right.updatedAt).localeCompare(String(left.updatedAt))) });
+  }
+
+  if (req.method === "POST") {
+    const quote = sanitizeQuote(req.body?.quote || req.body, {}, user.email);
+    if (!quote) return res.status(400).json({ error: "Fyll ut kunde, prosjekt og minst én tilbudslinje." });
+    quotes.unshift(quote);
+    await writeCollection("quotes", quotes);
+    await appendLeadActivity({ leadId: quote.leadId, type: "Tilbud", details: `Tilbud ${quote.number} opprettet på ${quote.total.toLocaleString("nb-NO")} kr.` }, user.email);
+    return res.status(201).json({ quote });
+  }
+
+  if (req.method === "PATCH") {
+    const id = cleanText(req.body?.id, 120);
+    const index = quotes.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Tilbudet ble ikke funnet." });
+    const previousStatus = quotes[index].status;
+    const quote = sanitizeQuote(req.body?.changes || {}, quotes[index], user.email);
+    if (!quote) return res.status(400).json({ error: "Fyll ut kunde, prosjekt og minst én tilbudslinje." });
+    quotes[index] = quote;
+    await writeCollection("quotes", quotes);
+    if (quote.status !== previousStatus) {
+      await appendLeadActivity({ leadId: quote.leadId, type: "Tilbud", details: `Tilbud ${quote.number} markert som «${quote.status}».` }, user.email);
+    }
+    return res.status(200).json({ quote });
+  }
+
+  if (req.method === "DELETE") {
+    const id = cleanText(req.query?.id || req.body?.id, 120);
+    const index = quotes.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Tilbudet ble ikke funnet." });
+    quotes.splice(index, 1);
+    await writeCollection("quotes", quotes);
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function backupHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const [leads, workspace, projects, audio, documents, activities, bookings, quotes, mailSort, funding] = await Promise.all([
+    readCollection("leads"),
+    readCollection("workspace"),
+    readCollection("projects"),
+    readCollection("audio"),
+    readCollection("documents"),
+    readCollection("activities"),
+    readCollection("bookings"),
+    readCollection("quotes"),
+    readCollection("mail-sort"),
+    readCollection("funding-monitor"),
+  ]);
+  const projectExport = createProjectExport(projects, audio);
+  const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
+  return res.status(200).json({
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    exportedBy: user.email,
+    studio: "Loki Lydstudio",
+    containsPersonalData: true,
+    leads,
+    workspace,
+    projects: projectExport.projects,
+    audioFiles: projectExport.files,
+    documents: safeDocuments,
+    activities,
+    bookings,
+    quotes,
+    mailPreferences: mailSort,
+    fundingMonitor: funding,
+  });
+}
+
 async function fikenHandler(req, res) {
   if (!requireUser(req, res)) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
@@ -358,6 +536,10 @@ module.exports = async function handler(req, res) {
     if (action === "jotta-sync") return await jottaSyncHandler(req, res);
     if (action === "jotta-download") return await jottaDownloadHandler(req, res);
     if (action === "workspace") return await workspaceHandler(req, res);
+    if (action === "activities") return await activitiesHandler(req, res);
+    if (action === "bookings") return await bookingsHandler(req, res);
+    if (action === "quotes") return await quotesHandler(req, res);
+    if (action === "backup") return await backupHandler(req, res);
     if (action === "fiken") return await fikenHandler(req, res);
     if (action === "fiken-connect") return await fikenConnectHandler(req, res);
     if (action === "fiken-callback") return await fikenCallbackHandler(req, res);

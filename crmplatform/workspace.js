@@ -189,5 +189,5 @@
     await Promise.all([loadWorkspace(), loadFiken()]);
   }
 
-  window.LokiWorkspace = { init };
+  window.LokiWorkspace = { init, reload: loadWorkspace };
 })();

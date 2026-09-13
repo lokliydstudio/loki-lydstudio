@@ -1,5 +1,7 @@
 const { requireUser } = require("../../lib/crm-auth");
 const { sendMail } = require("../../lib/crm-mail");
+const { sanitizeActivity } = require("../../lib/crm-operations");
+const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 
 function validEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
@@ -29,6 +31,29 @@ module.exports = async function handler(req, res) {
       references: inReplyTo || undefined,
       headers: { "X-Loki-CRM-User": user.email },
     });
+    if (isConfigured()) {
+      try {
+        const leads = await readCollection("leads");
+        const lead = leads.find((item) => String(item.email || "").toLowerCase() === to);
+        if (lead) {
+          if (lead.stage === "Nytt lead") {
+            lead.stage = "Kontaktet";
+            lead.nextAction = "Følg opp svar fra kunden";
+            lead.followUpDate = new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+            lead.lastSeenAt = new Date().toISOString();
+            await writeCollection("leads", leads);
+          }
+          const activities = await readCollection("activities");
+          const activity = sanitizeActivity({ leadId: lead.id, type: "E-post", details: `Svar sendt: ${subject}` }, {}, user.email);
+          if (activity) {
+            activities.unshift(activity);
+            await writeCollection("activities", activities.slice(0, 3000));
+          }
+        }
+      } catch (activityError) {
+        console.error("Sent email activity log failed", activityError?.message);
+      }
+    }
     return res.status(200).json({ ok: true, messageId: info.messageId });
   } catch (error) {
     console.error("Email send failed", error?.message);
