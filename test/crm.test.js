@@ -18,6 +18,7 @@ const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
+const { cleanUrl, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
 
@@ -64,6 +65,40 @@ test("projects sanitize status, email and patch data", () => {
   assert.equal(project.clientEmail, "artist@example.com");
   assert.equal(project.status, "Planlegges");
   assert.equal(project.patch[1].source, "Kick in");
+});
+
+test("Cold Call Pool keeps only safe public contact fields and gates outreach readiness", () => {
+  const prospect = sanitizeProspect({
+    name: "  Bergensbandet  ",
+    artistName: "Bergensbandet",
+    location: "Bergen",
+    publicEmail: "BOOKING@BAND.NO",
+    instagramUrl: "https://instagram.com/bergensbandet",
+    facebookUrl: "javascript:alert(1)",
+    services: ["Innspilling", "Miks", "Ukjent"],
+    status: "Klar for kontakt",
+    contactBasis: "Ikke vurdert",
+    adultConfirmed: false,
+    needEvidence: "Har offentlig annonsert arbeid med en ny EP.",
+  }, {}, "leon@lokilyd.no");
+  assert.equal(prospect.name, "Bergensbandet");
+  assert.equal(prospect.publicEmail, "booking@band.no");
+  assert.equal(prospect.facebookUrl, "");
+  assert.deepEqual(prospect.services, ["Innspilling", "Miks"]);
+  assert.equal(prospect.status, "Vurderes");
+  assert.equal(prospect.score >= 70, true);
+  assert.equal(cleanUrl("https://instagram.com/example", ["instagram.com"]).startsWith("https://instagram.com/"), true);
+  assert.equal(cleanUrl("https://example.com/not-instagram", ["instagram.com"]), "");
+});
+
+test("Cold Call Pool deduplicates public identities and preserves suppression", () => {
+  const blocked = sanitizeProspect({ name: "Band A", publicEmail: "hei@band.no", status: "Ikke kontakt", contactBasis: "Ikke kontakt" });
+  const merged = mergeProspects([blocked], [{ name: "Band A ny", publicEmail: "hei@band.no", location: "Bergen", needEvidence: "Ny singel" }]);
+  assert.equal(merged.prospects.length, 1);
+  assert.equal(merged.prospects[0].status, "Ikke kontakt");
+  assert.equal(merged.added, 0);
+  assert.equal(prospectKey(merged.prospects[0]), "email:hei@band.no");
+  assert.equal(prospectScore({ location: "Bergen", needEvidence: "Ny musikk", services: ["Miks"] }) > prospectScore({ location: "Oslo", services: [] }), true);
 });
 
 test("document uploads use private safe paths and reject active web content", () => {

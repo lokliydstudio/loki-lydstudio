@@ -80,7 +80,7 @@ function sanitizeLead(input, existing = {}) {
 function leadIsIrrelevant(lead, preferences) {
   if (suppressedByMailPreference(lead, preferences)) return true;
   const override = mailPreferenceForLead(lead, preferences);
-  if (!override && String(lead.source || "").toLowerCase() === "manuelt") return false;
+  if (!override && new Set(["manuelt", "cold call pool"]).has(String(lead.source || "").toLowerCase())) return false;
   return classifyEnvelope({
       uid: lead.id,
       envelope: {
@@ -148,7 +148,7 @@ async function handler(req, res) {
 
       for (const candidate of incoming) {
         const email = cleanEmail(candidate?.email);
-        const manual = String(candidate?.source || "").toLowerCase() === "manuelt";
+        const manual = new Set(["manuelt", "cold call pool"]).has(String(candidate?.source || "").toLowerCase());
         if ((!email && !manual) || email.endsWith("@lokilyd.no") || (email && seenEmails.has(email))) continue;
         if (email) seenEmails.add(email);
         if (manual && email) manuallyRestoredEmails.add(email);
