@@ -121,6 +121,9 @@ test("indexed documents get authenticated Jottacloud deep links", () => {
     "https://jottacloud.com/web/sync/list/name/Loki%20Lydstudio/Dokumenter%20%28Cloud%29/Markedsf%C3%B8ring/Avtale%20%231.pdf",
   );
   assert.equal(jottacloudDocumentUrl("Passord/hemmelig.pdf"), "");
+  const legacyVisible = publicDocument({ ...indexed, source: undefined, note: "Gammel indeksrad" });
+  assert.equal(legacyVisible.available, true);
+  assert.equal(legacyVisible.jottacloudUrl, visible.jottacloudUrl);
 });
 
 test("document reindexing preserves private uploads without exposing storage metadata", () => {
