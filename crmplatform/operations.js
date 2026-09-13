@@ -70,7 +70,7 @@
   }
 
   function lineMarkup(item = {}) {
-    return `<div class="quote-line"><input data-quote-field="description" required maxlength="180" value="${esc(item.description || "")}" placeholder="Innspilling, miks …"><input data-quote-field="quantity" type="number" required min="0.01" step="0.25" value="${esc(item.quantity || 1)}"><select data-quote-field="unit">${["time", "låt", "dag", "stk"].map((unit) => `<option ${unit === (item.unit || "time") ? "selected" : ""}>${unit}</option>`).join("")}</select><input data-quote-field="unitPrice" type="number" required min="0" step="50" value="${esc(item.unitPrice ?? 550)}"><button class="icon-button" data-remove-quote-line type="button" aria-label="Fjern linje">×</button></div>`;
+    return `<div class="quote-line"><input data-quote-field="description" required maxlength="180" value="${esc(item.description || "")}" placeholder="Innspilling, miks …"><input data-quote-field="quantity" type="number" required min="0.25" step="0.25" value="${esc(item.quantity || 1)}"><select data-quote-field="unit">${["time", "låt", "dag", "stk"].map((unit) => `<option ${unit === (item.unit || "time") ? "selected" : ""}>${unit}</option>`).join("")}</select><input data-quote-field="unitPrice" type="number" required min="0" step="50" value="${esc(item.unitPrice ?? 550)}"><button class="icon-button" data-remove-quote-line type="button" aria-label="Fjern linje">×</button></div>`;
   }
 
   function renderQuoteLines(items = []) {
