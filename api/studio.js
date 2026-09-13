@@ -9,6 +9,7 @@ const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = re
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
+const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 
@@ -312,6 +313,77 @@ async function workspaceHandler(req, res) {
   return res.status(405).json({ error: "Method not allowed" });
 }
 
+function rentalPayload(items) {
+  const data = splitRentalItems(items);
+  const activeTenants = data.tenants.filter((tenant) => tenant.active !== false);
+  return {
+    ...data,
+    summary: {
+      activeTenants: activeTenants.length,
+      monthlyRent: activeTenants.reduce((sum, tenant) => sum + (Number(tenant.monthlyRent) || 0), 0),
+    },
+  };
+}
+
+async function rentalsHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  let items = await readCollection("rentals");
+
+  if (req.method === "GET") {
+    if (!items.length) {
+      items = seedRentalItems(user.email);
+      await writeCollection("rentals", items);
+    }
+    return res.status(200).json(rentalPayload(items));
+  }
+
+  if (req.method === "POST" && req.body?.kind === "tenant") {
+    const tenant = sanitizeTenant(req.body?.item || {}, {}, user.email);
+    if (!tenant) return res.status(400).json({ error: "Leietakeren må ha et navn." });
+    items.unshift({ ...tenant, kind: "tenant" });
+    await writeCollection("rentals", items);
+    return res.status(201).json({ tenant: rentalPayload(items).tenants.find((item) => item.id === tenant.id) });
+  }
+
+  if (req.method === "POST" && req.body?.kind === "payment") {
+    const tenantId = cleanText(req.body?.item?.tenantId, 120);
+    if (!items.some((item) => item.kind === "tenant" && item.id === tenantId)) {
+      return res.status(404).json({ error: "Leietakeren ble ikke funnet." });
+    }
+    const existingIndex = items.findIndex((item) => item.kind === "payment"
+      && item.tenantId === tenantId
+      && Number(item.year) === Number(req.body?.item?.year)
+      && Number(item.month) === Number(req.body?.item?.month));
+    const payment = sanitizePayment(req.body?.item || {}, existingIndex >= 0 ? items[existingIndex] : {}, user.email);
+    if (!payment) return res.status(400).json({ error: "Betalingen har ugyldig måned eller dato." });
+    if (existingIndex >= 0) items[existingIndex] = { ...payment, kind: "payment" };
+    else items.push({ ...payment, kind: "payment" });
+    await writeCollection("rentals", items);
+    return res.status(existingIndex >= 0 ? 200 : 201).json({ payment: { ...payment, kind: "payment" } });
+  }
+
+  if (req.method === "PATCH") {
+    const kind = cleanText(req.body?.kind, 40);
+    const id = cleanText(req.body?.id, 120);
+    const index = items.findIndex((item) => item.id === id && item.kind === kind);
+    if (index < 0) return res.status(404).json({ error: "Elementet ble ikke funnet." });
+    const current = items[index];
+    const updated = kind === "tenant"
+      ? sanitizeTenant(req.body?.changes || {}, current, user.email)
+      : kind === "room-keys" ? sanitizeRoomKeys(req.body?.changes || {}, current, user.email) : null;
+    if (!updated) return res.status(400).json({ error: "Endringen inneholder ugyldige verdier." });
+    items[index] = { ...updated, kind };
+    await writeCollection("rentals", items);
+    const data = rentalPayload(items);
+    return res.status(200).json(kind === "tenant"
+      ? { tenant: data.tenants.find((item) => item.id === id) }
+      : { room: data.rooms.find((item) => item.id === id) });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
 async function appendLeadActivity(activity, userEmail) {
   if (!activity?.leadId) return;
   try {
@@ -456,9 +528,10 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, projects, audio, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
+    readCollection("rentals"),
     readCollection("projects"),
     readCollection("audio"),
     readCollection("documents"),
@@ -480,6 +553,7 @@ async function backupHandler(req, res) {
     containsPersonalData: true,
     leads,
     workspace,
+    rentals,
     projects: projectExport.projects,
     audioFiles: projectExport.files,
     documents: safeDocuments,
@@ -546,6 +620,7 @@ module.exports = async function handler(req, res) {
     if (action === "jotta-sync") return await jottaSyncHandler(req, res);
     if (action === "jotta-download") return await jottaDownloadHandler(req, res);
     if (action === "workspace") return await workspaceHandler(req, res);
+    if (action === "rentals") return await rentalsHandler(req, res);
     if (action === "activities") return await activitiesHandler(req, res);
     if (action === "bookings") return await bookingsHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);

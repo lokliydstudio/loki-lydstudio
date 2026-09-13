@@ -18,6 +18,7 @@ const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
+const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { cleanUrl, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { publicSummary } = require("../lib/crm-prospect-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
@@ -443,6 +444,50 @@ test("internal savings goals calculate bounded progress", () => {
   assert.equal(completed.progress, 100);
   assert.equal(completed.completed, true);
   assert.equal(sanitizeGoal({ title: "" }), null);
+});
+
+test("rental register seeds the 11 active workbook agreements and exact room totals", () => {
+  const seeded = seedRentalItems("leon@lokilyd.no");
+  const data = splitRentalItems(seeded);
+  assert.equal(data.tenants.length, 11);
+  assert.equal(data.rooms.length, 3);
+  assert.equal(data.payments.length, 0);
+  assert.equal(data.tenants.filter((tenant) => tenant.active).reduce((sum, tenant) => sum + tenant.monthlyRent, 0), 31_967);
+  assert.equal(data.tenants.filter((tenant) => tenant.room === "Studio B").reduce((sum, tenant) => sum + tenant.monthlyRent, 0), 6_000);
+  assert.equal(data.tenants.filter((tenant) => tenant.room === "Studio C").reduce((sum, tenant) => sum + tenant.monthlyRent, 0), 14_000);
+  assert.equal(data.tenants.filter((tenant) => tenant.room === "Studio D").reduce((sum, tenant) => sum + tenant.monthlyRent, 0), 11_967);
+  assert.equal(data.tenants.filter((tenant) => tenant.name === "Oskar / Oliver").length, 1);
+  assert.equal(data.rooms.every((room) => room.issuedKeys === 0), true);
+  assert.equal(JSON.stringify(seeded).includes("Daniel"), false);
+  assert.equal(JSON.stringify(seeded).includes("Frydenbølien 19"), false);
+});
+
+test("rental contacts, contracts, payments and room keys are sanitized", () => {
+  const tenant = sanitizeTenant({
+    name: "  Ny leietaker  ",
+    room: "Studio C",
+    monthlyRent: "4200",
+    email: "KONTAKT@example.com",
+    phone: "+47 900 00 000",
+    contractPath: "AS/Kontrakter/Utleie/Studio C/Navn/signert.pdf",
+  }, {}, "charles@lokilyd.no");
+  assert.equal(tenant.name, "Ny leietaker");
+  assert.equal(tenant.email, "kontakt@example.com");
+  assert.equal(tenant.monthlyRent, 4200);
+  assert.equal(tenant.contractStatus, "Kontrakt funnet");
+  assert.equal(splitRentalItems([{ ...tenant, kind: "tenant" }]).tenants[0].contractUrl.includes("jottacloud.com/web/sync/list/name/"), true);
+  assert.equal(cleanContractPath("AS/Kontrakter/Utleie/Arkiv_utflyttet/gammel.pdf"), "");
+  assert.equal(cleanContractPath("../AS/Kontrakter/Utleie/avtale.pdf"), "");
+  assert.equal(cleanJottacloudUrl("https://evil.example/contract.pdf"), "");
+
+  const payment = sanitizePayment({ tenantId: tenant.id, year: 2026, month: 9, paid: true, paidAt: "2026-09-12" }, {}, "leon@lokilyd.no");
+  assert.equal(payment.id, paymentId(tenant.id, 2026, 9));
+  assert.equal(payment.paidAt, "2026-09-12");
+  assert.equal(sanitizePayment({ tenantId: tenant.id, year: 2019, month: 13 }), null);
+
+  const keys = sanitizeRoomKeys({ room: "Studio D", issuedKeys: 150 }, {}, "leon@lokilyd.no");
+  assert.equal(keys.issuedKeys, 100);
+  assert.equal(sanitizeRoomKeys({ room: "Studio X", issuedKeys: 1 }), null);
 });
 
 test("studio bookings validate times and reject overlaps", () => {
