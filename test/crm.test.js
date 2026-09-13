@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const test = require("node:test");
 
 process.env.CRM_AUTH_SECRET = "test-only-secret-that-is-longer-than-thirty-two-characters";
@@ -29,6 +31,17 @@ test("only active owners can receive CRM tokens", () => {
   assert.equal(auth.verifyToken(token, "login").email, "leon@lokilyd.no");
   assert.equal(auth.createToken("charles@lokilyd.no", "login", 60) !== null, true);
   assert.equal(auth.createToken("daniel@lokilyd.no", "login", 60), null);
+});
+
+test("CRM shell includes an accessible persistent theme switcher", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const script = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "theme.js"), "utf8");
+  assert.match(html, /id="theme-toggle"/);
+  assert.match(html, /aria-label="Bytt til dark mode"/);
+  assert.match(html, /crmplatform\/theme\.css/);
+  assert.match(html, /crmplatform\/theme\.js/);
+  assert.match(script, /loki-crm-theme/);
+  assert.match(script, /aria-pressed/);
 });
 
 test("tokens cannot be reused for another purpose", () => {

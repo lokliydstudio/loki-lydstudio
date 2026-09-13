@@ -1,0 +1,178 @@
+@media screen {
+  html[data-theme="dark"] {
+    color-scheme: dark;
+    --ink: #f1efe8;
+    --muted: #aaa69d;
+    --line: #3e3d37;
+    --paper: #171714;
+    --panel: #22221e;
+    --sidebar: #0f0f0e;
+    --violet: #a997ff;
+    --amber: #e0b65b;
+    --green: #a7ca68;
+    --blue: #79b8d2;
+    --danger: #ff8f7b;
+  }
+
+  body,
+  .topbar,
+  .panel,
+  .modal,
+  button,
+  input,
+  select,
+  textarea {
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+  }
+
+  .theme-toggle {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 11px;
+    border: 1px solid #c9c4b9;
+    border-radius: 999px;
+    background: rgba(255, 254, 250, .72);
+    color: #4b4842;
+    font-size: 9px;
+    cursor: pointer;
+  }
+
+  .theme-toggle span { font-size: 15px; line-height: 1; }
+  .theme-toggle b { font-size: 9px; white-space: nowrap; }
+
+  html[data-theme="dark"] .topbar { background: rgba(23, 23, 20, .82); }
+  html[data-theme="dark"] .theme-toggle { border-color: #504f47; background: #292925; color: #f1efe8; }
+  html[data-theme="dark"] .version { border-color: #504f47; color: #aaa69d; }
+
+  html[data-theme="dark"] .secondary,
+  html[data-theme="dark"] .round,
+  html[data-theme="dark"] .icon-button,
+  html[data-theme="dark"] .tiny-button,
+  html[data-theme="dark"] .close,
+  html[data-theme="dark"] .rental-edit,
+  html[data-theme="dark"] .rental-contract a,
+  html[data-theme="dark"] .prospect-links a,
+  html[data-theme="dark"] .lead-relevance-button {
+    border-color: #4b4a43;
+    background: #2b2b27;
+    color: #e8e5dd;
+  }
+
+  html[data-theme="dark"] input:not([type="checkbox"]):not([type="radio"]),
+  html[data-theme="dark"] select,
+  html[data-theme="dark"] textarea {
+    border-color: #4b4a43 !important;
+    background: #292925 !important;
+    color: #f1efe8 !important;
+  }
+
+  html[data-theme="dark"] input::placeholder,
+  html[data-theme="dark"] textarea::placeholder { color: #77746c; }
+
+  html[data-theme="dark"] .compact-form,
+  html[data-theme="dark"] .note-form,
+  html[data-theme="dark"] .goal-form,
+  html[data-theme="dark"] .project-fields,
+  html[data-theme="dark"] .audio-form,
+  html[data-theme="dark"] .quote-lines,
+  html[data-theme="dark"] .facts,
+  html[data-theme="dark"] .deadline,
+  html[data-theme="dark"] .automation,
+  html[data-theme="dark"] .lead-email-source,
+  html[data-theme="dark"] .mail-reader,
+  html[data-theme="dark"] .prospect-evidence,
+  html[data-theme="dark"] .prospect-check,
+  html[data-theme="dark"] .rental-metrics,
+  html[data-theme="dark"] .rental-key-card,
+  html[data-theme="dark"] .rental-active-field,
+  html[data-theme="dark"] .crm-category-switch,
+  html[data-theme="dark"] .stage-view-bar {
+    background: #292925;
+  }
+
+  html[data-theme="dark"] .metric,
+  html[data-theme="dark"] .pipeline div,
+  html[data-theme="dark"] .task-row,
+  html[data-theme="dark"] .note-card,
+  html[data-theme="dark"] .goal-card,
+  html[data-theme="dark"] .fiken-metric,
+  html[data-theme="dark"] .booking-card,
+  html[data-theme="dark"] .quote-card,
+  html[data-theme="dark"] .customer-directory-card,
+  html[data-theme="dark"] .pipeline .pipeline-tab,
+  html[data-theme="dark"] .prospect-tab,
+  html[data-theme="dark"] .prospect-contact-grid > span {
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  html[data-theme="dark"] .crm-head,
+  html[data-theme="dark"] .doc-head,
+  html[data-theme="dark"] .invoice-head,
+  html[data-theme="dark"] .prospect-list-head {
+    background: #2d2d28;
+    color: #aaa69d;
+  }
+
+  html[data-theme="dark"] .message.selected,
+  html[data-theme="dark"] .project-list button:hover,
+  html[data-theme="dark"] .project-list button.active,
+  html[data-theme="dark"] .prospect-card:hover,
+  html[data-theme="dark"] .prospect-card.active,
+  html[data-theme="dark"] .crm-row[data-open-lead]:hover,
+  html[data-theme="dark"] .crm-row[data-open-lead]:focus-visible {
+    background: #30302b;
+  }
+
+  html[data-theme="dark"] .crm-row.priority-lead,
+  html[data-theme="dark"] .crm-row.priority-lead:hover,
+  html[data-theme="dark"] .crm-row.priority-lead:focus-visible { background: #29301e; }
+  html[data-theme="dark"] .crm-row.irrelevant-lead { background: #292824; color: var(--muted); }
+
+  html[data-theme="dark"] .patch-table td,
+  html[data-theme="dark"] .rental-sheet td,
+  html[data-theme="dark"] .rental-sheet .rental-sticky,
+  html[data-theme="dark"] .rental-sheet-wrap {
+    border-color: var(--line);
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  html[data-theme="dark"] .patch-table tr:nth-child(even) td,
+  html[data-theme="dark"] .rental-sheet tbody tr:hover td,
+  html[data-theme="dark"] .rental-sheet tbody tr:hover .rental-sticky { background: #282824; }
+
+  html[data-theme="dark"] .rental-year-switcher,
+  html[data-theme="dark"] .rental-key-control,
+  html[data-theme="dark"] .rental-key-control input { border-color: #4b4a43; background: #292925; color: var(--ink); }
+  html[data-theme="dark"] .rental-year-switcher button { color: var(--ink); }
+  html[data-theme="dark"] .rental-year-switcher button:hover,
+  html[data-theme="dark"] .rental-key-control button:hover { background: #363630; }
+  html[data-theme="dark"] .rental-payment { border-color: #4b4a43; background: #292925; }
+  html[data-theme="dark"] .rental-payment.due:not(.paid) { border-color: #7b6331; background: #332c1e; }
+  html[data-theme="dark"] .rental-payment.paid { border-color: #647d3d; background: #26321e; }
+  html[data-theme="dark"] .rental-payment input[type="date"] { background: transparent !important; color: var(--ink) !important; }
+
+  html[data-theme="dark"] .mail-reader-body { border-color: #4b4a43; background: #1c1c19; color: #e7e4dc; }
+  html[data-theme="dark"] .prospect-guard,
+  html[data-theme="dark"] .prospect-contact { border-color: #4d5935; background: #252b1e; }
+  html[data-theme="dark"] .prospect-guard p,
+  html[data-theme="dark"] .prospect-evidence p,
+  html[data-theme="dark"] .note-content,
+  html[data-theme="dark"] .activity-row span,
+  html[data-theme="dark"] .rental-arrangement { color: #c5c1b8; }
+
+  html[data-theme="dark"] .backup-note { border-left-color: #b78b32; background: #30291b; color: #c9c1b0; }
+  html[data-theme="dark"] .backup-note strong { color: #f1efe8; }
+  html[data-theme="dark"] .danger-button { border-color: #764b44 !important; background: #34221f !important; color: #ff9e8d !important; }
+  html[data-theme="dark"] .lead-relevance-button.restore { border-color: #617244; color: #b7da79; }
+  html[data-theme="dark"] .auth-gate { background: rgba(8, 8, 7, .94); }
+  html[data-theme="dark"] .auth-card { background: #1b1b18; }
+
+  @media (max-width: 640px) {
+    .theme-toggle { width: 38px; justify-content: center; padding: 8px; }
+    .theme-toggle b { display: none; }
+  }
+}
