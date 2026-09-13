@@ -83,11 +83,10 @@ module.exports = async function handler(req, res) {
     }
 
     const allUids = await client.search({ all: true }, { uid: true });
-    const unreadUids = await client.search({ seen: false }, { uid: true });
     const uids = allUids.slice(-50);
-    if (!uids.length) return res.status(200).json({ messages: [], unreadCount: 0 });
+    if (!uids.length) return res.status(200).json({ messages: [] });
     const rows = await client.fetchAll(uids, { uid: true, envelope: true, flags: true, headers: SORT_HEADERS }, { uid: true });
-    return res.status(200).json({ messages: sortMessages(rows.map((row) => envelopeToMessage(row, preferences))), unreadCount: unreadUids.length });
+    return res.status(200).json({ messages: sortMessages(rows.map((row) => envelopeToMessage(row, preferences))) });
   } catch (error) {
     console.error("Mailbox connection failed", error?.message);
     return res.status(503).json({ error: "Kunne ikke koble til innboksen." });
