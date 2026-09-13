@@ -19,6 +19,7 @@ const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = re
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
 const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
 
 test("only active owners can receive CRM tokens", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
@@ -308,6 +309,21 @@ test("mailbox preferences also suppress matching CRM leads", () => {
   assert.equal(suppressedByMailPreference({ messageKey: "other", email: "VARSLING@example.com" }, preferences), true);
   assert.equal(suppressedByMailPreference({ messageKey: "restored", email: "artist@example.com" }, preferences), false);
   assert.equal(mailPreferenceForLead({ messageKey: "restored", email: "artist@example.com" }, preferences), "inbox");
+});
+
+test("manual customers persist in the customer register without an email address", () => {
+  const customer = sanitizeLead({
+    name: "  Ny studiokunde  ",
+    phone: "+47 900 00 000",
+    project: "Innspilling av demo",
+    source: "Manuelt",
+  });
+  assert.equal(customer.name, "Ny studiokunde");
+  assert.equal(customer.email, "");
+  assert.equal(customer.phone, "+47 900 00 000");
+  const views = splitLeadViews([customer], []);
+  assert.deepEqual(views.leads.map((lead) => lead.id), [customer.id]);
+  assert.equal(views.irrelevantLeads.length, 0);
 });
 
 test("shared tasks and meeting notes are normalized", () => {

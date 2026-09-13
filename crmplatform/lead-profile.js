@@ -92,7 +92,7 @@
       form.reset();
       populate(lead);
       title.textContent = lead.profileCompleted ? lead.name : "Kompletter leadprofil";
-      subtitle.innerHTML = `${esc(lead.source || "Manuelt")} · ${esc(lead.email)}`;
+      subtitle.innerHTML = `${esc(lead.source || "Manuelt")} · ${esc(lead.email || lead.phone || "Kontaktinfo kan legges til senere")}`;
       submit.textContent = lead.profileCompleted ? "Lagre endringer" : "Legg til som lead";
       enrichmentState.textContent = lead.emailSummary ? "Lagret fra e-post" : "Henter kilde";
       enrichmentState.className = lead.emailSummary ? "state green" : "state amber";
@@ -139,7 +139,7 @@
       event.preventDefault();
       const values = Object.fromEntries(new FormData(form));
       const id = String(values.id || "");
-      const duplicate = !id && getLeads().find((item) => String(item.email || "").toLowerCase() === String(values.email || "").toLowerCase());
+      const duplicate = !id && values.email && getLeads().find((item) => String(item.email || "").toLowerCase() === String(values.email).toLowerCase());
       if (duplicate) {
         toast("Denne e-postadressen finnes allerede. Eksisterende kundeprofil åpnes.");
         return openLead(duplicate.id);
@@ -180,7 +180,7 @@
         if (!response.ok) throw new Error(data.error || "Leadet kunne ikke lagres.");
         if (id) setLeads(getLeads().map((item) => item.id === id ? data.lead : item));
         else setLeads(data.leads || getLeads());
-        onStageChange(lead.stage);
+        onStageChange(id ? lead.stage : "Alle kunder");
         close();
         renderAll();
         toast(id ? "Leadprofilen er oppdatert." : "Leadet er lagt til.");

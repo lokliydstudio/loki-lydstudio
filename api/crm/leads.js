@@ -32,8 +32,10 @@ function optionalValue(input, existing, key) {
 }
 
 function sanitizeLead(input, existing = {}) {
-  const email = cleanEmail(input?.email || existing.email);
-  if (!email) return null;
+  const email = cleanEmail(optionalValue(input, existing, "email"));
+  const phone = cleanText(optionalValue(input, existing, "phone"), 40);
+  const name = cleanText(optionalValue(input, existing, "name") || email.split("@")[0], 120);
+  if (!name) return null;
   const requestedStage = cleanText(input?.stage || existing.stage || "Nytt lead", 40);
   let source = cleanText(input?.source || existing.source || "Manuelt", 80);
   const category = cleanText(input?.category || existing.category || (source.toLowerCase() === "formspree" ? "formspree" : "customer"), 30);
@@ -44,7 +46,7 @@ function sanitizeLead(input, existing = {}) {
   const preferredContact = cleanText(optionalValue(input, existing, "preferredContact") || "E-post", 30);
   const lead = {
     id: cleanText(existing.id || input?.id, 120) || `lead-${crypto.randomUUID()}`,
-    name: cleanText(input?.name || existing.name || email.split("@")[0], 120),
+    name,
     email,
     project: cleanText(input?.project || existing.project || "Ny henvendelse", 300),
     stage: STAGES.has(requestedStage) ? requestedStage : "Nytt lead",
@@ -58,7 +60,7 @@ function sanitizeLead(input, existing = {}) {
     assignee: ASSIGNEES.has(assignee) ? assignee : "Begge",
     preferredContact: CONTACT_METHODS.has(preferredContact) ? preferredContact : "E-post",
     lostReason: cleanText(optionalValue(input, existing, "lostReason"), 300),
-    phone: cleanText(optionalValue(input, existing, "phone"), 40),
+    phone,
     role: cleanText(optionalValue(input, existing, "role"), 60),
     artistName: cleanText(optionalValue(input, existing, "artistName"), 160),
     company: cleanText(optionalValue(input, existing, "company"), 160),
@@ -78,6 +80,7 @@ function sanitizeLead(input, existing = {}) {
 function leadIsIrrelevant(lead, preferences) {
   if (suppressedByMailPreference(lead, preferences)) return true;
   const override = mailPreferenceForLead(lead, preferences);
+  if (!override && String(lead.source || "").toLowerCase() === "manuelt") return false;
   return classifyEnvelope({
       uid: lead.id,
       envelope: {
@@ -122,7 +125,7 @@ async function leadViews() {
   return splitLeadViews(leads, preferences);
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert ennå." });
@@ -145,17 +148,23 @@ module.exports = async function handler(req, res) {
 
       for (const candidate of incoming) {
         const email = cleanEmail(candidate?.email);
-        if (!email || email.endsWith("@lokilyd.no") || seenEmails.has(email)) continue;
-        seenEmails.add(email);
-        if (String(candidate?.source || "").toLowerCase() === "manuelt") manuallyRestoredEmails.add(email);
-        const index = current.findIndex((lead) => cleanEmail(lead.email) === email);
+        const manual = String(candidate?.source || "").toLowerCase() === "manuelt";
+        if ((!email && !manual) || email.endsWith("@lokilyd.no") || (email && seenEmails.has(email))) continue;
+        if (email) seenEmails.add(email);
+        if (manual && email) manuallyRestoredEmails.add(email);
+        const candidateId = cleanText(candidate?.id, 120);
+        const index = email
+          ? current.findIndex((lead) => cleanEmail(lead.email) === email)
+          : candidateId ? current.findIndex((lead) => lead.id === candidateId) : -1;
         if (index >= 0) {
           const merged = sanitizeLead(candidate, current[index]);
+          if (!merged) continue;
           current[index] = { ...merged, id: current[index].id, stage: current[index].stage, value: current[index].value };
         } else {
           const created = sanitizeLead(candidate);
+          if (!created) continue;
           current.unshift(created);
-          if (String(candidate?.source || "").toLowerCase() === "manuelt") createdLeads.push(created);
+          if (manual) createdLeads.push(created);
         }
         changed = true;
       }
@@ -232,6 +241,7 @@ module.exports = async function handler(req, res) {
       }
       const previous = current[index];
       const updated = sanitizeLead(req.body?.changes || {}, current[index]);
+      if (!updated) return res.status(400).json({ error: "Kunden må ha et navn." });
       current[index] = { ...updated, id: current[index].id, firstSeenAt: current[index].firstSeenAt };
       const prioritized = sortLeads(current);
       await writeCollection("leads", prioritized);
@@ -265,9 +275,11 @@ module.exports = async function handler(req, res) {
       const linkedActivities = activities.filter((item) => item.leadId === id).length;
       const linkedBookings = bookings.filter((item) => item.leadId === id).length;
       const linkedQuotes = quotes.filter((item) => item.leadId === id).length;
-      const suppressionKey = crypto.createHash("sha256").update(`deleted-lead:${lead.email}`).digest("hex").slice(0, 32);
-      const nextPreferences = preferences.filter((item) => String(item.sender || "").toLowerCase() !== lead.email);
-      nextPreferences.unshift({ key: suppressionKey, category: "irrelevant", sender: lead.email, updatedAt: new Date().toISOString(), updatedBy: user.email });
+      const nextPreferences = preferences.filter((item) => !lead.email || String(item.sender || "").toLowerCase() !== lead.email);
+      if (lead.email) {
+        const suppressionKey = crypto.createHash("sha256").update(`deleted-lead:${lead.email}`).digest("hex").slice(0, 32);
+        nextPreferences.unshift({ key: suppressionKey, category: "irrelevant", sender: lead.email, updatedAt: new Date().toISOString(), updatedBy: user.email });
+      }
       await Promise.all([
         writeCollection("leads", current.filter((item) => item.id !== id)),
         writeCollection("activities", activities.filter((item) => item.leadId !== id)),
@@ -283,4 +295,7 @@ module.exports = async function handler(req, res) {
     console.error("CRM lead storage failed", error?.message);
     return res.status(503).json({ error: "Kunne ikke oppdatere CRM-lagringen." });
   }
-};
+}
+
+module.exports = handler;
+module.exports._test = { sanitizeLead, splitLeadViews };

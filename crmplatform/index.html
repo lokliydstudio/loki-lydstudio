@@ -57,7 +57,7 @@
         </section>
 
         <section class="view" id="leads">
-          <div class="section-intro"><div><span class="kicker">CRM</span><h2>Fra henvendelse til booking</h2><p>Velg en fase for å se kundene som er der i prosessen. Formspree-henvendelser prioriteres innenfor hver fase.</p></div><div class="lead-tools"><span class="state green">Formspree først</span><input class="search" id="lead-search" type="search" placeholder="Søk etter navn, e-post eller prosjekt"></div></div><div class="pipeline" id="pipeline" role="tablist" aria-label="Salgsfaser"></div><section class="panel table-panel"><div class="stage-view-bar"><span class="kicker">VALGT MAPPE</span><strong id="lead-stage-title">Nytt lead</strong></div><div class="crm-row crm-head"><span>Kunde</span><span>Prosjekt</span><span>Status</span><span>Verdi</span><span>Neste handling</span><span></span></div><div id="lead-table" aria-live="polite"></div></section><p class="notice">Bruk «Ikke relevant» for promomail og andre henvendelser som ikke er reelle leads. De samles i en egen mappe og kan gjenopprettes. Nye meldinger fra samme avsender filtreres automatisk. «Ferdig / arkiv» samler avsluttede kundeforhold.</p>
+          <div class="section-intro"><div><span class="kicker">KUNDEREGISTER OG CRM</span><h2>Alle kunder på ett sted</h2><p>Hver lagrede lead blir et varig kundekort, uavhengig av enkeltmeldinger i innboksen. Bruk salgsfasene når dere vil følge den aktive prosessen.</p></div><div class="lead-tools"><span class="state green">Formspree først</span><input class="search" id="lead-search" type="search" placeholder="Søk etter navn, telefon, e-post eller prosjekt"></div></div><div class="pipeline" id="pipeline" role="tablist" aria-label="Kunderegister og salgsfaser"></div><section class="panel table-panel"><div class="stage-view-bar"><span class="kicker">VALGT OVERSIKT</span><strong id="lead-stage-title">Alle kunder</strong></div><div class="crm-row crm-head"><span>Kunde</span><span>Prosjekt</span><span>Status</span><span>Verdi</span><span>Neste handling</span><span></span></div><div id="lead-table" aria-live="polite"></div></section><p class="notice">«Alle kunder» er det varige kunderegisteret og inkluderer både aktive og avsluttede forhold. Bruk «Ikke relevant» for promomail; den kan gjenopprettes senere.</p>
         </section>
 
         <section class="view" id="workspace-tools">
@@ -94,7 +94,7 @@
         <input name="messageUid" type="hidden">
         <div class="lead-profile-grid">
           <label>Fullt navn<input name="name" required maxlength="120"></label>
-          <label>E-post<input name="email" type="email" required maxlength="254"></label>
+          <label>E-post · valgfritt<input name="email" type="email" maxlength="254" placeholder="Kan legges til senere"></label>
           <label>Telefon<input name="phone" type="tel" maxlength="40" placeholder="+47 …"></label>
           <label>Rolle<select name="role"><option value="">Ikke valgt</option><option>Artist</option><option>Produsent</option><option>Artist og produsent</option><option>Band</option><option>Management / label</option><option>Annet</option></select></label>
           <label>Artist- / prosjektnavn<input name="artistName" maxlength="160" placeholder="Artistnavn eller band"></label>
@@ -134,7 +134,7 @@
   <script>
     (() => {
       const stages = ["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig"];
-      const pipelineTabs = ["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig / arkiv", "Ikke relevant"];
+      const pipelineTabs = ["Alle kunder", "Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig / arkiv", "Ikke relevant"];
       const archivedStages = new Set(["Ferdig", "Tapt"]);
       const initialLeads = [
         {id:"demo-1",name:"Nora S.",email:"nora@eksempel.no",project:"Ny singel · innspilling",stage:"Kontaktet",value:4400,source:"Nettside",nextAction:"Godkjenn AI-svar"},
@@ -157,7 +157,7 @@
       let irrelevantLeads = [];
       let selectedMessage = 1;
       let mailFilter = "priority";
-      let leadStageFilter = "Nytt lead";
+      let leadStageFilter = "Alle kunder";
       let authenticatedUser = null;
       try { const states = JSON.parse(localStorage.getItem("loki_message_states")) || {}; messages.forEach(m => { if(states[m.id]) m.state=states[m.id]; }); } catch {}
       const money = value => new Intl.NumberFormat("nb-NO",{style:"currency",currency:"NOK",maximumFractionDigits:0}).format(value);
@@ -167,7 +167,7 @@
       const leadPriority=lead=>Number(lead.priority)||(String(lead.category||"").toLowerCase()==="formspree"||String(lead.source||"").toLowerCase()==="formspree"?100:String(lead.source||"").toLowerCase()==="nettside"?90:["e-post","email"].includes(String(lead.source||"").toLowerCase())?50:30);
       const prioritizedLeads=list=>[...list].sort((a,b)=>{const aOpen=!archivedStages.has(a.stage);const bOpen=!archivedStages.has(b.stage);if(aOpen!==bOpen)return aOpen?-1:1;const sourceDifference=leadPriority(b)-leadPriority(a);if(sourceDifference)return sourceDifference;return new Date(b.receivedAt||b.lastSeenAt||b.firstSeenAt||0)-new Date(a.receivedAt||a.lastSeenAt||a.firstSeenAt||0)});
       const stageTabFor=stage=>archivedStages.has(stage)?"Ferdig / arkiv":stage;
-      const matchesStageTab=(lead,tab)=>tab==="Ikke relevant"?lead.relevance==="irrelevant":lead.relevance!=="irrelevant"&&(tab==="Ferdig / arkiv"?archivedStages.has(lead.stage):lead.stage===tab);
+      const matchesStageTab=(lead,tab)=>{if(tab==="Ikke relevant")return lead.relevance==="irrelevant";if(lead.relevance==="irrelevant")return false;if(tab==="Alle kunder")return true;if(tab==="Ferdig / arkiv")return archivedStages.has(lead.stage);return lead.stage===tab};
       const leadSourceBadge=lead=>{const source=lead.source||"Manuelt";if(leadPriority(lead)>=100)return '<span class="lead-source-badge formspree">Formspree · Høy prioritet</span>';if(leadPriority(lead)>=50)return `<span class="lead-source-badge email">${esc(source)} · Prioritert</span>`;return `<span class="lead-source-badge">${esc(source)}</span>`};
       async function loadCrmData(){const [leadResult,fundingResult]=await Promise.allSettled([fetch("/api/crm/leads",{credentials:"same-origin"}),fetch("/api/crm/funding",{credentials:"same-origin"})]);if(leadResult.status==="fulfilled"&&leadResult.value.ok){const data=await leadResult.value.json();leads=data.leads||[];irrelevantLeads=data.irrelevantLeads||[];saveLeads()}if(fundingResult.status==="fulfilled"&&fundingResult.value.ok){const data=await fundingResult.value.json();const node=document.getElementById("funding-status");if(data.lastCheckedAt){node.textContent=`Sjekket ${formatDate(data.lastCheckedAt)}`;node.className="state green"}}renderAll()}
       async function upsertLeads(candidates){try{const response=await fetch("/api/crm/leads",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({action:"upsertMany",leads:candidates})});if(!response.ok)throw new Error();const data=await response.json();leads=data.leads||leads;irrelevantLeads=data.irrelevantLeads||irrelevantLeads;saveLeads();return true}catch{return false}}
