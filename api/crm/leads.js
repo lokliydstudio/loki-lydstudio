@@ -209,7 +209,7 @@ module.exports = async function handler(req, res) {
         nextPreferences.unshift({
           key,
           category: relevance === "irrelevant" ? "irrelevant" : "inbox",
-          sender: relevance === "irrelevant" ? sender : "",
+          sender,
           updatedAt: new Date().toISOString(),
           updatedBy: user.email,
         });
