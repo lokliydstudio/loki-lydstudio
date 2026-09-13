@@ -128,7 +128,7 @@
   }
 
   function suggestedQuoteItem(lead = {}) {
-    const project = String(lead.project || "").toLowerCase();
+    const project = String(lead?.project || "").toLowerCase();
     if (project.includes("master")) return { description: "Mastering", quantity: 1, unit: "låt", unitPrice: 750 };
     if (project.includes("produksjon")) return { description: "Produksjon", quantity: 1, unit: "time", unitPrice: 650 };
     if (project.includes("miks")) return { description: "Miks", quantity: 1, unit: "time", unitPrice: 550 };
