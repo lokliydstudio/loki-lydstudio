@@ -13,7 +13,7 @@
     return String(lead.email || stored).split("@")[0].replace(/[._-]+/g, " ").replace(/\b\p{L}/gu, (letter) => letter.toUpperCase()).trim() || "Kunde uten navn";
   }
 
-  function init({ getLeads, setLeads, renderAll, toast, onStageChange = () => {} }) {
+  function init({ getLeads, setLeads, renderAll, toast, onStageChange = () => {}, onCustomerSaved = () => {} }) {
     const modal = document.getElementById("lead-modal");
     const form = document.getElementById("lead-form");
     const title = document.getElementById("modal-title");
@@ -43,9 +43,9 @@
       quickActions.hidden = true;
       timeline.hidden = true;
       preview.value = "";
-      title.textContent = "Nytt lead";
-      subtitle.textContent = "Legg inn kontakt- og prosjektinformasjon.";
-      submit.textContent = "Legg til lead";
+      title.textContent = "Ny kunde";
+      subtitle.textContent = "Opprett en kundeprofil med kontakt- og prosjektinformasjon.";
+      submit.textContent = "Opprett kunde";
       modal.classList.add("open");
       form.elements.name.focus();
     }
@@ -100,6 +100,7 @@
       activeLead = lead;
       form.reset();
       populate(lead);
+      if (customerMode && String(form.elements.name.value || "").includes("@")) setValue(form, "name", customerDisplayName(lead));
       title.textContent = customerMode ? customerDisplayName(lead) : lead.profileCompleted ? lead.name : "Kompletter leadprofil";
       subtitle.innerHTML = customerMode
         ? `Kunderegister · ${esc(lead.stage || "Kunde")}`
@@ -193,14 +194,15 @@
         if (id) setLeads(getLeads().map((item) => item.id === id ? data.lead : item));
         else setLeads(data.leads || getLeads());
         onStageChange(lead.stage);
+        onCustomerSaved(data.lead || lead);
         close();
         renderAll();
-        toast(id ? "Leadprofilen er oppdatert." : "Leadet er lagt til.");
+        toast(id ? "Kundeprofilen er oppdatert under «Kunder»." : "Kunden er lagt til under «Kunder».");
       } catch (error) {
         toast(error.message || "Leadet kunne ikke lagres.");
       } finally {
         submit.disabled = false;
-        submit.textContent = id ? "Lagre endringer" : "Legg til lead";
+        submit.textContent = id ? "Lagre endringer" : "Opprett kunde";
       }
     };
 
