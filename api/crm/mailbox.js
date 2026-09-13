@@ -35,11 +35,27 @@ async function updatePreference(req, res, user) {
   return res.status(200).json({ ok: true, key, category });
 }
 
+async function markMessageRead(req, res) {
+  const uid = Number.parseInt(req.body?.uid, 10);
+  if (!Number.isSafeInteger(uid) || uid < 1) return res.status(400).json({ error: "Ugyldig e-post-ID." });
+  const client = createImapClient();
+  try {
+    await client.connect();
+    await client.mailboxOpen("INBOX");
+    const updated = await client.messageFlagsAdd(uid, ["\\Seen"], { uid: true });
+    if (!updated) return res.status(404).json({ error: "Meldingen ble ikke funnet." });
+    return res.status(200).json({ ok: true, uid, unread: false });
+  } finally {
+    try { await client.logout(); } catch {}
+  }
+}
+
 module.exports = async function handler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method === "POST") {
     try {
+      if (req.body?.action === "markRead") return await markMessageRead(req, res);
       return await updatePreference(req, res, user);
     } catch (error) {
       console.error("Mailbox preference update failed", error?.message);
@@ -54,10 +70,10 @@ module.exports = async function handler(req, res) {
     await client.mailboxOpen("INBOX", { readOnly: true });
     const requestedUid = Number.parseInt(req.query?.uid, 10);
     if (Number.isFinite(requestedUid) && requestedUid > 0) {
-      const metadata = await client.fetchOne(requestedUid, { uid: true, envelope: true, size: true, headers: SORT_HEADERS }, { uid: true });
+      const metadata = await client.fetchOne(requestedUid, { uid: true, envelope: true, size: true, flags: true, headers: SORT_HEADERS }, { uid: true });
       if (!metadata) return res.status(404).json({ error: "Meldingen ble ikke funnet." });
       if (metadata.size > 2_000_000) return res.status(413).json({ ...envelopeToMessage(metadata, preferences), error: "Meldingen er for stor til å forhåndsvise." });
-      const full = await client.fetchOne(requestedUid, { uid: true, envelope: true, source: true, headers: SORT_HEADERS }, { uid: true });
+      const full = await client.fetchOne(requestedUid, { uid: true, envelope: true, source: true, flags: true, headers: SORT_HEADERS }, { uid: true });
       const parsed = await simpleParser(full.source, { skipHtmlToText: false, skipTextToHtml: true });
       const parsedBody = String(parsed.text || parsed.html || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
       const body = parsedBody.slice(0, 100_000);
@@ -67,10 +83,11 @@ module.exports = async function handler(req, res) {
     }
 
     const allUids = await client.search({ all: true }, { uid: true });
+    const unreadUids = await client.search({ seen: false }, { uid: true });
     const uids = allUids.slice(-50);
-    if (!uids.length) return res.status(200).json({ messages: [] });
+    if (!uids.length) return res.status(200).json({ messages: [], unreadCount: 0 });
     const rows = await client.fetchAll(uids, { uid: true, envelope: true, flags: true, headers: SORT_HEADERS }, { uid: true });
-    return res.status(200).json({ messages: sortMessages(rows.map((row) => envelopeToMessage(row, preferences))) });
+    return res.status(200).json({ messages: sortMessages(rows.map((row) => envelopeToMessage(row, preferences))), unreadCount: unreadUids.length });
   } catch (error) {
     console.error("Mailbox connection failed", error?.message);
     return res.status(503).json({ error: "Kunne ikke koble til innboksen." });

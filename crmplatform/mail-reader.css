@@ -1,3 +1,99 @@
+.inbox {
+  height: calc(100dvh - 166px);
+  min-height: 540px;
+  align-items: stretch;
+  overflow: hidden;
+}
+
+.inbox-list-panel,
+.draft {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.inbox-list-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#message-list {
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.draft {
+  position: static;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.message {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.message-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  overflow: hidden;
+}
+
+.message-sender,
+.message-subject {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.message-sender {
+  position: relative;
+  padding-right: 12px;
+}
+
+.message.unread .message-sender::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #6b54dc;
+  transform: translateY(-50%);
+}
+
+.message-summary {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.message-meta {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.message-meta em {
+  color: #6753bf;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 700;
+}
+
 .mail-reader {
   margin: 18px 0;
   padding: 16px;
@@ -80,5 +176,23 @@
 
   .mail-reader.expanded .mail-reader-body {
     min-height: 55vh;
+  }
+}
+
+@media (max-width: 880px) {
+  .inbox {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .inbox-list-panel,
+  .draft {
+    height: auto;
+    overflow: visible;
+  }
+
+  #message-list {
+    max-height: 65vh;
   }
 }

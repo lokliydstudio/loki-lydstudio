@@ -211,6 +211,12 @@ test("Formspree submissions are prioritized and use the customer's reply-to addr
   assert.equal(message.priority, 100);
 });
 
+test("mail unread state follows the IMAP Seen flag", () => {
+  const envelope = { from: [{ name: "Artist", address: "artist@example.com" }], subject: "Ny låt" };
+  assert.equal(classifyEnvelope({ uid: 1, envelope, flags: new Set() }).unread, true);
+  assert.equal(classifyEnvelope({ uid: 2, envelope, flags: new Set(["\\Seen"]) }).unread, false);
+});
+
 test("Formspree body fields enrich the editable lead profile", () => {
   const enrichment = inferLeadDetails({
     subject: "Ny melding fra kontaktskjema",
