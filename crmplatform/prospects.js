@@ -25,7 +25,7 @@
     const needle = document.getElementById("prospect-search")?.value.trim().toLowerCase() || "";
     return prospects.filter((item) => {
       const matchesFilter = filter === "Alle" || (filter === "Aktive" ? activeStatus(item.status) : item.status === filter);
-      const haystack = `${item.name} ${item.artistName} ${item.location} ${item.genre} ${(item.services || []).join(" ")} ${item.publicEmail}`.toLowerCase();
+      const haystack = `${item.name} ${item.artistName} ${item.location} ${item.genre} ${(item.services || []).join(" ")} ${item.contactName || ""} ${item.contactRole || ""} ${item.publicEmail || ""} ${item.publicPhone || ""}`.toLowerCase();
       return matchesFilter && haystack.includes(needle);
     });
   }
@@ -66,10 +66,12 @@
     node.innerHTML = `<div class="prospect-detail-header"><div><span class="kicker">KANDIDATPROFIL</span><h2>${esc(item.artistName || item.name)}</h2><p class="prospect-detail-sub">${esc([item.type, item.location, item.genre].filter(Boolean).join(" · "))}</p></div><span class="prospect-score-ring" title="Relevansscore">${Number(item.score) || 0}</span></div>
       <div class="prospect-tags">${(item.services || []).map((service) => `<span>${esc(service)}</span>`).join("")}<span class="state ${stateClass(item.status)}">${esc(item.status)}</span></div>
       <div class="prospect-links">${link("Kilde", item.sourceUrl)}${link("Nettside", item.websiteUrl)}${link("Instagram", item.instagramUrl)}${link("Facebook", item.facebookUrl)}${item.publicEmail ? `<a href="mailto:${esc(item.publicEmail)}">${esc(item.publicEmail)}</a>` : ""}</div>
+      <section class="prospect-contact"><div class="prospect-contact-head"><strong>Offentlig profesjonell kontakt</strong><button class="secondary" id="prospect-enrich-contact" type="button" ${disabled ? "disabled" : ""}>✦ Finn / oppdater kontaktinfo</button></div>${item.contactName || item.publicEmail || item.publicPhone ? `<div class="prospect-contact-grid">${item.contactName ? `<span><small>Kontaktperson</small><b>${esc(item.contactName)}</b>${item.contactRole ? `<em>${esc(item.contactRole)}</em>` : ""}</span>` : ""}${item.publicEmail ? `<span><small>E-post</small><a href="mailto:${esc(item.publicEmail)}">${esc(item.publicEmail)}</a></span>` : ""}${item.publicPhone ? `<span><small>Telefon</small><a href="tel:${esc(item.publicPhone)}">${esc(item.publicPhone)}</a></span>` : ""}</div>` : '<p>Ingen dokumentert profesjonell kontaktinformasjon ennå.</p>'}${item.contactSourceUrl ? `<a class="prospect-contact-source" href="${esc(item.contactSourceUrl)}" target="_blank" rel="noreferrer">Dokumentert hos ${esc(item.contactSourceName || "offentlig kilde")} ↗</a>` : ""}</section>
       <section class="prospect-evidence"><strong>Offentlig behovssignal</strong><p>${esc(item.needEvidence || "Ingen konkret behovsindikasjon er dokumentert ennå.")}</p>${item.relevanceReason ? `<p><br>${esc(item.relevanceReason)}</p>` : ""}<p class="prospect-source-note">${esc(item.sourceName || item.sourceType || "Manuelt lagt inn")} · kontrollert ${esc(formatDate(item.lastVerifiedAt))}</p></section>
       <form class="prospect-review-form" id="prospect-review-form"><label>Status<select name="status" ${disabled ? "disabled" : ""}>${["Ny", "Vurderes", "Klar for kontakt", "Kontaktet", "Svarte", "Konvertert", "Ikke relevant"].map((status) => `<option ${status === item.status ? "selected" : ""}>${esc(status)}</option>`).join("")}</select></label><label>Kontaktgrunnlag<select name="contactBasis" ${disabled ? "disabled" : ""}>${["Ikke vurdert", "Uttrykkelig samtykke", "Eksisterende kundeforhold", "Manuelt godkjent", "Ikke kontakt"].map((basis) => `<option ${basis === item.contactBasis ? "selected" : ""}>${esc(basis)}</option>`).join("")}</select></label><label class="prospect-check"><input name="adultConfirmed" type="checkbox" ${item.adultConfirmed ? "checked" : ""} ${disabled ? "disabled" : ""}><span>Jeg har kontrollert at kontakten gjelder en voksen (18+) eller en virksomhet, og at kilden er profesjonell.</span></label><label class="wide">Interne notater<textarea name="notes" maxlength="5000" ${disabled ? "disabled" : ""}>${esc(item.notes || "")}</textarea></label><div class="button-row wide"><button class="secondary" type="submit" ${disabled ? "disabled" : ""}>Lagre vurdering</button></div></form>
       <section class="prospect-draft"><div class="prospect-draft-head"><span class="kicker">PERSONLIG UTKAST · SENDES IKKE AUTOMATISK</span><span><button class="link-button" id="prospect-use-template" type="button" ${disabled ? "disabled" : ""}>Bruk Loki-malen</button><button class="link-button" id="prospect-generate-draft" type="button" ${disabled ? "disabled" : ""}>Tilpass med AI</button></span></div><textarea id="prospect-draft-text" placeholder="Velg Loki-malen eller lag et personlig utkast …" ${disabled ? "disabled" : ""}>${esc(item.outreachDraft || "")}</textarea><div class="prospect-actions"><div><button class="secondary" id="prospect-copy-draft" type="button" ${!item.outreachDraft || disabled ? "disabled" : ""}>Kopier utkast</button><button class="primary" id="prospect-convert" type="button" ${disabled || item.status === "Konvertert" ? "disabled" : ""}>Gjør til CRM-kontakt</button></div><div><button class="link-button prospect-danger" id="prospect-irrelevant" type="button" ${disabled ? "disabled" : ""}>Ikke relevant</button><button class="link-button prospect-danger" id="prospect-suppress" type="button" ${disabled ? "disabled" : ""}>Ikke kontakt igjen</button></div></div></section>`;
     document.getElementById("prospect-review-form").onsubmit = saveReview;
+    document.getElementById("prospect-enrich-contact").onclick = enrichContact;
     document.getElementById("prospect-use-template").onclick = useTemplate;
     document.getElementById("prospect-generate-draft").onclick = generateDraft;
     document.getElementById("prospect-copy-draft").onclick = copyDraft;
@@ -129,6 +131,17 @@
     catch (error) { notify(error.message); button.disabled = false; button.textContent = "Lag utkast"; }
   }
 
+  async function enrichContact() {
+    const item = prospects.find((candidate) => candidate.id === selectedId); if (!item) return;
+    const button = document.getElementById("prospect-enrich-contact"); button.disabled = true; button.textContent = "Søker offentlige kilder …";
+    try {
+      const data = await request("/api/studio?action=prospects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "enrich", id: item.id }) });
+      prospects = prospects.map((candidate) => candidate.id === item.id ? data.prospect : candidate);
+      render();
+      notify(data.found ? "Profesjonell kontaktinformasjon er funnet og lagret med kilde." : "Fant ingen dokumentert profesjonell kontaktinformasjon i åpne kilder.");
+    } catch (error) { notify(error.message); button.disabled = false; button.textContent = "✦ Finn / oppdater kontaktinfo"; }
+  }
+
   async function useTemplate() {
     const item = prospects.find((candidate) => candidate.id === selectedId); if (!item) return;
     document.getElementById("prospect-draft-text").value = STANDARD_TEMPLATE;
@@ -144,7 +157,8 @@
     const item = prospects.find((candidate) => candidate.id === selectedId); if (!item) return;
     if (!item.adultConfirmed || item.contactBasis === "Ikke vurdert") { notify("Fullfør 18+/virksomhetskontroll og kontaktvurdering først."); return; }
     try {
-      const response = await request("/api/crm/leads", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "upsertMany", leads: [{ name: item.name, artistName: item.artistName, email: item.publicEmail, project: `${(item.services || []).join(" / ") || "Studioforespørsel"} · ${item.artistName || item.name}`, stage: "Nytt lead", source: "Cold Call Pool", nextAction: "Manuell, respektfull første kontakt", location: item.location, website: item.websiteUrl, social: item.instagramUrl || item.facebookUrl, notes: [item.needEvidence, item.relevanceReason, item.notes].filter(Boolean).join("\n\n"), profileCompleted: true }] }) });
+      const contactContext = item.contactName ? `Offentlig kontaktperson: ${item.contactName}${item.contactRole ? ` (${item.contactRole})` : ""}` : "";
+      const response = await request("/api/crm/leads", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "upsertMany", leads: [{ name: item.contactName || item.name, artistName: item.artistName, company: item.contactName ? item.artistName : "", role: item.contactRole || item.type, email: item.publicEmail, phone: item.publicPhone, project: `${(item.services || []).join(" / ") || "Studioforespørsel"} · ${item.artistName || item.name}`, stage: "Nytt lead", source: "Cold Call Pool", nextAction: "Manuell, respektfull første kontakt", location: item.location, website: item.websiteUrl, social: item.instagramUrl || item.facebookUrl, notes: [contactContext, item.contactSourceUrl ? `Kontaktkilde: ${item.contactSourceUrl}` : "", item.needEvidence, item.relevanceReason, item.notes].filter(Boolean).join("\n\n"), profileCompleted: true }] }) });
       if (!response.leads) throw new Error("Kontakten kunne ikke opprettes.");
       await updateProspect(item.id, { status: "Konvertert" }, "Kandidaten er opprettet under «Kontakter og leads».");
       if (ui.onConverted) ui.onConverted(response.leads);

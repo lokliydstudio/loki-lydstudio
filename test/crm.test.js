@@ -73,7 +73,11 @@ test("Cold Call Pool keeps only safe public contact fields and gates outreach re
     name: "  Bergensbandet  ",
     artistName: "Bergensbandet",
     location: "Bergen",
+    contactName: "Kari Booking",
+    contactRole: "Bookingansvarlig",
     publicEmail: "BOOKING@BAND.NO",
+    publicPhone: "+47 55 12 34 56",
+    contactSourceUrl: "https://band.no/kontakt",
     instagramUrl: "https://instagram.com/bergensbandet",
     facebookUrl: "javascript:alert(1)",
     services: ["Innspilling", "Miks", "Ukjent"],
@@ -84,12 +88,17 @@ test("Cold Call Pool keeps only safe public contact fields and gates outreach re
   }, {}, "leon@lokilyd.no");
   assert.equal(prospect.name, "Bergensbandet");
   assert.equal(prospect.publicEmail, "booking@band.no");
+  assert.equal(prospect.publicPhone, "+47 55 12 34 56");
+  assert.equal(prospect.contactName, "Kari Booking");
+  assert.equal(prospect.contactRole, "Bookingansvarlig");
+  assert.equal(prospect.contactSourceUrl, "https://band.no/kontakt");
   assert.equal(prospect.facebookUrl, "");
   assert.deepEqual(prospect.services, ["Innspilling", "Miks"]);
   assert.equal(prospect.status, "Vurderes");
   assert.equal(prospect.score >= 70, true);
   assert.equal(cleanUrl("https://instagram.com/example", ["instagram.com"]).startsWith("https://instagram.com/"), true);
   assert.equal(cleanUrl("https://example.com/not-instagram", ["instagram.com"]), "");
+  assert.equal(sanitizeProspect({ name: "Band B", publicPhone: "ring-me<script>" }).publicPhone, "");
 });
 
 test("Cold Call Pool deduplicates public identities and preserves suppression", () => {
@@ -100,6 +109,26 @@ test("Cold Call Pool deduplicates public identities and preserves suppression", 
   assert.equal(merged.added, 0);
   assert.equal(prospectKey(merged.prospects[0]), "email:hei@band.no");
   assert.equal(prospectScore({ location: "Bergen", needEvidence: "Ny musikk", services: ["Miks"] }) > prospectScore({ location: "Oslo", services: [] }), true);
+});
+
+test("Cold Call Pool refresh preserves previously documented contact details", () => {
+  const existing = sanitizeProspect({
+    name: "Bandet",
+    artistName: "Bandet",
+    location: "Bergen",
+    websiteUrl: "https://bandet.no",
+    contactName: "Kari Booking",
+    contactRole: "Manager",
+    publicEmail: "booking@bandet.no",
+    publicPhone: "+47 55 12 34 56",
+    contactSourceUrl: "https://bandet.no/kontakt",
+  });
+  const incoming = { name: "Bandet", artistName: "Bandet", location: "Bergen", websiteUrl: "https://bandet.no" };
+  const merged = mergeProspects([existing], [incoming], "system");
+  assert.equal(merged.prospects.length, 1);
+  assert.equal(merged.prospects[0].contactName, "Kari Booking");
+  assert.equal(merged.prospects[0].publicEmail, "booking@bandet.no");
+  assert.equal(merged.prospects[0].publicPhone, "+47 55 12 34 56");
 });
 
 test("Cold Call Pool recognizes Vercel runtime OIDC headers", () => {
