@@ -19,7 +19,8 @@ const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = re
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
 const { cleanUrl, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
-const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const { publicSummary } = require("../lib/crm-prospect-handler");
+const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
 
 test("only active owners can receive CRM tokens", () => {
@@ -99,6 +100,11 @@ test("Cold Call Pool deduplicates public identities and preserves suppression", 
   assert.equal(merged.added, 0);
   assert.equal(prospectKey(merged.prospects[0]), "email:hei@band.no");
   assert.equal(prospectScore({ location: "Bergen", needEvidence: "Ny musikk", services: ["Miks"] }) > prospectScore({ location: "Oslo", services: [] }), true);
+});
+
+test("Cold Call Pool recognizes Vercel runtime OIDC headers", () => {
+  const summary = publicSummary([], [], { headers: { "x-vercel-oidc-token": "short-lived-test-token" } });
+  assert.equal(summary.discoveryConfigured, true);
 });
 
 test("document uploads use private safe paths and reject active web content", () => {
@@ -391,6 +397,23 @@ test("shared tasks and meeting notes are normalized", () => {
   const note = sanitizeNote({ type: "møte", title: "Ukemøte", content: "Neste steg", attendees: "Leon, Charles" }, {}, "charles@lokilyd.no");
   assert.equal(note.type, "møte");
   assert.equal(note.attendees, "Leon, Charles");
+});
+
+test("internal savings goals calculate bounded progress", () => {
+  const goal = sanitizeGoal({
+    title: "  Tur til Dublin  ",
+    type: "Sparemål",
+    currentAmount: "7500",
+    targetAmount: "25000",
+    targetDate: "2027-04-01",
+  }, {}, "leon@lokilyd.no");
+  assert.equal(goal.title, "Tur til Dublin");
+  assert.equal(goal.progress, 30);
+  assert.equal(goal.completed, false);
+  const completed = sanitizeGoal({ currentAmount: 30000 }, goal, "charles@lokilyd.no");
+  assert.equal(completed.progress, 100);
+  assert.equal(completed.completed, true);
+  assert.equal(sanitizeGoal({ title: "" }), null);
 });
 
 test("studio bookings validate times and reject overlaps", () => {

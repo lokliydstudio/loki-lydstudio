@@ -1,7 +1,9 @@
 (() => {
   let tasks = [];
   let notes = [];
+  let goals = [];
   let editingNoteId = null;
+  let editingGoalId = null;
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
   const api = async (url, options = {}) => {
@@ -19,6 +21,7 @@
   };
   const formatDate = (value) => value ? new Intl.DateTimeFormat("nb-NO", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${value}T12:00:00`)) : "Ingen frist";
   const moneyFromOre = (value) => new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 0 }).format((Number(value) || 0) / 100);
+  const money = (value) => new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 0 }).format(Number(value) || 0);
 
   function renderTasks() {
     const list = document.getElementById("task-list");
@@ -51,6 +54,23 @@
     document.querySelectorAll("[data-note-delete]").forEach((button) => { button.onclick = () => deleteItem(button.dataset.noteDelete, "notatet"); });
   }
 
+  function renderGoals() {
+    const active = goals.filter((goal) => !goal.completed).length;
+    document.getElementById("goal-summary").textContent = `${active} aktive · ${goals.length - active} fullført`;
+    const sorted = [...goals].sort((left, right) => Number(left.completed) - Number(right.completed) || String(left.targetDate || "9999").localeCompare(String(right.targetDate || "9999")));
+    document.getElementById("goal-list").innerHTML = sorted.length ? sorted.map((goal) => {
+      const progress = Math.max(0, Math.min(100, Number(goal.progress) || 0));
+      return `<article class="goal-card ${goal.completed ? "completed" : ""}">
+        <div class="goal-card-head"><div><span class="state ${goal.completed ? "green" : goal.type === "Milepæl" ? "violet" : "amber"}">${goal.completed ? "Fullført" : esc(goal.type)}</span><h3>${esc(goal.title)}</h3></div><div class="goal-card-actions"><button class="icon-button" data-goal-edit="${esc(goal.id)}" aria-label="Rediger mål">✎</button><button class="icon-button" data-goal-delete="${esc(goal.id)}" aria-label="Slett mål">×</button></div></div>
+        <div class="goal-amount"><strong>${esc(money(goal.currentAmount))}</strong><span>av ${esc(money(goal.targetAmount))}</span><b>${progress}%</b></div>
+        <div class="goal-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}" aria-label="${esc(goal.title)}"><i style="width:${progress}%"></i></div>
+        <div class="goal-foot"><span>${goal.targetDate ? `Måldato ${esc(formatDate(goal.targetDate))}` : "Ingen måldato"}</span>${goal.note ? `<span>${esc(goal.note)}</span>` : ""}</div>
+      </article>`;
+    }).join("") : '<div class="empty">Ingen interne mål ennå. Legg til et sparemål eller en milepæl over.</div>';
+    document.querySelectorAll("[data-goal-edit]").forEach((button) => { button.onclick = () => editGoal(button.dataset.goalEdit); });
+    document.querySelectorAll("[data-goal-delete]").forEach((button) => { button.onclick = () => deleteItem(button.dataset.goalDelete, "målet"); });
+  }
+
   async function updateTask(id, changes) {
     try {
       const data = await api("/api/studio?action=workspace", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, changes }) });
@@ -65,8 +85,10 @@
       await api(`/api/studio?action=workspace&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       tasks = tasks.filter((task) => task.id !== id);
       notes = notes.filter((note) => note.id !== id);
+      goals = goals.filter((goal) => goal.id !== id);
       renderTasks();
       renderNotes();
+      renderGoals();
       toast(`${label[0].toUpperCase()}${label.slice(1)} er slettet.`);
     } catch (error) { toast(error.message); }
   }
@@ -93,6 +115,26 @@
     updateMeetingFields();
   }
 
+  function editGoal(id) {
+    const goal = goals.find((item) => item.id === id);
+    if (!goal) return;
+    editingGoalId = id;
+    const form = document.getElementById("goal-form");
+    Object.entries(goal).forEach(([key, value]) => { if (form.elements[key]) form.elements[key].value = value ?? ""; });
+    document.getElementById("goal-submit").textContent = "Lagre endringer";
+    document.getElementById("goal-cancel").hidden = false;
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function resetGoalForm() {
+    editingGoalId = null;
+    const form = document.getElementById("goal-form");
+    form.reset();
+    form.elements.currentAmount.value = "0";
+    document.getElementById("goal-submit").textContent = "+ Legg til mål";
+    document.getElementById("goal-cancel").hidden = true;
+  }
+
   function updateMeetingFields() {
     const meeting = document.getElementById("note-type").value === "møte";
     document.getElementById("attendees-field").hidden = !meeting;
@@ -103,8 +145,10 @@
       const data = await api("/api/studio?action=workspace");
       tasks = data.tasks || [];
       notes = data.notes || [];
+      goals = data.goals || [];
       renderTasks();
       renderNotes();
+      renderGoals();
     } catch (error) { toast(error.message); }
   }
 
@@ -178,14 +222,36 @@
     };
     document.getElementById("note-type").onchange = updateMeetingFields;
     document.getElementById("note-cancel").onclick = resetNoteForm;
+    document.getElementById("goal-form").onsubmit = async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const item = Object.fromEntries(new FormData(form));
+      const button = document.getElementById("goal-submit");
+      button.disabled = true;
+      try {
+        const options = editingGoalId
+          ? { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: editingGoalId, changes: item }) }
+          : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "goal", item }) };
+        const data = await api("/api/studio?action=workspace", options);
+        if (editingGoalId) goals = goals.map((goal) => goal.id === editingGoalId ? data.item : goal);
+        else goals.unshift(data.item);
+        resetGoalForm();
+        renderGoals();
+        toast("Det interne målet er lagret.");
+      } catch (error) { toast(error.message); }
+      finally { button.disabled = false; }
+    };
+    document.getElementById("goal-cancel").onclick = resetGoalForm;
     document.getElementById("refresh-fiken").onclick = loadFiken;
   }
 
   async function init() {
     bindForms();
     resetNoteForm();
+    resetGoalForm();
     renderTasks();
     renderNotes();
+    renderGoals();
     await Promise.all([loadWorkspace(), loadFiken()]);
   }
 

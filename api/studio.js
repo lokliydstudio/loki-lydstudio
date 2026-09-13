@@ -10,7 +10,7 @@ const { createProjectExport, planProjectDeletion } = require("../lib/crm-project
 const { sanitizeProject } = require("../lib/crm-projects");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
-const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 
 function publicBaseUrl(req) {
   const configured = String(process.env.CRM_BASE_URL || "").replace(/\/$/, "");
@@ -266,6 +266,7 @@ async function workspaceHandler(req, res) {
     return res.status(200).json({
       tasks: items.filter((item) => item.kind === "task"),
       notes: items.filter((item) => item.kind === "note"),
+      goals: items.filter((item) => item.kind === "goal"),
     });
   }
 
@@ -273,7 +274,9 @@ async function workspaceHandler(req, res) {
     const kind = req.body?.kind;
     const sanitized = kind === "task"
       ? sanitizeTask(req.body?.item, {}, user.email)
-      : kind === "note" ? sanitizeNote(req.body?.item, {}, user.email) : null;
+      : kind === "note"
+        ? sanitizeNote(req.body?.item, {}, user.email)
+        : kind === "goal" ? sanitizeGoal(req.body?.item, {}, user.email) : null;
     if (!sanitized) return res.status(400).json({ error: "Fyll ut de obligatoriske feltene." });
     const item = { ...sanitized, kind };
     items.unshift(item);
@@ -288,7 +291,9 @@ async function workspaceHandler(req, res) {
     const current = items[index];
     const updated = current.kind === "task"
       ? sanitizeTask(req.body?.changes, current, user.email)
-      : sanitizeNote(req.body?.changes, current, user.email);
+      : current.kind === "note"
+        ? sanitizeNote(req.body?.changes, current, user.email)
+        : current.kind === "goal" ? sanitizeGoal(req.body?.changes, current, user.email) : null;
     if (!updated) return res.status(400).json({ error: "Fyll ut de obligatoriske feltene." });
     items[index] = { ...updated, kind: current.kind };
     await writeCollection("workspace", items);
