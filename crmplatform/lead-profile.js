@@ -5,6 +5,14 @@
     if (form.elements[name]) form.elements[name].value = value ?? "";
   }
 
+  function customerDisplayName(lead) {
+    const stored = String(lead.name || "").trim();
+    if (stored && !stored.includes("@")) return stored;
+    if (lead.artistName) return lead.artistName;
+    if (lead.company) return lead.company;
+    return String(lead.email || stored).split("@")[0].replace(/[._-]+/g, " ").replace(/\b\p{L}/gu, (letter) => letter.toUpperCase()).trim() || "Kunde uten navn";
+  }
+
   function init({ getLeads, setLeads, renderAll, toast, onStageChange = () => {} }) {
     const modal = document.getElementById("lead-modal");
     const form = document.getElementById("lead-form");
@@ -92,7 +100,7 @@
       activeLead = lead;
       form.reset();
       populate(lead);
-      title.textContent = customerMode || lead.profileCompleted ? lead.name : "Kompletter leadprofil";
+      title.textContent = customerMode ? customerDisplayName(lead) : lead.profileCompleted ? lead.name : "Kompletter leadprofil";
       subtitle.innerHTML = customerMode
         ? `Kunderegister · ${esc(lead.stage || "Kunde")}`
         : `${esc(lead.source || "Manuelt")} · ${esc(lead.email || lead.phone || "Kontaktinfo kan legges til senere")}`;
