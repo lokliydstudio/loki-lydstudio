@@ -58,14 +58,12 @@
     "api/crm/auth-request.js": { "maxDuration": 30 },
     "api/crm/draft.js": { "maxDuration": 30 },
     "api/crm/leads.js": { "maxDuration": 30 },
-    "api/studio.js": { "maxDuration": 30 },
+    "api/studio.js": { "maxDuration": 60 },
     "api/crm/documents.js": { "maxDuration": 30 },
-    "api/crm/funding-sync.js": { "maxDuration": 30 },
-    "api/crm/prospects.js": { "maxDuration": 60 },
-    "api/crm/prospect-sync.js": { "maxDuration": 60 }
+    "api/crm/funding-sync.js": { "maxDuration": 30 }
   },
   "crons": [
     { "path": "/api/crm/funding-sync", "schedule": "17 5 * * *" },
-    { "path": "/api/crm/prospect-sync", "schedule": "37 6 * * *" }
+    { "path": "/api/studio?action=prospect-sync", "schedule": "37 6 * * *" }
   ]
 }

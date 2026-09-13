@@ -8,6 +8,7 @@ const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConf
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
+const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
 const { sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 
@@ -450,7 +451,7 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, projects, audio, documents, activities, bookings, quotes, mailSort, funding] = await Promise.all([
+  const [leads, workspace, projects, audio, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("projects"),
@@ -461,6 +462,8 @@ async function backupHandler(req, res) {
     readCollection("quotes"),
     readCollection("mail-sort"),
     readCollection("funding-monitor"),
+    readCollection("cold-call-pool"),
+    readCollection("cold-call-runs"),
   ]);
   const projectExport = createProjectExport(projects, audio);
   const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
@@ -480,6 +483,8 @@ async function backupHandler(req, res) {
     quotes,
     mailPreferences: mailSort,
     fundingMonitor: funding,
+    coldCallPool: prospects,
+    coldCallRuns: prospectRuns,
   });
 }
 
@@ -543,6 +548,8 @@ module.exports = async function handler(req, res) {
     if (action === "fiken") return await fikenHandler(req, res);
     if (action === "fiken-connect") return await fikenConnectHandler(req, res);
     if (action === "fiken-callback") return await fikenCallbackHandler(req, res);
+    if (action === "prospects") return await prospectsHandler(req, res);
+    if (action === "prospect-sync") return await prospectSyncHandler(req, res);
     return res.status(404).json({ error: "Ukjent studiohandling." });
   } catch (error) {
     console.error(`Studio API failed (${action})`, error?.message);

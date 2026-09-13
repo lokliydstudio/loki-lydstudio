@@ -83,7 +83,7 @@
   async function load() {
     document.getElementById("prospect-list").innerHTML = '<div class="loading-message">Henter kandidater …</div>';
     try {
-      const data = await request("/api/crm/prospects");
+      const data = await request("/api/studio?action=prospects");
       prospects = data.prospects || [];
       render(data.summary || {});
     } catch (error) {
@@ -96,7 +96,7 @@
     const button = document.getElementById("prospect-discover");
     button.disabled = true; button.textContent = "Søker offentlige kilder …";
     try {
-      const data = await request("/api/crm/prospects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "discover" }) });
+      const data = await request("/api/studio?action=prospects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "discover" }) });
       prospects = data.prospects || prospects; render(data.summary || {});
       notify(`${data.result?.added || 0} nye kandidater funnet, ${data.result?.refreshed || 0} oppdatert.`);
     } catch (error) {
@@ -106,7 +106,7 @@
 
   async function updateProspect(id, changes, message) {
     try {
-      const data = await request("/api/crm/prospects", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, changes }) });
+      const data = await request("/api/studio?action=prospects", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, changes }) });
       prospects = data.prospects || prospects.map((item) => item.id === id ? data.prospect : item); render(); if (message) notify(message); return data.prospect;
     } catch (error) { notify(error.message); return null; }
   }
@@ -125,7 +125,7 @@
   async function generateDraft() {
     const item = prospects.find((candidate) => candidate.id === selectedId); if (!item) return;
     const button = document.getElementById("prospect-generate-draft"); button.disabled = true; button.textContent = "Skriver …";
-    try { const data = await request("/api/crm/prospects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "draft", id: item.id }) }); prospects = prospects.map((candidate) => candidate.id === item.id ? data.prospect : candidate); renderDetail(); notify("Et personlig utkast er laget. Kontroller det før bruk."); }
+    try { const data = await request("/api/studio?action=prospects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action: "draft", id: item.id }) }); prospects = prospects.map((candidate) => candidate.id === item.id ? data.prospect : candidate); renderDetail(); notify("Et personlig utkast er laget. Kontroller det før bruk."); }
     catch (error) { notify(error.message); button.disabled = false; button.textContent = "Lag utkast"; }
   }
 
@@ -153,7 +153,7 @@
 
   async function suppressProspect() {
     const item = prospects.find((candidate) => candidate.id === selectedId); if (!item || !confirm(`Sperr «${item.artistName || item.name}» mot videre kontakt? Kandidaten beholdes som en undertrykkelsespost slik at den ikke dukker opp igjen.`)) return;
-    try { const data = await request(`/api/crm/prospects?id=${encodeURIComponent(item.id)}`, { method: "DELETE" }); prospects = data.prospects || prospects; filter = "Aktive"; render(); notify("Kandidaten er sperret mot videre kontakt."); } catch (error) { notify(error.message); }
+    try { const data = await request(`/api/studio?action=prospects&id=${encodeURIComponent(item.id)}`, { method: "DELETE" }); prospects = data.prospects || prospects; filter = "Aktive"; render(); notify("Kandidaten er sperret mot videre kontakt."); } catch (error) { notify(error.message); }
   }
 
   function openModal() { document.getElementById("prospect-modal").classList.add("open"); }
@@ -163,7 +163,7 @@
     event.preventDefault(); const form = event.currentTarget; const data = new FormData(form);
     const services = String(data.get("services") || "").split(",").map((value) => value.trim()).filter(Boolean);
     const prospect = Object.fromEntries(data.entries()); prospect.services = services; prospect.adultConfirmed = data.get("adultConfirmed") === "on";
-    try { const result = await request("/api/crm/prospects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ prospect }) }); prospects = result.prospects || [result.prospect, ...prospects]; selectedId = result.prospect?.id || selectedId; closeModal(); render(); notify("Kandidaten er lagt i Cold Call Pool."); } catch (error) { notify(error.message); }
+    try { const result = await request("/api/studio?action=prospects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ prospect }) }); prospects = result.prospects || [result.prospect, ...prospects]; selectedId = result.prospect?.id || selectedId; closeModal(); render(); notify("Kandidaten er lagt i Cold Call Pool."); } catch (error) { notify(error.message); }
   }
 
   function init(options = {}) {
