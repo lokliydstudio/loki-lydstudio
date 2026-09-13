@@ -8,7 +8,7 @@ process.env.MAIL_PASSWORD = "test-only-password";
 
 const auth = require("../lib/crm-auth");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
-const { documentPathname, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
+const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
@@ -108,6 +108,19 @@ test("document uploads use private safe paths and reject active web content", ()
   assert.equal(documentPathname("short", "avtale.pdf"), "");
   assert.equal(sanitizeIndexedDocument({ path: "Passord /hemmelig.pdf" }), null);
   assert.equal(sanitizeIndexedDocument({ path: "Mikser (Cloud)/opptak.pdf" }), null);
+});
+
+test("indexed documents get authenticated Jottacloud deep links", () => {
+  const indexed = sanitizeIndexedDocument({ path: "Markedsføring/Avtale #1.pdf", size: 100 });
+  const visible = publicDocument(indexed);
+  assert.equal(visible.available, true);
+  assert.equal(visible.downloadable, false);
+  assert.equal(visible.status, "Jottacloud");
+  assert.equal(
+    visible.jottacloudUrl,
+    "https://jottacloud.com/web/sync/list/name/Loki%20Lydstudio/Dokumenter%20%28Cloud%29/Markedsf%C3%B8ring/Avtale%20%231.pdf",
+  );
+  assert.equal(jottacloudDocumentUrl("Passord/hemmelig.pdf"), "");
 });
 
 test("document reindexing preserves private uploads without exposing storage metadata", () => {

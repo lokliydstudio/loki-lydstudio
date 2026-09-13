@@ -104,10 +104,14 @@
     }
     list.innerHTML = visible.map((item) => {
       const actionUrl = `/api/crm/documents?action=download&id=${encodeURIComponent(item.id)}`;
-      const actions = item.available
-        ? `<div class="document-actions"><a class="tiny-button" href="${actionUrl}" target="_blank" rel="noreferrer">Åpne</a><a class="tiny-button" href="${actionUrl}&amp;download=1">Last ned</a></div>`
-        : `<div class="document-actions"><button class="tiny-button" data-connect-document="${esc(item.id)}">Koble fil</button></div>`;
-      return `<article class="doc-row"><div class="document-name"><span class="doc-icon">▱</span><span><strong>${esc(item.name)}</strong><small title="${esc(item.path)}">${esc(item.path)} · ${formatBytes(item.size)}</small></span></div><span>${esc(item.type)}</span><span><em class="state ${item.available ? "green" : "neutral"}">${item.available ? "Kan åpnes" : "Kun indeks"}</em></span><p>${esc(item.note)}</p>${actions}</article>`;
+      let actions = `<div class="document-actions"><button class="tiny-button" data-connect-document="${esc(item.id)}">Koble fil</button></div>`;
+      if (item.downloadable) {
+        actions = `<div class="document-actions"><a class="tiny-button" href="${actionUrl}" target="_blank" rel="noreferrer">Åpne</a><a class="tiny-button" href="${actionUrl}&amp;download=1">Last ned</a></div>`;
+      } else if (item.jottacloudUrl) {
+        actions = `<div class="document-actions"><a class="tiny-button" href="${esc(item.jottacloudUrl)}" target="_blank" rel="noreferrer" referrerpolicy="no-referrer">Åpne i Jottacloud ↗</a><button class="tiny-button" data-connect-document="${esc(item.id)}" title="Lagre en privat kopi i CRM">Koble kopi</button></div>`;
+      }
+      const stateLabel = item.downloadable ? "I CRM" : item.jottacloudUrl ? "Jottacloud" : "Kun indeks";
+      return `<article class="doc-row"><div class="document-name"><span class="doc-icon">▱</span><span><strong>${esc(item.name)}</strong><small title="${esc(item.path)}">${esc(item.path)} · ${formatBytes(item.size)}</small></span></div><span>${esc(item.type)}</span><span><em class="state ${item.available ? "green" : "neutral"}">${stateLabel}</em></span><p>${esc(item.note)}</p>${actions}</article>`;
     }).join("");
     document.querySelectorAll("[data-connect-document]").forEach((button) => {
       button.onclick = () => chooseFiles(button.dataset.connectDocument);
