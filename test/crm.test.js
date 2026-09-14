@@ -42,6 +42,8 @@ test("CRM shell includes an accessible persistent theme switcher", () => {
   assert.match(html, /crmplatform\/theme\.js/);
   assert.match(script, /loki-crm-theme/);
   assert.match(script, /aria-pressed/);
+  assert.equal(html.indexOf('class="workspace-grid"') < html.indexOf('class="panel rental-workbook"'), true);
+  assert.equal(html.indexOf('class="panel rental-workbook"') < html.indexOf('class="panel goals-panel"'), true);
 });
 
 test("tokens cannot be reused for another purpose", () => {
