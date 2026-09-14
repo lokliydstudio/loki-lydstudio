@@ -156,8 +156,8 @@ test("Cold Call Pool defaults to a Vercel free-tier compatible discovery model",
   const configured = process.env.LEAD_DISCOVERY_MODEL;
   delete process.env.LEAD_DISCOVERY_MODEL;
   try {
-    assert.equal(discoveryModel(false), "openai/gpt-5-mini");
-    assert.equal(discoveryModel(true), "gpt-5-mini");
+    assert.equal(discoveryModel(false), "openai/gpt-5-nano");
+    assert.equal(discoveryModel(true), "gpt-5-nano");
     process.env.LEAD_DISCOVERY_MODEL = "openai/custom-model";
     assert.equal(discoveryModel(false), "openai/custom-model");
   } finally {
