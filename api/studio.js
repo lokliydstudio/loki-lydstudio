@@ -5,6 +5,7 @@ const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeT
 const { MAX_COMMENTS_PER_TRACK, commentsForTrack, publicAudioComment, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
+const { loadGoogleCalendar } = require("../lib/crm-calendar");
 const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
@@ -559,6 +560,13 @@ async function bookingsHandler(req, res) {
   return res.status(405).json({ error: "Method not allowed" });
 }
 
+async function googleCalendarHandler(req, res) {
+  if (!requireUser(req, res)) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const calendar = await loadGoogleCalendar({ refresh: String(req.query?.refresh || "") === "1" });
+  return res.status(200).json(calendar);
+}
+
 async function quotesHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
@@ -707,6 +715,7 @@ module.exports = async function handler(req, res) {
     if (action === "rentals") return await rentalsHandler(req, res);
     if (action === "activities") return await activitiesHandler(req, res);
     if (action === "bookings") return await bookingsHandler(req, res);
+    if (action === "google-calendar") return await googleCalendarHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);
     if (action === "backup") return await backupHandler(req, res);
     if (action === "fiken") return await fikenHandler(req, res);

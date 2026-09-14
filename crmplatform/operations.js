@@ -2,6 +2,10 @@
   let initialized = false;
   let bookings = [];
   let quotes = [];
+  let googleEvents = [];
+  let googleCalendar = { configured: false, calendarName: "Loki-kalender", refreshedAt: "" };
+  let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1, 12);
+  let selectedGoogleEvent = "";
   let getLeads = () => [];
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -53,6 +57,112 @@
     if (["Bekreftet", "Godkjent", "Fullført"].includes(status)) return "green";
     if (["Avlyst", "Avslått", "Utløpt"].includes(status)) return "neutral";
     return status === "Sendt" ? "blue" : "amber";
+  }
+
+  function calendarMonthLabel() {
+    return new Intl.DateTimeFormat("nb-NO", { month: "long", year: "numeric" }).format(calendarCursor);
+  }
+
+  function calendarEventLabel(event) {
+    if (event.allDay) return `${dateLabel(event.date)} · Hele dagen`;
+    const end = event.endDateExclusive && event.endDateExclusive !== event.date ? ` – ${dateLabel(event.endDateExclusive)} ${event.endTime}` : `–${event.endTime}`;
+    return `${dateLabel(event.date)} · ${event.startTime}${end}`;
+  }
+
+  function calendarEventsForDay(key) {
+    return googleEvents.filter((event) => event.allDay
+      ? key >= event.date && key < event.endDateExclusive
+      : event.date === key);
+  }
+
+  function visibleMonthEvents() {
+    const month = `${calendarCursor.getFullYear()}-${String(calendarCursor.getMonth() + 1).padStart(2, "0")}`;
+    return googleEvents.filter((event) => event.date.slice(0, 7) === month || (event.allDay && event.date < `${month}-01` && event.endDateExclusive > `${month}-01`));
+  }
+
+  function renderCalendarDetail() {
+    const node = document.getElementById("google-calendar-detail");
+    if (!node) return;
+    const event = googleEvents.find((item) => item.id === selectedGoogleEvent);
+    if (!event) {
+      node.innerHTML = "<p>Velg en kalenderhendelse for å se detaljer.</p>";
+      return;
+    }
+    const badges = [calendarEventLabel(event), event.location, event.recurring ? "Gjentakende" : ""].filter(Boolean);
+    node.innerHTML = `<h4>${esc(event.title)}</h4><div class="google-calendar-detail-meta">${badges.map((item) => `<span>${esc(item)}</span>`).join("")}</div><p>${esc(event.description || "Ingen beskrivelse i Google Kalender.")}</p>`;
+  }
+
+  function bindCalendarEventButtons() {
+    document.querySelectorAll("[data-google-event]").forEach((button) => {
+      button.onclick = () => {
+        selectedGoogleEvent = button.dataset.googleEvent;
+        document.querySelectorAll("[data-google-event]").forEach((item) => item.classList.toggle("active", item.dataset.googleEvent === selectedGoogleEvent));
+        renderCalendarDetail();
+      };
+    });
+  }
+
+  function renderGoogleCalendar() {
+    const grid = document.getElementById("google-calendar-grid");
+    const agenda = document.getElementById("google-calendar-agenda");
+    if (!grid || !agenda) return;
+    document.getElementById("google-calendar-name").textContent = googleCalendar.calendarName || "Loki-kalender";
+    document.getElementById("calendar-month-title").textContent = calendarMonthLabel();
+    const state = document.getElementById("google-calendar-state");
+    state.textContent = googleCalendar.configured ? "Tilkoblet · skrivebeskyttet" : "Ikke konfigurert";
+    state.className = `state ${googleCalendar.configured ? "green" : "amber"}`;
+    document.getElementById("google-calendar-updated").textContent = googleCalendar.refreshedAt
+      ? `Oppdatert ${new Intl.DateTimeFormat("nb-NO", { hour: "2-digit", minute: "2-digit" }).format(new Date(googleCalendar.refreshedAt))}`
+      : googleCalendar.error || "Ingen kalenderdata";
+
+    const year = calendarCursor.getFullYear();
+    const month = calendarCursor.getMonth();
+    const first = new Date(year, month, 1, 12);
+    const offset = (first.getDay() + 6) % 7;
+    const cursor = new Date(year, month, 1 - offset, 12);
+    const today = localDate();
+    const cells = [];
+    for (let index = 0; index < 42; index += 1) {
+      const day = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate() + index, 12);
+      const key = localDate(day);
+      const events = calendarEventsForDay(key);
+      cells.push(`<section class="google-calendar-day${day.getMonth() !== month ? " outside" : ""}${key === today ? " today" : ""}" aria-label="${esc(dateLabel(key))}"><div class="google-calendar-day-head"><strong>${day.getDate()}</strong>${events.length ? `<span>${events.length}</span>` : ""}</div>${events.slice(0, 3).map((event) => `<button class="google-calendar-event-chip${event.id === selectedGoogleEvent ? " active" : ""}" type="button" data-google-event="${esc(event.id)}" title="${esc(event.title)}"><time>${esc(event.allDay ? "Hele" : event.startTime)}</time><span>${esc(event.title)}</span></button>`).join("")}${events.length > 3 ? `<small class="google-calendar-more">+ ${events.length - 3} til</small>` : ""}</section>`);
+    }
+    grid.innerHTML = cells.join("");
+
+    const monthEvents = visibleMonthEvents();
+    if (!selectedGoogleEvent || !googleEvents.some((event) => event.id === selectedGoogleEvent)) {
+      selectedGoogleEvent = monthEvents.find((event) => event.endAt >= new Date().toISOString())?.id || monthEvents[0]?.id || "";
+    }
+    agenda.innerHTML = monthEvents.length ? monthEvents.map((event) => {
+      const date = bookingDate(event.date);
+      return `<button class="google-calendar-agenda-item${event.id === selectedGoogleEvent ? " active" : ""}" type="button" data-google-event="${esc(event.id)}"><span class="google-calendar-agenda-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></span><span class="google-calendar-agenda-copy"><strong>${esc(event.title)}</strong><span>${esc(event.allDay ? "Hele dagen" : `${event.startTime}–${event.endTime}`)}${event.location ? ` · ${esc(event.location)}` : ""}</span></span></button>`;
+    }).join("") : `<div class="google-calendar-empty">${googleCalendar.configured ? "Ingen avtaler denne måneden." : "Kalenderintegrasjonen må aktiveres på serveren."}</div>`;
+    bindCalendarEventButtons();
+    renderCalendarDetail();
+  }
+
+  async function loadGoogleCalendar(refresh = false) {
+    const button = document.getElementById("refresh-google-calendar");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Oppdaterer …";
+    }
+    try {
+      const data = await api(`/api/studio?action=google-calendar${refresh ? "&refresh=1" : ""}`);
+      googleCalendar = data;
+      googleEvents = data.events || [];
+    } catch (error) {
+      googleCalendar = { configured: false, calendarName: "Loki-kalender", refreshedAt: "", error: error.message };
+      googleEvents = [];
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "Oppdater";
+      }
+      renderGoogleCalendar();
+      renderMetrics();
+    }
   }
 
   function renderBookings() {
@@ -114,10 +224,24 @@
   function renderMetrics() {
     const today = localDate();
     const upcoming = bookings.filter((booking) => booking.date >= today && !["Avlyst", "Fullført"].includes(booking.status));
+    const now = new Date().toISOString();
+    const googleUpcoming = googleEvents.filter((event) => event.endAt >= now);
+    const sessions = [...upcoming.map((booking) => ({
+      key: `${booking.date}|${booking.startTime}|${String(booking.title || "").toLowerCase()}`,
+      date: booking.date,
+      startTime: booking.startTime,
+      startAt: `${booking.date}T${booking.startTime}:00`,
+    })), ...googleUpcoming.map((event) => ({
+      key: `${event.date}|${event.startTime}|${String(event.title || "").toLowerCase()}`,
+      date: event.date,
+      startTime: event.startTime || "Hele dagen",
+      startAt: event.startAt,
+    }))];
+    const uniqueSessions = [...new Map(sessions.map((session) => [session.key, session])).values()];
     const openQuotes = quotes.filter((quote) => ["Utkast", "Sendt"].includes(quote.status));
-    const next = [...upcoming].sort((left, right) => `${left.date} ${left.startTime}`.localeCompare(`${right.date} ${right.startTime}`))[0];
-    document.getElementById("booking-count").textContent = String(upcoming.length);
-    document.getElementById("ops-upcoming").textContent = String(upcoming.length);
+    const next = [...uniqueSessions].sort((left, right) => left.startAt.localeCompare(right.startAt))[0];
+    document.getElementById("booking-count").textContent = String(uniqueSessions.length);
+    document.getElementById("ops-upcoming").textContent = String(uniqueSessions.length);
     document.getElementById("ops-open-quotes").textContent = String(openQuotes.length);
     document.getElementById("ops-quote-value").textContent = money(openQuotes.reduce((sum, quote) => sum + (Number(quote.total) || 0), 0));
     document.getElementById("ops-next-session").textContent = next ? `${dateLabel(next.date).replace(/\s+\d{4}$/, "")} · ${next.startTime}` : "—";
@@ -358,6 +482,23 @@
     document.getElementById("new-booking").onclick = () => openBooking();
     document.getElementById("new-quote").onclick = () => openQuote();
     document.getElementById("crm-backup").onclick = createBackup;
+    document.getElementById("refresh-google-calendar").onclick = () => loadGoogleCalendar(true);
+    document.getElementById("calendar-previous").onclick = () => {
+      calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1, 12);
+      selectedGoogleEvent = "";
+      renderGoogleCalendar();
+    };
+    document.getElementById("calendar-today").onclick = () => {
+      const today = new Date();
+      calendarCursor = new Date(today.getFullYear(), today.getMonth(), 1, 12);
+      selectedGoogleEvent = "";
+      renderGoogleCalendar();
+    };
+    document.getElementById("calendar-next").onclick = () => {
+      calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() + 1, 1, 12);
+      selectedGoogleEvent = "";
+      renderGoogleCalendar();
+    };
     document.getElementById("booking-form").onsubmit = saveBooking;
     document.getElementById("quote-form").onsubmit = saveQuote;
     document.getElementById("close-booking-modal").onclick = () => closeModal("booking-modal");
@@ -399,6 +540,7 @@
     quotes = quoteData.quotes || [];
     renderBookings();
     renderQuotes();
+    await loadGoogleCalendar();
   }
 
   async function init(options = {}) {

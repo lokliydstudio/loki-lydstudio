@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="/crmplatform/lead-priority.css">
     <link rel="stylesheet" href="/crmplatform/fiken-import.css?v=20260914-fiken-contacts">
     <link rel="stylesheet" href="/crmplatform/mail-reader.css">
-    <link rel="stylesheet" href="/crmplatform/operations.css">
+    <link rel="stylesheet" href="/crmplatform/operations.css?v=20260915-google-calendar">
     <link rel="stylesheet" href="/crmplatform/prospects.css">
     <link rel="stylesheet" href="/crmplatform/audio-comments.css?v=20260914-feedback">
     <link rel="stylesheet" href="/crmplatform/spotify-references.css?v=20260914-spotify">
@@ -106,7 +106,8 @@
 
         <section class="view" id="operations">
           <div class="section-intro"><div><span class="kicker">SALG OG KAPASITET</span><h2>Bookinger og tilbud</h2><p>Planlegg studioet uten dobbeltbookinger, bygg pristilbud fra Loki-prisene og følg hvert tilbud til svar.</p></div><div class="button-row"><button class="secondary" id="crm-backup">⇩ Full CRM-backup</button><button class="secondary" id="new-quote">+ Nytt tilbud</button><button class="primary" id="new-booking">+ Ny booking</button></div></div>
-          <div class="ops-metrics"><article><span>KOMMENDE BOOKINGER</span><strong id="ops-upcoming">0</strong></article><article><span>UBESVARTE TILBUD</span><strong id="ops-open-quotes">0</strong></article><article><span>TILBUDSVERDI</span><strong id="ops-quote-value">0 kr</strong></article><article><span>NESTE ØKT</span><strong id="ops-next-session">—</strong></article></div>
+          <section class="panel google-calendar-panel"><div class="google-calendar-head"><div><span class="kicker">GOOGLE CALENDAR</span><h2 id="google-calendar-name">Loki-kalender</h2><p>Privat kalenderoversikt fra studioets Google Calendar. Endringer gjøres i Google Kalender.</p></div><div class="google-calendar-actions"><span class="state amber" id="google-calendar-state">Kobler til</span><a class="secondary google-calendar-link" href="https://calendar.google.com/calendar/u/0/r" target="_blank" rel="noopener noreferrer">Åpne Google Kalender ↗</a><button class="secondary" id="refresh-google-calendar" type="button">Oppdater</button></div></div><div class="google-calendar-nav"><div class="button-row"><button class="secondary" id="calendar-previous" type="button" aria-label="Forrige måned">←</button><button class="secondary" id="calendar-today" type="button">I dag</button><button class="secondary" id="calendar-next" type="button" aria-label="Neste måned">→</button></div><h3 id="calendar-month-title">Kalender</h3><span id="google-calendar-updated">Henter hendelser …</span></div><div class="google-calendar-layout"><div class="google-calendar-month"><div class="google-calendar-weekdays" aria-hidden="true"><span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span></div><div class="google-calendar-grid" id="google-calendar-grid" aria-live="polite"><div class="loading-message">Henter Google-kalender …</div></div></div><aside class="google-calendar-sidebar"><div><span class="kicker">MÅNEDSAGENDA</span><h3>Kommende avtaler</h3></div><div class="google-calendar-agenda" id="google-calendar-agenda"><div class="loading-message">Henter avtaler …</div></div><div class="google-calendar-detail" id="google-calendar-detail" aria-live="polite"><p>Velg en kalenderhendelse for å se detaljer.</p></div></aside></div></section>
+          <div class="ops-metrics"><article><span>KOMMENDE AVTALER</span><strong id="ops-upcoming">0</strong></article><article><span>UBESVARTE TILBUD</span><strong id="ops-open-quotes">0</strong></article><article><span>TILBUDSVERDI</span><strong id="ops-quote-value">0 kr</strong></article><article><span>NESTE ØKT</span><strong id="ops-next-session">—</strong></article></div>
           <div class="ops-layout"><section class="panel"><div class="panel-head"><div><span class="kicker">STUDIOKALENDER</span><h2>Kommende økter</h2></div><span class="state green">Kollisjonskontroll</span></div><div class="booking-list" id="booking-list"><div class="loading-message">Henter bookinger …</div></div></section><section class="panel"><div class="panel-head"><div><span class="kicker">TILBUD</span><h2>Pris og status</h2></div><span class="state violet">Loki-priser</span></div><div class="quote-list" id="quote-list"><div class="loading-message">Henter tilbud …</div></div></section></div>
           <p class="backup-note"><strong>Full CRM-backup:</strong> ZIP-filen inneholder kunder, utleieavtaler, leiebetalinger, nøkkelregister, aktiviteter, bookinger, tilbud, oppgaver, notater, prosjektmetadata og dokumentindeks. Selve lydfilene tas fortsatt med i prosjektbackupen under «Prosjekter».</p>
         </section>
@@ -168,7 +169,7 @@
   <script src="/crmplatform/workspace.js"></script>
   <script src="/crmplatform/rentals.js"></script>
   <script src="/crmplatform/documents.js"></script>
-  <script src="/crmplatform/operations.js"></script>
+  <script src="/crmplatform/operations.js?v=20260915-google-calendar"></script>
   <script src="/crmplatform/lead-profile.js"></script>
   <script src="/crmplatform/fiken-import.js?v=20260914-fiken-contacts"></script>
   <script src="/crmplatform/prospects.js"></script>

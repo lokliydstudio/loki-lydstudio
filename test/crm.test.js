@@ -11,6 +11,7 @@ process.env.MAIL_PASSWORD = "test-only-password";
 const auth = require("../lib/crm-auth");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
+const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-calendar");
 const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
@@ -716,4 +717,87 @@ test("Fiken OAuth grants are encrypted before private storage", () => {
   const sealed = sealGrant(grant);
   assert.equal(sealed.includes("access-secret"), false);
   assert.deepEqual(openGrant(sealed), grant);
+});
+
+test("Google Calendar ICS dates preserve Oslo time and all-day dates", () => {
+  const timed = parseIcsDate({ params: { TZID: "Europe/Oslo" }, value: "20260920T100000" });
+  const allDay = parseIcsDate({ params: { VALUE: "DATE" }, value: "20260921" });
+  assert.equal(timed.date.toISOString(), "2026-09-20T08:00:00.000Z");
+  assert.equal(timed.localDate, "2026-09-20");
+  assert.equal(timed.localTime, "10:00");
+  assert.equal(allDay.allDay, true);
+  assert.equal(allDay.localDate, "2026-09-21");
+});
+
+test("Google Calendar parser expands recurrence, exclusions and moved occurrences", () => {
+  const source = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "X-WR-CALNAME:Loki testkalender",
+    "BEGIN:VEVENT",
+    "UID:single-event",
+    "DTSTART;TZID=Europe/Oslo:20260920T100000",
+    "DTEND;TZID=Europe/Oslo:20260920T120000",
+    "SUMMARY:Studioøkt",
+    "DESCRIPTION:Første linje\\nAndre linje",
+    "LOCATION:Studio A",
+    "END:VEVENT",
+    "BEGIN:VEVENT",
+    "UID:all-day-event",
+    "DTSTART;VALUE=DATE:20260921",
+    "DTEND;VALUE=DATE:20260922",
+    "SUMMARY:Hele dagen",
+    "END:VEVENT",
+    "BEGIN:VEVENT",
+    "UID:weekly-event",
+    "DTSTART;TZID=Europe/Oslo:20260914T090000",
+    "DTEND;TZID=Europe/Oslo:20260914T100000",
+    "RRULE:FREQ=WEEKLY;COUNT=4;BYDAY=MO",
+    "EXDATE;TZID=Europe/Oslo:20260921T090000",
+    "SUMMARY:Fast møte",
+    "END:VEVENT",
+    "BEGIN:VEVENT",
+    "UID:weekly-event",
+    "RECURRENCE-ID;TZID=Europe/Oslo:20260928T090000",
+    "DTSTART;TZID=Europe/Oslo:20260929T130000",
+    "DTEND;TZID=Europe/Oslo:20260929T140000",
+    "SUMMARY:Flyttet møte",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  const parsed = parseIcsCalendar(source, {
+    from: "2026-09-01T00:00:00.000Z",
+    to: "2026-10-10T00:00:00.000Z",
+    now: new Date("2026-09-15T10:00:00.000Z"),
+  });
+  assert.equal(parsed.calendarName, "Loki testkalender");
+  assert.deepEqual(parsed.events.map((event) => event.date), ["2026-09-14", "2026-09-20", "2026-09-21", "2026-09-29", "2026-10-05"]);
+  assert.equal(parsed.events.some((event) => event.date === "2026-09-21" && event.title === "Fast møte"), false);
+  assert.equal(parsed.events.find((event) => event.title === "Flyttet møte").startTime, "13:00");
+  assert.equal(parsed.events.find((event) => event.title === "Hele dagen").allDay, true);
+  assert.equal(parsed.events.find((event) => event.title === "Studioøkt").description, "Første linje\nAndre linje");
+  assert.equal(parsed.events.every((event) => /^gcal-[a-f0-9]{24}$/.test(event.id)), true);
+});
+
+test("Google Calendar feed accepts only private Google ICS URLs", () => {
+  const valid = calendarFeedUrl("https://calendar.google.com/calendar/ical/test%40group.calendar.google.com/private-token/basic.ics");
+  assert.equal(valid.hostname, "calendar.google.com");
+  assert.equal(calendarFeedUrl("http://calendar.google.com/calendar/ical/test/private-token/basic.ics"), null);
+  assert.equal(calendarFeedUrl("https://calendar.google.com.evil.example/calendar/ical/test/private-token/basic.ics"), null);
+  assert.equal(calendarFeedUrl("https://calendar.google.com/calendar/ical/test/public/basic.ics"), null);
+});
+
+test("CRM calendar UI uses an authenticated server feed without exposing its private URL", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const operations = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "operations.js"), "utf8");
+  const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  assert.match(html, /id="google-calendar-grid"/);
+  assert.match(html, /id="calendar-previous"/);
+  assert.match(html, /KOMMENDE AVTALER/);
+  assert.match(operations, /action=google-calendar/);
+  assert.match(operations, /calendarCursor/);
+  assert.match(studioApi, /requireUser\(req, res\)/);
+  assert.match(studioApi, /loadGoogleCalendar/);
+  assert.doesNotMatch(html, /private-[a-z0-9_-]+\/basic\.ics/i);
+  assert.doesNotMatch(operations, /private-[a-z0-9_-]+\/basic\.ics/i);
 });
