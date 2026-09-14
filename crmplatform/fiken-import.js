@@ -60,7 +60,7 @@
       const summary = `${result.rows || 0} rader behandlet · ${result.created || 0} nye · ${result.updated || 0} oppdatert`;
       try { sessionStorage.setItem(STATUS_KEY, summary); } catch {}
       setStatus(summary, "success");
-      window.setTimeout(() => location.replace(`${location.pathname}${location.search}#leads`), 650);
+      window.setTimeout(() => location.reload(), 650);
     } catch (error) {
       setStatus(error?.message || "Fiken-kontaktene kunne ikke importeres.", "error");
       button.disabled = false;
