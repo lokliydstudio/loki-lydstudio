@@ -23,6 +23,7 @@ const { createProjectExport, planProjectDeletion } = require("../lib/crm-project
 const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
+const { decodeXlsxBase64, fikenContactsFromRows } = require("../lib/fiken-contact-import");
 const { publicSummary } = require("../lib/crm-prospect-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
@@ -113,6 +114,61 @@ test("project workspace embeds Spotify references behind the CRM CSP", () => {
   assert.match(studio, /spotify-reference-form/);
   assert.match(studio, /open\.spotify\.com\/embed/);
   assert.match(vercel, /frame-src https:\/\/open\.spotify\.com/);
+});
+
+test("Fiken customer exports become complete archived contact profiles", () => {
+  const contacts = fikenContactsFromRows([
+    {
+      Navn: "VANARY AS",
+      Kundenr: "10022",
+      Orgnr: "930674958",
+      "E-post": "POST@VANARY.NO",
+      Telefon: "55555555",
+      Adresse: "Testveien 1",
+      Postnr: "5003",
+      Poststed: "Bergen",
+      Land: "Norge",
+      Kontaktperson: "Kari Test",
+    },
+    { Navn: "VANARY RECORDS AS", Kundenr: "10023", Orgnr: "922182973", "E-post": "post@vanary.no" },
+    { Navn: "Kunde uten kontaktkanal", Kundenr: "10024" },
+  ]);
+  assert.equal(contacts.length, 3);
+  assert.deepEqual(contacts.map((contact) => contact.id), ["fiken-customer-10022", "fiken-customer-10023", "fiken-customer-10024"]);
+  assert.equal(contacts[0].email, "POST@VANARY.NO");
+  assert.equal(contacts[0].stage, "Ferdig");
+  assert.equal(contacts[0].profileCompleted, true);
+  assert.match(contacts[0].notes, /Organisasjonsnummer: 930674958/);
+  assert.match(contacts[0].notes, /Kontaktperson: Kari Test/);
+  assert.equal(contacts[2].preferredContact, "Ingen preferanse");
+  assert.equal(decodeXlsxBase64(Buffer.from("xlsx").toString("base64")).toString(), "xlsx");
+});
+
+test("Fiken contacts keep stable external identifiers and no artificial follow-up", () => {
+  const lead = sanitizeLead({
+    name: "Fiken-kunde",
+    source: "Fiken",
+    stage: "Ferdig",
+    externalSource: "Fiken",
+    externalId: "10024",
+    profileCompleted: true,
+  });
+  assert.equal(lead.externalSource, "Fiken");
+  assert.equal(lead.externalId, "10024");
+  assert.equal(lead.followUpDate, "");
+  assert.equal(splitLeadViews([lead], []).leads.length, 1);
+});
+
+test("contact register exposes an authenticated Fiken XLSX importer", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "fiken-import.js"), "utf8");
+  const api = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "leads.js"), "utf8");
+  assert.match(html, /id="import-fiken-contacts"/);
+  assert.match(html, /accept="\.xlsx/);
+  assert.match(client, /importFikenXlsx/);
+  assert.match(client, /credentials: "same-origin"/);
+  assert.match(api, /parseFikenContacts/);
+  assert.match(api, /externalSource/);
 });
 
 test("Cold Call Pool keeps only safe public contact fields and gates outreach readiness", () => {

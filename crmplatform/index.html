@@ -21,6 +21,7 @@
     <link rel="stylesheet" href="/crmplatform/workspace.css">
     <link rel="stylesheet" href="/crmplatform/rentals.css">
     <link rel="stylesheet" href="/crmplatform/lead-priority.css">
+    <link rel="stylesheet" href="/crmplatform/fiken-import.css?v=20260914-fiken-contacts">
     <link rel="stylesheet" href="/crmplatform/mail-reader.css">
     <link rel="stylesheet" href="/crmplatform/operations.css">
     <link rel="stylesheet" href="/crmplatform/prospects.css">
@@ -69,7 +70,7 @@
             <button class="crm-category-tab" type="button" role="tab" aria-selected="false" data-crm-section="prospects"><span><b>Cold Call Pool</b><small>Nye, offentlige kandidater</small></span><strong id="prospect-nav-count">0</strong></button>
           </nav>
           <section class="crm-subsection" id="customer-section">
-            <section class="panel customer-directory"><div class="customer-directory-head"><div><span class="kicker">KONTAKTER</span><h2>Kontaktregister</h2><p>Alle kontaktprofiler dere har opprettet eller lagret. Originale e-poster og e-postemner vises ikke her.</p></div><div class="customer-directory-tools"><span class="state green" id="customer-count">0 kontakter</span><input class="search" id="customer-search" type="search" placeholder="Søk i kontakter"></div></div><div class="customer-directory-grid" id="customer-directory-list" aria-live="polite"></div></section>
+            <section class="panel customer-directory"><div class="customer-directory-head"><div><span class="kicker">KONTAKTER</span><h2>Kontaktregister</h2><p>Alle kontaktprofiler dere har opprettet eller lagret. Originale e-poster og e-postemner vises ikke her.</p></div><div class="customer-directory-tools"><span class="state green" id="customer-count">0 kontakter</span><input class="search" id="customer-search" type="search" placeholder="Søk i kontakter"><input id="fiken-contact-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden><button class="secondary fiken-import-button" id="import-fiken-contacts" type="button">⇧ Importer Fiken XLSX</button><span class="fiken-import-status" id="fiken-import-status" role="status" aria-live="polite"></span></div></div><div class="customer-directory-grid" id="customer-directory-list" aria-live="polite"></div></section>
           </section>
           <section class="crm-subsection" id="lead-section" hidden>
             <div class="lead-section-divider"><div><span class="kicker">LEADS OG HENVENDELSER</span><h2>Fra henvendelse til booking</h2><p>Her behandles innkommende e-post og kontaktene flyttes gjennom salgsfasene.</p></div><div class="lead-tools"><span class="state green">Formspree først</span><input class="search" id="lead-search" type="search" placeholder="Søk i leads og henvendelser"></div></div><div class="pipeline" id="pipeline" role="tablist" aria-label="Salgsfaser"></div><section class="panel table-panel"><div class="stage-view-bar"><span class="kicker">VALGT SALGSFASE</span><strong id="lead-stage-title">Nytt lead</strong></div><div class="crm-row crm-head"><span>Kontakt</span><span>Prosjekt</span><span>Status</span><span>Verdi</span><span>Neste handling</span><span></span></div><div id="lead-table" aria-live="polite"></div></section><p class="notice">Bruk «Ikke relevant» for promomail og andre henvendelser som ikke skal følges opp. Når en profil lagres, blir den også tilgjengelig under «Kontakter».</p>
@@ -169,6 +170,7 @@
   <script src="/crmplatform/documents.js"></script>
   <script src="/crmplatform/operations.js"></script>
   <script src="/crmplatform/lead-profile.js"></script>
+  <script src="/crmplatform/fiken-import.js?v=20260914-fiken-contacts"></script>
   <script src="/crmplatform/prospects.js"></script>
   <script src="/crmplatform/theme.js"></script>
   <script>

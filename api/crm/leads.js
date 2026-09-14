@@ -4,6 +4,7 @@ const { leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreferen
 const { classifyEnvelope } = require("../../lib/crm-mail-sort");
 const { sanitizeActivity } = require("../../lib/crm-operations");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
+const { decodeXlsxBase64, parseFikenContacts } = require("../../lib/fiken-contact-import");
 
 const STAGES = new Set(["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig", "Tapt"]);
 const ASSIGNEES = new Set(["Leon", "Charles", "Begge"]);
@@ -37,6 +38,7 @@ function sanitizeLead(input, existing = {}) {
   const name = cleanText(optionalValue(input, existing, "name") || email.split("@")[0], 120);
   if (!name) return null;
   const requestedStage = cleanText(input?.stage || existing.stage || "Nytt lead", 40);
+  const normalizedStage = STAGES.has(requestedStage) ? requestedStage : "Nytt lead";
   let source = cleanText(input?.source || existing.source || "Manuelt", 80);
   const category = cleanText(input?.category || existing.category || (source.toLowerCase() === "formspree" ? "formspree" : "customer"), 30);
   if (category === "customer" && source.toLowerCase() === "automatisk filtrert") source = "E-post";
@@ -46,17 +48,21 @@ function sanitizeLead(input, existing = {}) {
   const preferredContact = cleanText(optionalValue(input, existing, "preferredContact") || "E-post", 30);
   const lead = {
     id: cleanText(existing.id || input?.id, 120) || `lead-${crypto.randomUUID()}`,
+    externalSource: cleanText(optionalValue(input, existing, "externalSource"), 40),
+    externalId: cleanText(optionalValue(input, existing, "externalId"), 120),
     name,
     email,
     project: cleanText(input?.project || existing.project || "Ny henvendelse", 300),
-    stage: STAGES.has(requestedStage) ? requestedStage : "Nytt lead",
+    stage: normalizedStage,
     value: Math.max(0, Math.min(Number(input?.value ?? existing.value ?? 0) || 0, 10_000_000)),
     source,
     category: category === "formspree" ? "formspree" : "customer",
     messageKey: /^[a-f0-9]{32}$/.test(messageKey) ? messageKey : "",
     receivedAt: Number.isNaN(receivedAt.getTime()) ? new Date().toISOString() : receivedAt.toISOString(),
     nextAction: cleanText(input?.nextAction || existing.nextAction || "Ta første kontakt", 180),
-    followUpDate: cleanDate(optionalValue(input, existing, "followUpDate")) || (!existing.id ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : ""),
+    followUpDate: new Set(["Ferdig", "Tapt"]).has(normalizedStage)
+      ? ""
+      : cleanDate(optionalValue(input, existing, "followUpDate")) || (!existing.id ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : ""),
     assignee: ASSIGNEES.has(assignee) ? assignee : "Begge",
     preferredContact: CONTACT_METHODS.has(preferredContact) ? preferredContact : "E-post",
     lostReason: cleanText(optionalValue(input, existing, "lostReason"), 300),
@@ -80,7 +86,7 @@ function sanitizeLead(input, existing = {}) {
 function leadIsIrrelevant(lead, preferences) {
   if (suppressedByMailPreference(lead, preferences)) return true;
   const override = mailPreferenceForLead(lead, preferences);
-  if (!override && new Set(["manuelt", "cold call pool"]).has(String(lead.source || "").toLowerCase())) return false;
+  if (!override && new Set(["manuelt", "cold call pool", "fiken"]).has(String(lead.source || "").toLowerCase())) return false;
   return classifyEnvelope({
       uid: lead.id,
       envelope: {
@@ -138,33 +144,78 @@ async function handler(req, res) {
 
     if (req.method === "POST") {
       const current = await readLeads({ includeHidden: true });
-      const incoming = req.body?.action === "upsertMany"
-        ? (Array.isArray(req.body?.leads) ? req.body.leads.slice(0, 50) : [])
-        : [req.body?.lead];
+      const importFromFiken = req.body?.action === "importFikenXlsx";
+      let incoming;
+      if (importFromFiken) {
+        try {
+          incoming = parseFikenContacts(decodeXlsxBase64(req.body?.fileBase64));
+        } catch (importError) {
+          return res.status(400).json({ error: importError?.message || "Kunne ikke lese Fiken-filen." });
+        }
+      } else {
+        incoming = req.body?.action === "upsertMany"
+          ? (Array.isArray(req.body?.leads) ? req.body.leads.slice(0, 50) : [])
+          : [req.body?.lead];
+      }
       let changed = false;
-      const seenEmails = new Set();
+      const seenKeys = new Set();
       const createdLeads = [];
       const manuallyRestoredEmails = new Set();
+      let createdCount = 0;
+      let updatedCount = 0;
+      let skippedCount = 0;
 
       for (const candidate of incoming) {
         const email = cleanEmail(candidate?.email);
-        const manual = new Set(["manuelt", "cold call pool"]).has(String(candidate?.source || "").toLowerCase());
-        if ((!email && !manual) || email.endsWith("@lokilyd.no") || (email && seenEmails.has(email))) continue;
-        if (email) seenEmails.add(email);
+        const sourceName = String(candidate?.source || "").toLowerCase();
+        const manual = new Set(["manuelt", "cold call pool", "fiken"]).has(sourceName);
+        const externalSource = cleanText(candidate?.externalSource, 40).toLowerCase();
+        const externalId = cleanText(candidate?.externalId, 120);
+        const externalKey = externalSource && externalId ? `${externalSource}:${externalId}` : "";
+        const candidateKey = externalKey || (email ? `email:${email}` : cleanText(candidate?.id, 120) ? `id:${cleanText(candidate.id, 120)}` : "");
+        if ((!email && !manual) || (email.endsWith("@lokilyd.no") && !importFromFiken) || !candidateKey || seenKeys.has(candidateKey)) {
+          skippedCount += 1;
+          continue;
+        }
+        seenKeys.add(candidateKey);
         if (manual && email) manuallyRestoredEmails.add(email);
         const candidateId = cleanText(candidate?.id, 120);
-        const index = email
-          ? current.findIndex((lead) => cleanEmail(lead.email) === email)
-          : candidateId ? current.findIndex((lead) => lead.id === candidateId) : -1;
+        let matchedByExternalId = false;
+        let index = externalKey
+          ? current.findIndex((lead) => cleanText(lead.externalSource, 40).toLowerCase() === externalSource && cleanText(lead.externalId, 120) === externalId)
+          : -1;
+        if (index >= 0) matchedByExternalId = true;
+        if (index < 0 && externalKey && email) {
+          index = current.findIndex((lead) => cleanEmail(lead.email) === email && !cleanText(lead.externalId, 120));
+        }
+        if (index < 0 && !externalKey) {
+          index = email
+            ? current.findIndex((lead) => cleanEmail(lead.email) === email)
+            : candidateId ? current.findIndex((lead) => lead.id === candidateId) : -1;
+        }
         if (index >= 0) {
-          const merged = sanitizeLead(candidate, current[index]);
+          const previous = current[index];
+          const merged = sanitizeLead(candidate, previous);
           if (!merged) continue;
-          current[index] = { ...merged, id: current[index].id, stage: current[index].stage, value: current[index].value };
+          current[index] = {
+            ...merged,
+            id: previous.id,
+            stage: previous.stage,
+            value: previous.value,
+            ...(!matchedByExternalId && externalKey ? {
+              project: previous.project,
+              source: previous.source,
+              nextAction: previous.nextAction,
+              followUpDate: previous.followUpDate,
+            } : {}),
+          };
+          updatedCount += 1;
         } else {
           const created = sanitizeLead(candidate);
           if (!created) continue;
           current.unshift(created);
-          if (manual) createdLeads.push(created);
+          if (manual) createdLeads.push({ ...created, importedFromFiken: importFromFiken });
+          createdCount += 1;
         }
         changed = true;
       }
@@ -185,7 +236,10 @@ async function handler(req, res) {
           try {
             const activities = await readCollection("activities");
             createdLeads.forEach((lead) => {
-              const activity = sanitizeActivity({ leadId: lead.id, type: "Status", details: "Kunderelasjonen ble opprettet manuelt i CRM." }, {}, user.email);
+              const details = lead.importedFromFiken
+                ? "Kontaktprofilen ble importert fra Fiken."
+                : "Kunderelasjonen ble opprettet manuelt i CRM.";
+              const activity = sanitizeActivity({ leadId: lead.id, type: "Status", details }, {}, user.email);
               if (activity) activities.unshift(activity);
             });
             await writeCollection("activities", activities.slice(0, 3000));
@@ -195,7 +249,12 @@ async function handler(req, res) {
         }
       }
       const views = await leadViews();
-      return res.status(200).json({ leads: views.leads, irrelevantLeads: views.irrelevantLeads, persistent: true });
+      return res.status(200).json({
+        leads: views.leads,
+        irrelevantLeads: views.irrelevantLeads,
+        persistent: true,
+        ...(importFromFiken ? { import: { rows: incoming.length, created: createdCount, updated: updatedCount, skipped: skippedCount } } : {}),
+      });
     }
 
     if (req.method === "PATCH") {

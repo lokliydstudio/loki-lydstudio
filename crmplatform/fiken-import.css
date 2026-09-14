@@ -1,0 +1,40 @@
+.customer-directory-tools {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.fiken-import-button {
+  white-space: nowrap;
+}
+
+.fiken-import-button[disabled] {
+  cursor: wait;
+  opacity: .58;
+}
+
+.fiken-import-status {
+  flex-basis: 100%;
+  min-height: 14px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+  text-align: right;
+}
+
+.fiken-import-status.success {
+  color: var(--green);
+}
+
+.fiken-import-status.error {
+  color: var(--danger);
+}
+
+@media (max-width: 640px) {
+  .fiken-import-button {
+    width: 100%;
+  }
+
+  .fiken-import-status {
+    text-align: left;
+  }
+}
