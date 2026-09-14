@@ -15,6 +15,7 @@
   let initialized = false;
   let projects = [];
   let tracks = [];
+  let audioComments = [];
   let selectedProjectId = null;
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({
@@ -51,6 +52,51 @@
     return tracks.filter((track) => track.projectId === selectedProjectId);
   }
 
+  function formatTimestamp(value) {
+    const total = Math.max(0, Math.floor(Number(value) || 0));
+    const hours = Math.floor(total / 3600);
+    const minutes = Math.floor((total % 3600) / 60);
+    const seconds = total % 60;
+    return hours
+      ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+      : `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  function commentsForTrack(trackId) {
+    return audioComments
+      .filter((comment) => comment.trackId === trackId)
+      .sort((left, right) => Number(left.timestampSeconds) - Number(right.timestampSeconds) || String(left.createdAt).localeCompare(String(right.createdAt)));
+  }
+
+  function commentRows(trackId) {
+    const comments = commentsForTrack(trackId);
+    if (!comments.length) return '<p class="mix-feedback-empty">Ingen tidsstemplede kommentarer ennå.</p>';
+    return comments.map((comment) => `
+      <article class="mix-comment">
+        <button class="mix-comment-time" type="button" data-jump-comment="${esc(trackId)}" data-seconds="${Number(comment.timestampSeconds) || 0}" title="Hopp til tidspunktet">${formatTimestamp(comment.timestampSeconds)}</button>
+        <div class="mix-comment-copy"><strong>${esc(comment.authorName)}${comment.authorType === "studio" ? ' <span>LOKI</span>' : ""}</strong><p>${esc(comment.body)}</p><small>${new Date(comment.createdAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div>
+        <button class="mix-comment-delete" type="button" data-delete-comment="${esc(comment.id)}" data-track-id="${esc(trackId)}" aria-label="Slett kommentar">×</button>
+      </article>`).join("");
+  }
+
+  function bindCommentActions(root = document) {
+    root.querySelectorAll("[data-jump-comment]").forEach((button) => {
+      button.onclick = () => jumpToComment(button.dataset.jumpComment, button.dataset.seconds);
+    });
+    root.querySelectorAll("[data-delete-comment]").forEach((button) => {
+      button.onclick = () => deleteAudioComment(button.dataset.trackId, button.dataset.deleteComment);
+    });
+  }
+
+  function refreshTrackComments(trackId) {
+    const card = document.querySelector(`[data-track-card="${CSS.escape(trackId)}"]`);
+    if (!card) return;
+    const count = commentsForTrack(trackId).length;
+    card.querySelector(".mix-feedback-head > span").textContent = `${count} ${count === 1 ? "kommentar" : "kommentarer"}`;
+    card.querySelector(".mix-comment-list").innerHTML = commentRows(trackId);
+    bindCommentActions(card);
+  }
+
   function patchRows(project) {
     return project.patch.map((row) => `
       <tr data-channel="${row.channel}">
@@ -69,17 +115,28 @@
     const visible = projectTracks();
     if (!visible.length) return '<div class="project-empty">Ingen lydfiler i prosjektet ennå.</div>';
     return visible.map((track) => `
-      <article class="track-card">
-        <div class="track-copy">
-          <strong>${esc(track.title)} · ${esc(track.version)}</strong>
-          <span>${esc(track.filename)} · ${formatBytes(track.size)}</span>
-          <span>${esc(track.jottaStatus || "Venter på lokal synk")}</span>
+      <article class="track-card" data-track-card="${esc(track.id)}">
+        <div class="track-main">
+          <div class="track-copy">
+            <strong>${esc(track.title)} · ${esc(track.version)}</strong>
+            <span>${esc(track.filename)} · ${formatBytes(track.size)}</span>
+            <span>${esc(track.jottaStatus || "Venter på lokal synk")}</span>
+          </div>
+          <audio controls preload="metadata" data-track-player="${esc(track.id)}" src="/api/studio?action=internal-stream&amp;id=${encodeURIComponent(track.id)}">Nettleseren støtter ikke lydavspilling.</audio>
+          <div class="track-actions">
+            <button class="tiny-button" data-share-track="${esc(track.id)}">Kopier kundelenke</button>
+            <button class="tiny-button danger" data-delete-track="${esc(track.id)}">Slett</button>
+          </div>
         </div>
-        <audio controls preload="metadata" src="/api/studio?action=internal-stream&amp;id=${encodeURIComponent(track.id)}">Nettleseren støtter ikke lydavspilling.</audio>
-        <div class="track-actions">
-          <button class="tiny-button" data-share-track="${esc(track.id)}">Kopier kundelenke</button>
-          <button class="tiny-button danger" data-delete-track="${esc(track.id)}">Slett</button>
-        </div>
+        <section class="mix-feedback" aria-label="Tidsstemplet feedback for ${esc(track.title)}">
+          <div class="mix-feedback-head"><div><strong>Kommentarer på tidslinjen</strong><span>Spill av eller pause der du vil kommentere.</span></div><span>${commentsForTrack(track.id).length} kommentarer</span></div>
+          <form class="mix-comment-form" data-comment-form="${esc(track.id)}">
+            <span class="mix-comment-capture" data-comment-capture="${esc(track.id)}">00:00</span>
+            <textarea data-comment-body="${esc(track.id)}" maxlength="1000" rows="2" placeholder="F.eks. basstrommen er litt høy her …" aria-label="Kommentar til ${esc(track.title)}" required></textarea>
+            <button class="primary" type="submit">Legg til</button>
+          </form>
+          <div class="mix-comment-list">${commentRows(track.id)}</div>
+        </section>
       </article>`).join("");
   }
 
@@ -152,12 +209,72 @@
     document.querySelectorAll("[data-delete-track]").forEach((button) => {
       button.onclick = () => deleteTrack(button.dataset.deleteTrack);
     });
-    document.querySelectorAll("#project-workspace input, #project-workspace textarea, #project-workspace select").forEach((input) => {
+    document.querySelectorAll("[data-track-player]").forEach((player) => {
+      const updateTimestamp = () => {
+        const capture = document.querySelector(`[data-comment-capture="${CSS.escape(player.dataset.trackPlayer)}"]`);
+        if (capture) capture.textContent = formatTimestamp(player.currentTime);
+      };
+      player.addEventListener("timeupdate", updateTimestamp);
+      player.addEventListener("seeked", updateTimestamp);
+      updateTimestamp();
+    });
+    document.querySelectorAll("[data-comment-form]").forEach((form) => {
+      form.onsubmit = (event) => saveAudioComment(event, form.dataset.commentForm);
+    });
+    bindCommentActions();
+    document.querySelectorAll("#project-workspace .project-fields input, #project-workspace .project-fields textarea, #project-workspace .project-fields select, #patch-body input").forEach((input) => {
       input.addEventListener("input", () => {
         const state = document.getElementById("project-save-state");
         if (state) state.textContent = "Ulagrede endringer";
       });
     });
+  }
+
+  function jumpToComment(trackId, seconds) {
+    const player = document.querySelector(`[data-track-player="${CSS.escape(trackId)}"]`);
+    if (!player) return;
+    player.currentTime = Math.max(0, Number(seconds) || 0);
+    player.play().catch(() => {});
+  }
+
+  async function saveAudioComment(event, trackId) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const player = document.querySelector(`[data-track-player="${CSS.escape(trackId)}"]`);
+    const body = form.querySelector(`[data-comment-body="${CSS.escape(trackId)}"]`).value.trim();
+    if (!body) return;
+    const button = form.querySelector("button[type=submit]");
+    button.disabled = true;
+    button.textContent = "Lagrer …";
+    try {
+      const data = await request(`/api/studio?action=audio-comments&trackId=${encodeURIComponent(trackId)}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ trackId, timestampSeconds: player?.currentTime || 0, body }),
+      });
+      audioComments.push(data.comment);
+      form.querySelector(`[data-comment-body="${CSS.escape(trackId)}"]`).value = "";
+      button.disabled = false;
+      button.textContent = "Legg til";
+      refreshTrackComments(trackId);
+      toast(`Kommentar lagret ved ${formatTimestamp(data.comment.timestampSeconds)}.`);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = "Legg til";
+      toast(error.message || "Kommentaren kunne ikke lagres.");
+    }
+  }
+
+  async function deleteAudioComment(trackId, id) {
+    if (!confirm("Slett denne kommentaren?")) return;
+    try {
+      await request(`/api/studio?action=audio-comments&trackId=${encodeURIComponent(trackId)}&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      audioComments = audioComments.filter((comment) => comment.id !== id);
+      refreshTrackComments(trackId);
+      toast("Kommentaren er slettet.");
+    } catch (error) {
+      toast(error.message || "Kommentaren kunne ikke slettes.");
+    }
   }
 
   function collectPatch() {
@@ -437,8 +554,10 @@
     button.textContent = "Sletter …";
     try {
       const result = await request(`/api/studio?action=projects&id=${encodeURIComponent(project.id)}`, { method: "DELETE" });
+      const deletedTrackIds = new Set(tracks.filter((track) => track.projectId === project.id).map((track) => track.id));
       projects = projects.filter((item) => item.id !== project.id);
       tracks = tracks.filter((track) => track.projectId !== project.id);
+      audioComments = audioComments.filter((comment) => !deletedTrackIds.has(comment.trackId));
       selectedProjectId = projects[0]?.id || null;
       render();
       const trackText = result.deletedTrackCount ? ` og ${result.deletedTrackCount} lydfil${result.deletedTrackCount === 1 ? "" : "er"}` : "";
@@ -527,6 +646,7 @@
     try {
       await request(`/api/studio?action=audio&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       tracks = tracks.filter((item) => item.id !== id);
+      audioComments = audioComments.filter((comment) => comment.trackId !== id);
       render();
       toast("Lydfilen er slettet fra plattformen.");
     } catch (error) {
@@ -578,6 +698,7 @@
       ]);
       projects = projectData.projects || [];
       tracks = audioData.tracks || [];
+      audioComments = audioData.comments || [];
       selectedProjectId = projects[0]?.id || null;
       render();
     } catch (error) {

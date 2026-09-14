@@ -7,7 +7,7 @@
   <meta name="referrer" content="no-referrer">
   <title>Loki Lydstudio · Privat lyttelenke</title>
   <style>
-    :root{--ink:#1c1c1a;--muted:#77736a;--paper:#f3f0e8;--panel:#fffefa;--lime:#d9ff53;--line:#ded9cf}*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif}main{width:min(680px,100%);overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--panel);box-shadow:0 30px 90px rgba(31,29,23,.12)}header{display:flex;align-items:center;gap:14px;padding:25px 28px;border-bottom:1px solid var(--line);background:#20201e;color:white}.logo{position:relative;width:62px;height:49px;overflow:hidden}.logo img{position:absolute;width:143px;height:143px;left:-40px;top:-47px;filter:brightness(0) invert(1)}.wordmark{display:flex;flex-direction:column;line-height:1;letter-spacing:.13em}.wordmark strong{font-size:16px}.wordmark span{margin-top:6px;color:#aaa79f;font-size:8px;letter-spacing:.28em}.content{padding:38px}.kicker{color:#5a584f;font-size:8px;font-weight:800;letter-spacing:.18em}h1{margin:9px 0 8px;font:500 34px Georgia,serif}.project{color:var(--muted);font-size:12px}.version{display:inline-block;margin:18px 0 22px;padding:6px 9px;border-radius:99px;background:var(--lime);font-size:9px;font-weight:800}audio{width:100%;margin:4px 0 18px}.notes{min-height:48px;margin:0;padding:15px;border-left:3px solid var(--lime);background:#f0ede6;color:#5f5b53;font-size:11px;line-height:1.6}.meta{display:flex;justify-content:space-between;gap:20px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}.error{display:none;padding:22px;border-radius:10px;background:#fff0ed;color:#963c2e;font-size:12px;line-height:1.55}.privacy{margin:20px 0 0;color:#8a867e;font-size:9px;line-height:1.5}@media(max-width:560px){.content{padding:28px 22px}h1{font-size:28px}.meta{flex-direction:column;gap:7px}}
+    :root{--ink:#1c1c1a;--muted:#77736a;--paper:#f3f0e8;--panel:#fffefa;--lime:#d9ff53;--line:#ded9cf}*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif}main{width:min(680px,100%);overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--panel);box-shadow:0 30px 90px rgba(31,29,23,.12)}header{display:flex;align-items:center;gap:14px;padding:25px 28px;border-bottom:1px solid var(--line);background:#20201e;color:white}.logo{position:relative;width:62px;height:49px;overflow:hidden}.logo img{position:absolute;width:143px;height:143px;left:-40px;top:-47px;filter:brightness(0) invert(1)}.wordmark{display:flex;flex-direction:column;line-height:1;letter-spacing:.13em}.wordmark strong{font-size:16px}.wordmark span{margin-top:6px;color:#aaa79f;font-size:8px;letter-spacing:.28em}.content{padding:38px}.kicker{color:#5a584f;font-size:8px;font-weight:800;letter-spacing:.18em}h1{margin:9px 0 8px;font:500 34px Georgia,serif}.project{color:var(--muted);font-size:12px}.version{display:inline-block;margin:18px 0 22px;padding:6px 9px;border-radius:99px;background:var(--lime);font-size:9px;font-weight:800}audio{width:100%;margin:4px 0 18px}.notes{min-height:48px;margin:0;padding:15px;border-left:3px solid var(--lime);background:#f0ede6;color:#5f5b53;font-size:11px;line-height:1.6}.feedback{margin-top:24px;padding-top:23px;border-top:1px solid var(--line)}.feedback-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:13px}.feedback-head h2{margin:5px 0 0;font:500 22px Georgia,serif}.feedback-count{padding:6px 9px;border-radius:99px;background:#efebe3;color:var(--muted);font-size:9px}.feedback-form{display:grid;grid-template-columns:74px 1fr;gap:9px}.feedback-form label{display:grid;gap:5px;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.feedback-form label:first-child{grid-column:1/-1}.feedback-form input,.feedback-form textarea{width:100%;padding:11px;border:1px solid #d5d0c6;border-radius:8px;background:white;color:var(--ink);font:inherit;font-size:11px}.feedback-form textarea{min-height:70px;resize:vertical}.feedback-time{display:grid;place-items:center;border-radius:8px;background:#23231f;color:var(--lime);font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace}.feedback-form button{border:0;border-radius:8px;background:var(--lime);color:#20201d;font-size:10px;font-weight:800;cursor:pointer}.feedback-form button:disabled{cursor:wait;opacity:.6}.feedback-status{min-height:16px;margin:7px 0 0;color:var(--muted);font-size:9px}.feedback-list{display:grid;gap:8px;margin-top:10px}.feedback-empty{padding:15px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);font-size:10px;text-align:center}.comment{display:grid;grid-template-columns:58px 1fr;gap:11px;padding:11px;border:1px solid var(--line);border-radius:9px;background:#faf8f3}.comment button{align-self:start;padding:7px 4px;border:0;border-radius:6px;background:var(--lime);color:#20201d;font:800 10px ui-monospace,SFMono-Regular,Menlo,monospace;cursor:pointer}.comment strong{font-size:10px}.comment strong span{margin-left:5px;padding:2px 5px;border-radius:99px;background:#242420;color:var(--lime);font-size:6px;letter-spacing:.1em}.comment p{margin:5px 0;color:#3f3d38;font-size:11px;line-height:1.45;overflow-wrap:anywhere}.comment small{color:var(--muted);font-size:8px}.meta{display:flex;justify-content:space-between;gap:20px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}.error{display:none;padding:22px;border-radius:10px;background:#fff0ed;color:#963c2e;font-size:12px;line-height:1.55}.privacy{margin:20px 0 0;color:#8a867e;font-size:9px;line-height:1.5}@media(max-width:560px){.content{padding:28px 22px}h1{font-size:28px}.meta{flex-direction:column;gap:7px}.feedback-form{grid-template-columns:64px 1fr}}
   </style>
 </head>
 <body>
@@ -22,8 +22,19 @@
         <span class="version" id="track-version"></span>
         <audio id="audio" controls preload="metadata">Nettleseren støtter ikke lydavspilling.</audio>
         <p class="notes" id="track-notes"></p>
+        <section class="feedback" aria-labelledby="feedback-title">
+          <div class="feedback-head"><div><span class="kicker">TIDSSTEMPLET FEEDBACK</span><h2 id="feedback-title">Kommentarer på miksen</h2></div><span class="feedback-count" id="feedback-count">0 kommentarer</span></div>
+          <form class="feedback-form" id="feedback-form">
+            <label>Navnet ditt<input id="feedback-name" maxlength="80" autocomplete="name" placeholder="F.eks. Kari" required></label>
+            <span class="feedback-time" id="feedback-time">00:00</span>
+            <label>Kommentar<textarea id="feedback-body" maxlength="1000" placeholder="F.eks. basstrommen er litt høy her …" required></textarea></label>
+            <button id="feedback-submit" type="submit">Legg til</button>
+          </form>
+          <p class="feedback-status" id="feedback-status">Spill av eller pause ved stedet du vil kommentere.</p>
+          <div class="feedback-list" id="feedback-list"><p class="feedback-empty">Ingen kommentarer ennå.</p></div>
+        </section>
         <div class="meta"><span id="file-meta"></span><span id="expires"></span></div>
-        <p class="privacy">Lenken er personlig og tidsbegrenset. Del den bare med personer som skal høre leveransen.</p>
+        <p class="privacy">Lenken er personlig og tidsbegrenset. Del den bare med personer som skal høre leveransen. Navn og kommentarer du lagrer blir synlige for Loki Lydstudio og andre som har den samme lenken.</p>
       </div>
       <div class="error" id="error"></div>
     </section>
@@ -31,6 +42,84 @@
   <script>
     const token = new URLSearchParams(location.search).get("token") || "";
     const formatBytes = bytes => `${(Number(bytes || 0) / 1024 / 1024).toLocaleString("nb-NO", { maximumFractionDigits: 1 })} MB`;
+    const formatTimestamp = value => { const total=Math.max(0,Math.floor(Number(value)||0));const hours=Math.floor(total/3600);const minutes=Math.floor((total%3600)/60);const seconds=total%60;return hours?`${hours}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`:`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`; };
+    const audio = document.getElementById("audio");
+    let comments = [];
+
+    function renderComments() {
+      const list = document.getElementById("feedback-list");
+      document.getElementById("feedback-count").textContent = `${comments.length} ${comments.length === 1 ? "kommentar" : "kommentarer"}`;
+      list.replaceChildren();
+      if (!comments.length) {
+        const empty = document.createElement("p");
+        empty.className = "feedback-empty";
+        empty.textContent = "Ingen kommentarer ennå.";
+        list.appendChild(empty);
+        return;
+      }
+      comments.forEach(comment => {
+        const article = document.createElement("article");
+        article.className = "comment";
+        const time = document.createElement("button");
+        time.type = "button";
+        time.textContent = formatTimestamp(comment.timestampSeconds);
+        time.title = "Hopp til tidspunktet";
+        time.onclick = () => { audio.currentTime = Math.max(0, Number(comment.timestampSeconds) || 0); audio.play().catch(() => {}); };
+        const copy = document.createElement("div");
+        const author = document.createElement("strong");
+        author.textContent = comment.authorName;
+        if (comment.authorType === "studio") { const badge=document.createElement("span");badge.textContent="LOKI";author.appendChild(badge); }
+        const body = document.createElement("p");
+        body.textContent = comment.body;
+        const date = document.createElement("small");
+        date.textContent = new Date(comment.createdAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+        copy.append(author, body, date);
+        article.append(time, copy);
+        list.appendChild(article);
+      });
+    }
+
+    async function loadComments() {
+      const response = await fetch(`/api/studio?action=public-comments&token=${encodeURIComponent(token)}`, { credentials: "omit" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "Kommentarene kunne ikke hentes.");
+      comments = data.comments || [];
+      renderComments();
+    }
+
+    audio.addEventListener("timeupdate", () => { document.getElementById("feedback-time").textContent = formatTimestamp(audio.currentTime); });
+    audio.addEventListener("seeked", () => { document.getElementById("feedback-time").textContent = formatTimestamp(audio.currentTime); });
+    try { document.getElementById("feedback-name").value = localStorage.getItem("loki-reviewer-name") || ""; } catch {}
+    document.getElementById("feedback-form").addEventListener("submit", async event => {
+      event.preventDefault();
+      const name = document.getElementById("feedback-name").value.trim();
+      const body = document.getElementById("feedback-body").value.trim();
+      const button = document.getElementById("feedback-submit");
+      const status = document.getElementById("feedback-status");
+      if (!name || !body) return;
+      button.disabled = true;
+      button.textContent = "Lagrer …";
+      status.textContent = "Lagrer kommentaren sikkert …";
+      try {
+        const response = await fetch(`/api/studio?action=public-comments&token=${encodeURIComponent(token)}`, {
+          method: "POST",
+          credentials: "omit",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ authorName: name, body, timestampSeconds: audio.currentTime || 0 }),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || "Kommentaren kunne ikke lagres.");
+        try { localStorage.setItem("loki-reviewer-name", name); } catch {}
+        document.getElementById("feedback-body").value = "";
+        await loadComments();
+        status.textContent = `Kommentaren ble lagret ved ${formatTimestamp(data.comment.timestampSeconds)}.`;
+      } catch (error) {
+        status.textContent = error.message || "Kommentaren kunne ikke lagres.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "Legg til";
+      }
+    });
     (async () => {
       try {
         if (!token) throw new Error("Denne lyttelenken mangler en sikker nøkkel.");
@@ -45,9 +134,10 @@
         document.getElementById("track-notes").textContent = data.track.notes || "Lytt gjennom leveransen og send tilbakemeldingen din til post@lokilyd.no.";
         document.getElementById("file-meta").textContent = `${data.track.filename} · ${formatBytes(data.track.size)}`;
         document.getElementById("expires").textContent = `Gyldig til ${new Date(data.expiresAt).toLocaleDateString("nb-NO")}`;
-        document.getElementById("audio").src = `/api/studio?action=public-stream&token=${encodeURIComponent(token)}`;
+        audio.src = `/api/studio?action=public-stream&token=${encodeURIComponent(token)}`;
         document.getElementById("loading").hidden = true;
         document.getElementById("player").hidden = false;
+        loadComments().catch(error => { document.getElementById("feedback-status").textContent = error.message || "Kommentarene kunne ikke hentes."; });
       } catch (error) {
         document.getElementById("loading").hidden = true;
         const node = document.getElementById("error");

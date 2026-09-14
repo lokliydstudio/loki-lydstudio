@@ -10,6 +10,7 @@ process.env.MAIL_PASSWORD = "test-only-password";
 
 const auth = require("../lib/crm-auth");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
+const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
@@ -219,7 +220,16 @@ test("project exports include only selected project files and no private blob de
     { id: "track-1", projectId: "project-1", filename: "miks.wav", title: "Miks", version: "V1", size: 120, contentType: "audio/wav", pathname: "loki-crm/private/track-1", uploadedBy: "leon@lokilyd.no" },
     { id: "track-2", projectId: "project-2", filename: "demo.mp3", title: "Demo", version: "V2", size: 80, contentType: "audio/mpeg", pathname: "loki-crm/private/track-2", uploadedBy: "charles@lokilyd.no" },
   ];
-  const manifest = createProjectExport(projects, tracks, "project-1");
+  const comments = [{
+    id: "comment-1",
+    trackId: "track-1",
+    timestampSeconds: 34,
+    body: "Basstrommen er litt høy her.",
+    authorName: "Kari",
+    authorType: "customer",
+    createdAt: "2026-09-14T07:00:00.000Z",
+  }];
+  const manifest = createProjectExport(projects, tracks, "project-1", comments);
   assert.equal(manifest.scope, "project");
   assert.deepEqual(manifest.projects.map((project) => project.id), ["project-1"]);
   assert.deepEqual(manifest.files.map((file) => file.trackId), ["track-1"]);
@@ -227,6 +237,7 @@ test("project exports include only selected project files and no private blob de
   assert.equal("pathname" in manifest.projects[0].tracks[0], false);
   assert.equal("uploadedBy" in manifest.projects[0].tracks[0], false);
   assert.equal(JSON.stringify(manifest).includes("loki-crm/private"), false);
+  assert.equal(manifest.projects[0].tracks[0].comments[0].timestampSeconds, 34);
 });
 
 test("project deletion cascades to its audio metadata only", () => {
@@ -266,6 +277,42 @@ test("audio metadata must match a private CRM pathname and supported audio type"
     { pathname: "public/min-miks.wav", size: 100, contentType: "audio/wav" },
     "leon@lokilyd.no",
   ), null);
+});
+
+test("audio feedback is timestamped, sanitized and scoped to one track", () => {
+  const trackId = "track-123e4567-e89b-12d3-a456-426614174000";
+  const customer = sanitizeAudioComment({
+    trackId,
+    timestampSeconds: 34.26,
+    authorName: "  Kari  ",
+    body: "  Basstrommen er litt høy her.  ",
+  }, { type: "customer" });
+  const studio = sanitizeAudioComment({
+    trackId,
+    timestampSeconds: -4,
+    body: "Vi senker den 1 dB.",
+  }, { type: "studio", email: "leon@lokilyd.no" });
+  assert.equal(customer.timestampSeconds, 34.3);
+  assert.equal(customer.authorName, "Kari");
+  assert.equal(customer.body, "Basstrommen er litt høy her.");
+  assert.equal(studio.authorName, "Leon");
+  assert.equal(studio.timestampSeconds, 0);
+  assert.equal(cleanTimestamp(100_000), 43_200);
+  assert.deepEqual(commentsForTrack([customer, studio, { ...customer, trackId: "track-other" }], trackId).map((comment) => comment.id), [studio.id, customer.id]);
+  assert.equal(sanitizeAudioComment({ trackId, authorName: "Kari", body: "" }, { type: "customer" }), null);
+});
+
+test("mix feedback is available in both internal and customer players", () => {
+  const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  const internalScript = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  const customerPlayer = fs.readFileSync(path.join(__dirname, "..", "lytt", "index.html"), "utf8");
+  assert.match(studioApi, /action === "audio-comments"/);
+  assert.match(studioApi, /action === "public-comments"/);
+  assert.match(studioApi, /audioComments: audioComments\.map/);
+  assert.match(internalScript, /action=audio-comments/);
+  assert.match(internalScript, /data-comment-capture/);
+  assert.match(customerPlayer, /action=public-comments/);
+  assert.match(customerPlayer, /TIDSSTEMPLET FEEDBACK/);
 });
 
 test("mail defaults use TLS-compatible Domeneshop ports", () => {

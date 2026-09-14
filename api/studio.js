@@ -2,6 +2,7 @@ const { del, head, issueSignedToken } = require("@vercel/blob");
 const { handleUploadPresigned } = require("@vercel/blob/client");
 const { createScopedToken, createToken, requireUser, verifyScopedToken, verifyToken } = require("../lib/crm-auth");
 const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeTrack } = require("../lib/crm-audio");
+const { MAX_COMMENTS_PER_TRACK, commentsForTrack, publicAudioComment, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
@@ -44,16 +45,19 @@ async function projectsHandler(req, res) {
 
   if (req.method === "DELETE") {
     const id = cleanText(req.query?.id || req.body?.id, 120);
-    const [projects, tracks] = await Promise.all([
+    const [projects, tracks, comments] = await Promise.all([
       readCollection("projects"),
       readCollection("audio"),
+      readCollection("audio-comments"),
     ]);
     const deletion = planProjectDeletion(projects, tracks, id);
     if (!deletion) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
 
     const pathnames = deletion.attachedTracks.map((track) => track.pathname).filter(Boolean);
+    const deletedTrackIds = new Set(deletion.attachedTracks.map((track) => track.id));
     if (pathnames.length) await del(pathnames);
     await writeCollection("audio", deletion.remainingTracks);
+    await writeCollection("audio-comments", comments.filter((comment) => !deletedTrackIds.has(comment.trackId)));
     await writeCollection("projects", deletion.remainingProjects);
 
     return res.status(200).json({
@@ -69,12 +73,13 @@ async function projectsHandler(req, res) {
 async function projectExportHandler(req, res) {
   if (!requireUser(req, res)) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [projects, tracks] = await Promise.all([
+  const [projects, tracks, comments] = await Promise.all([
     readCollection("projects"),
     readCollection("audio"),
+    readCollection("audio-comments"),
   ]);
   const requestedId = cleanText(req.query?.id, 120);
-  const manifest = createProjectExport(projects, tracks, requestedId);
+  const manifest = createProjectExport(projects, tracks, requestedId, comments);
   if (!manifest) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
   return res.status(200).json(manifest);
 }
@@ -128,7 +133,13 @@ async function audioHandler(req, res) {
 
   if (req.method === "GET") {
     const projectId = cleanText(req.query?.projectId, 120);
-    return res.status(200).json({ tracks: tracks.filter((track) => !projectId || track.projectId === projectId) });
+    const visibleTracks = tracks.filter((track) => !projectId || track.projectId === projectId);
+    const visibleTrackIds = new Set(visibleTracks.map((track) => track.id));
+    const comments = await readCollection("audio-comments");
+    return res.status(200).json({
+      tracks: visibleTracks,
+      comments: comments.filter((comment) => visibleTrackIds.has(comment.trackId)).map(publicAudioComment),
+    });
   }
 
   if (req.method === "POST" && req.body?.operation === "register") {
@@ -175,6 +186,43 @@ async function audioHandler(req, res) {
     const [track] = tracks.splice(index, 1);
     await del(track.pathname);
     await writeCollection("audio", tracks);
+    const comments = await readCollection("audio-comments");
+    await writeCollection("audio-comments", comments.filter((comment) => comment.trackId !== id));
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function audioCommentsHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const trackId = cleanText(req.query?.trackId || req.body?.trackId, 80);
+  const tracks = await readCollection("audio");
+  if (!tracks.some((track) => track.id === trackId)) return res.status(404).json({ error: "Lydfilen ble ikke funnet." });
+  const comments = await readCollection("audio-comments");
+
+  if (req.method === "GET") {
+    return res.status(200).json({ comments: commentsForTrack(comments, trackId) });
+  }
+
+  if (req.method === "POST") {
+    if (comments.filter((comment) => comment.trackId === trackId).length >= MAX_COMMENTS_PER_TRACK) {
+      return res.status(409).json({ error: "Denne lydfilen har nådd grensen på 250 kommentarer." });
+    }
+    const comment = sanitizeAudioComment({ ...req.body, trackId }, { type: "studio", email: user.email });
+    if (!comment) return res.status(400).json({ error: "Skriv en kommentar før du lagrer." });
+    comments.unshift(comment);
+    await writeCollection("audio-comments", comments);
+    return res.status(201).json({ comment: publicAudioComment(comment) });
+  }
+
+  if (req.method === "DELETE") {
+    const id = cleanText(req.query?.id || req.body?.id, 80);
+    const index = comments.findIndex((comment) => comment.id === id && comment.trackId === trackId);
+    if (index < 0) return res.status(404).json({ error: "Kommentaren ble ikke funnet." });
+    comments.splice(index, 1);
+    await writeCollection("audio-comments", comments);
     return res.status(200).json({ ok: true });
   }
 
@@ -209,6 +257,38 @@ async function publicShareHandler(req, res) {
     },
     expiresAt: new Date(grant.expires).toISOString(),
   });
+}
+
+async function publicCommentsHandler(req, res) {
+  const grant = verifyScopedToken(req.query?.token, "audio-share");
+  if (!grant) return res.status(401).json({ error: "Lenken er ugyldig eller utløpt." });
+  const tracks = await readCollection("audio");
+  const track = tracks.find((item) => item.id === grant.subject);
+  if (!track) return res.status(404).json({ error: "Lydfilen ble ikke funnet." });
+  const comments = await readCollection("audio-comments");
+
+  if (req.method === "GET") {
+    return res.status(200).json({ comments: commentsForTrack(comments, track.id) });
+  }
+
+  if (req.method === "POST") {
+    if (comments.filter((comment) => comment.trackId === track.id).length >= MAX_COMMENTS_PER_TRACK) {
+      return res.status(409).json({ error: "Denne lydfilen har nådd grensen på 250 kommentarer." });
+    }
+    const comment = sanitizeAudioComment({ ...req.body, trackId: track.id }, { type: "customer" });
+    if (!comment) return res.status(400).json({ error: "Skriv navn og kommentar før du lagrer." });
+    const duplicate = comments.find((item) => item.trackId === track.id
+      && item.authorName === comment.authorName
+      && item.body === comment.body
+      && item.timestampSeconds === comment.timestampSeconds
+      && Date.now() - new Date(item.createdAt).getTime() < 30_000);
+    if (duplicate) return res.status(200).json({ comment: publicAudioComment(duplicate) });
+    comments.unshift(comment);
+    await writeCollection("audio-comments", comments);
+    return res.status(201).json({ comment: publicAudioComment(comment) });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
 }
 
 async function publicStreamHandler(req, res) {
@@ -528,12 +608,13 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, rentals, projects, audio, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, audioComments, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("rentals"),
     readCollection("projects"),
     readCollection("audio"),
+    readCollection("audio-comments"),
     readCollection("documents"),
     readCollection("activities"),
     readCollection("bookings"),
@@ -543,7 +624,7 @@ async function backupHandler(req, res) {
     readCollection("cold-call-pool"),
     readCollection("cold-call-runs"),
   ]);
-  const projectExport = createProjectExport(projects, audio);
+  const projectExport = createProjectExport(projects, audio, "", audioComments);
   const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
   return res.status(200).json({
     version: 1,
@@ -556,6 +637,7 @@ async function backupHandler(req, res) {
     rentals,
     projects: projectExport.projects,
     audioFiles: projectExport.files,
+    audioComments: audioComments.map(publicAudioComment),
     documents: safeDocuments,
     activities,
     bookings,
@@ -614,8 +696,10 @@ module.exports = async function handler(req, res) {
     if (action === "project-export") return await projectExportHandler(req, res);
     if (action === "upload") return await uploadHandler(req, res);
     if (action === "audio") return await audioHandler(req, res);
+    if (action === "audio-comments") return await audioCommentsHandler(req, res);
     if (action === "internal-stream") return await internalStreamHandler(req, res);
     if (action === "public-share") return await publicShareHandler(req, res);
+    if (action === "public-comments") return await publicCommentsHandler(req, res);
     if (action === "public-stream") return await publicStreamHandler(req, res);
     if (action === "jotta-sync") return await jottaSyncHandler(req, res);
     if (action === "jotta-download") return await jottaDownloadHandler(req, res);
