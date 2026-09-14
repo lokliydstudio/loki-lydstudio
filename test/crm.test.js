@@ -21,7 +21,7 @@ const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = re
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
-const { cleanUrl, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
+const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { publicSummary } = require("../lib/crm-prospect-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
@@ -150,6 +150,20 @@ test("Cold Call Pool refresh preserves previously documented contact details", (
 test("Cold Call Pool recognizes Vercel runtime OIDC headers", () => {
   const summary = publicSummary([], [], { headers: { "x-vercel-oidc-token": "short-lived-test-token" } });
   assert.equal(summary.discoveryConfigured, true);
+});
+
+test("Cold Call Pool defaults to a Vercel free-tier compatible discovery model", () => {
+  const configured = process.env.LEAD_DISCOVERY_MODEL;
+  delete process.env.LEAD_DISCOVERY_MODEL;
+  try {
+    assert.equal(discoveryModel(false), "openai/gpt-5-mini");
+    assert.equal(discoveryModel(true), "gpt-5-mini");
+    process.env.LEAD_DISCOVERY_MODEL = "openai/custom-model";
+    assert.equal(discoveryModel(false), "openai/custom-model");
+  } finally {
+    if (configured === undefined) delete process.env.LEAD_DISCOVERY_MODEL;
+    else process.env.LEAD_DISCOVERY_MODEL = configured;
+  }
 });
 
 test("document uploads use private safe paths and reject active web content", () => {
