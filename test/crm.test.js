@@ -20,7 +20,7 @@ const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
-const { sanitizePatch, sanitizeProject } = require("../lib/crm-projects");
+const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { publicSummary } = require("../lib/crm-prospect-handler");
@@ -83,6 +83,36 @@ test("projects sanitize status, email and patch data", () => {
   assert.equal(project.clientEmail, "artist@example.com");
   assert.equal(project.status, "Planlegges");
   assert.equal(project.patch[1].source, "Kick in");
+});
+
+test("projects keep only canonical Spotify reference tracks and playlists", () => {
+  const references = sanitizeSpotifyReferences([
+    { url: "https://open.spotify.com/playlist/37i9dQZF1DX4JAvHpjipBk?si=secret", title: "Miksepalett", note: "Rom og trommer" },
+    { url: "spotify:track:4uLU6hMCjMI75M1A2tKUQC", title: "Vokalreferanse" },
+    { url: "https://open.spotify.com/playlist/37i9dQZF1DX4JAvHpjipBk", title: "Duplikat" },
+    { url: "https://evil.example/playlist/37i9dQZF1DX4JAvHpjipBk", title: "Avvises" },
+  ]);
+  assert.equal(references.length, 2);
+  assert.equal(references[0].url, "https://open.spotify.com/playlist/37i9dQZF1DX4JAvHpjipBk");
+  assert.equal(references[0].embedUrl, "https://open.spotify.com/embed/playlist/37i9dQZF1DX4JAvHpjipBk");
+  assert.equal(references[0].note, "Rom og trommer");
+  assert.equal(references[1].type, "track");
+  assert.equal(parseSpotifyUrl("https://open.spotify.com/intl-no/album/4aawyAB9vmqN3uQ7FjRGTy").type, "album");
+  assert.equal(parseSpotifyUrl("https://open.spotify.com.evil.example/track/4uLU6hMCjMI75M1A2tKUQC"), null);
+
+  const project = sanitizeProject({ spotifyReferences: references });
+  assert.equal(project.spotifyReferences.length, 2);
+});
+
+test("project workspace embeds Spotify references behind the CRM CSP", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  const vercel = fs.readFileSync(path.join(__dirname, "..", "vercel.json"), "utf8");
+  assert.match(html, /spotify-references\.css/);
+  assert.match(studio, /Referanselåter/);
+  assert.match(studio, /spotify-reference-form/);
+  assert.match(studio, /open\.spotify\.com\/embed/);
+  assert.match(vercel, /frame-src https:\/\/open\.spotify\.com/);
 });
 
 test("Cold Call Pool keeps only safe public contact fields and gates outreach readiness", () => {
@@ -213,7 +243,7 @@ test("document reindexing preserves private uploads without exposing storage met
 
 test("project exports include only selected project files and no private blob details", () => {
   const projects = [
-    { id: "project-1", name: "Første", patch: [] },
+    { id: "project-1", name: "Første", patch: [], spotifyReferences: [{ id: "spotify-1", title: "Miksereferanser", type: "playlist", spotifyId: "37i9dQZF1DX4JAvHpjipBk", url: "https://open.spotify.com/playlist/37i9dQZF1DX4JAvHpjipBk", embedUrl: "https://open.spotify.com/embed/playlist/37i9dQZF1DX4JAvHpjipBk" }] },
     { id: "project-2", name: "Andre", patch: [] },
   ];
   const tracks = [
@@ -238,6 +268,7 @@ test("project exports include only selected project files and no private blob de
   assert.equal("uploadedBy" in manifest.projects[0].tracks[0], false);
   assert.equal(JSON.stringify(manifest).includes("loki-crm/private"), false);
   assert.equal(manifest.projects[0].tracks[0].comments[0].timestampSeconds, 34);
+  assert.equal(manifest.projects[0].spotifyReferences[0].title, "Miksereferanser");
 });
 
 test("project deletion cascades to its audio metadata only", () => {

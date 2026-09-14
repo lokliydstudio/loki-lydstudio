@@ -111,6 +111,59 @@
       </tr>`).join("");
   }
 
+  function spotifyReferenceInput(value) {
+    try {
+      const url = new URL(String(value || "").trim());
+      if (url.protocol !== "https:" || url.hostname !== "open.spotify.com") return null;
+      const segments = url.pathname.split("/").filter(Boolean);
+      if (/^intl-[a-z]{2}$/i.test(segments[0] || "")) segments.shift();
+      if (segments[0] === "embed") segments.shift();
+      const type = String(segments[0] || "").toLowerCase();
+      const spotifyId = String(segments[1] || "");
+      if (!["playlist", "album", "track"].includes(type) || !/^[A-Za-z0-9]{10,64}$/.test(spotifyId)) return null;
+      return { type, spotifyId, url: `https://open.spotify.com/${type}/${spotifyId}` };
+    } catch {
+      return null;
+    }
+  }
+
+  function spotifyEmbedUrl(reference) {
+    const type = ["playlist", "album", "track"].includes(reference?.type) ? reference.type : "";
+    const spotifyId = /^[A-Za-z0-9]{10,64}$/.test(String(reference?.spotifyId || "")) ? reference.spotifyId : "";
+    return type && spotifyId ? `https://open.spotify.com/embed/${type}/${spotifyId}` : "";
+  }
+
+  function spotifyReferenceCards(project) {
+    const references = Array.isArray(project?.spotifyReferences) ? project.spotifyReferences : [];
+    if (!references.length) return '<div class="project-empty spotify-reference-empty">Ingen referanselåter lagt til ennå.</div>';
+    return references.map((reference) => {
+      const embedUrl = spotifyEmbedUrl(reference);
+      if (!embedUrl) return "";
+      const typeLabel = reference.type === "playlist" ? "Spilleliste" : reference.type === "album" ? "Album" : "Låt";
+      return `
+        <article class="spotify-reference-card ${reference.type === "track" ? "compact" : ""}">
+          <iframe src="${esc(embedUrl)}" title="Spotify-referanse: ${esc(reference.title)}" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>
+          <div class="spotify-reference-meta">
+            <div class="spotify-reference-copy"><strong>${esc(reference.title)}</strong><span>${esc(typeLabel)}${reference.note ? ` · ${esc(reference.note)}` : ""}</span></div>
+            <div class="spotify-reference-actions"><a class="tiny-button" href="${esc(reference.url)}" target="_blank" rel="noreferrer">Åpne ↗</a><button class="tiny-button danger" type="button" data-remove-spotify="${esc(reference.id)}">Fjern</button></div>
+          </div>
+        </article>`;
+    }).join("");
+  }
+
+  function bindSpotifyReferenceActions() {
+    document.querySelectorAll("[data-remove-spotify]").forEach((button) => {
+      button.onclick = () => removeSpotifyReference(button.dataset.removeSpotify);
+    });
+  }
+
+  function refreshSpotifyReferences(project) {
+    const list = document.getElementById("spotify-reference-list");
+    if (!list || project.id !== selectedProjectId) return;
+    list.innerHTML = spotifyReferenceCards(project);
+    bindSpotifyReferenceActions();
+  }
+
   function trackCards() {
     const visible = projectTracks();
     if (!visible.length) return '<div class="project-empty">Ingen lydfiler i prosjektet ennå.</div>';
@@ -154,6 +207,17 @@
         <label class="field">Dato<input id="project-date" type="date" value="${esc(project.sessionDate)}"></label>
         <label class="field field-wide">Prosjektnotater<textarea id="project-notes" placeholder="Leveranse, referanser, tidsplan og andre avtaler …">${esc(project.notes)}</textarea></label>
       </div>
+      <section class="studio-section">
+        <div class="studio-section-head"><div><span class="kicker">LYTTEREFERANSER</span><h3>Referanselåter</h3><p>Koble Spotify-spillelister, album eller låter direkte til prosjektet.</p></div><span class="state green">Spotify</span></div>
+        <form class="spotify-reference-form" id="spotify-reference-form">
+          <label>Spotify-lenke<input id="spotify-reference-url" type="url" inputmode="url" placeholder="https://open.spotify.com/playlist/…" required></label>
+          <label>Navn<input id="spotify-reference-title" maxlength="120" placeholder="F.eks. sound og retning"></label>
+          <label>Hva skal vi lytte etter?<input id="spotify-reference-note" maxlength="300" placeholder="Trommer, vokal, rom, balanse …"></label>
+          <button class="primary" type="submit">+ Legg til</button>
+        </form>
+        <div class="spotify-reference-list" id="spotify-reference-list">${spotifyReferenceCards(project)}</div>
+        <p class="spotify-reference-note">Referansene lagres på prosjektet og følger med i prosjektets ZIP-backup.</p>
+      </section>
       <section class="studio-section">
         <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>32-kanals patcheliste</h3><p>Fysisk input → mikrofon / DI → preamp → lydkortets input.</p></div><div class="button-row"><button class="secondary" id="print-patch" type="button">⎙ Skriv ut patcheliste</button><span class="state green">32 kanaler</span></div></div>
         <div class="patch-wrap"><table class="patch-table"><thead><tr><th>CH</th><th>KILDE</th><th>FYSISK INPUT</th><th>MIK / DI</th><th>PREAMP</th><th>ROUTING</th><th>+48V</th><th>NOTAT</th></tr></thead><tbody id="patch-body">${patchRows(project)}</tbody></table></div>
@@ -203,6 +267,9 @@
     if (deleteButton) deleteButton.onclick = deleteProject;
     const upload = document.getElementById("audio-upload-form");
     if (upload) upload.onsubmit = uploadAudio;
+    const spotifyForm = document.getElementById("spotify-reference-form");
+    if (spotifyForm) spotifyForm.onsubmit = addSpotifyReference;
+    bindSpotifyReferenceActions();
     document.querySelectorAll("[data-share-track]").forEach((button) => {
       button.onclick = () => shareTrack(button.dataset.shareTrack);
     });
@@ -293,6 +360,65 @@
     });
   }
 
+  async function addSpotifyReference(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const project = projects.find((item) => item.id === selectedProjectId);
+    const parsed = spotifyReferenceInput(document.getElementById("spotify-reference-url").value);
+    if (!project || !parsed) return toast("Lim inn en gyldig Spotify-lenke til en spilleliste, et album eller en låt.");
+    const references = Array.isArray(project.spotifyReferences) ? project.spotifyReferences : [];
+    if (references.length >= 12) return toast("Et prosjekt kan ha maksimalt 12 Spotify-referanser.");
+    if (references.some((reference) => reference.type === parsed.type && reference.spotifyId === parsed.spotifyId)) return toast("Denne Spotify-referansen ligger allerede i prosjektet.");
+
+    const button = form.querySelector("button[type=submit]");
+    button.disabled = true;
+    button.textContent = "Lagrer …";
+    try {
+      const data = await request("/api/studio?action=projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          id: project.id,
+          changes: {
+            spotifyReferences: [...references, {
+              id: `spotify-${crypto.randomUUID()}`,
+              url: parsed.url,
+              title: document.getElementById("spotify-reference-title").value,
+              note: document.getElementById("spotify-reference-note").value,
+            }],
+          },
+        }),
+      });
+      projects = projects.map((item) => item.id === data.project.id ? data.project : item);
+      form.reset();
+      refreshSpotifyReferences(data.project);
+      toast("Spotify-referansen er lagret på prosjektet.");
+    } catch (error) {
+      toast(error.message || "Spotify-referansen kunne ikke lagres.");
+    } finally {
+      button.disabled = false;
+      button.textContent = "+ Legg til";
+    }
+  }
+
+  async function removeSpotifyReference(id) {
+    const project = projects.find((item) => item.id === selectedProjectId);
+    const reference = project?.spotifyReferences?.find((item) => item.id === id);
+    if (!project || !reference || !confirm(`Fjern «${reference.title}» fra prosjektets referanselåter?`)) return;
+    try {
+      const data = await request("/api/studio?action=projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: project.id, changes: { spotifyReferences: project.spotifyReferences.filter((item) => item.id !== id) } }),
+      });
+      projects = projects.map((item) => item.id === data.project.id ? data.project : item);
+      refreshSpotifyReferences(data.project);
+      toast("Spotify-referansen er fjernet fra prosjektet.");
+    } catch (error) {
+      toast(error.message || "Spotify-referansen kunne ikke fjernes.");
+    }
+  }
+
   function printPatchList() {
     const project = projects.find((item) => item.id === selectedProjectId);
     if (!project) return;
@@ -371,6 +497,7 @@
             status: document.getElementById("project-status").value,
             sessionDate: document.getElementById("project-date").value,
             notes: document.getElementById("project-notes").value,
+            spotifyReferences: projects.find((project) => project.id === selectedProjectId)?.spotifyReferences || [],
             patch: collectPatch(),
           },
         }),
@@ -431,7 +558,7 @@
       `Antall prosjekter: ${manifest.projects.length}`,
       `Antall lydfiler: ${manifest.files.length}`,
       "",
-      "Hver prosjektmappe inneholder prosjekt.json, patcheliste.csv og mappen Lydfiler.",
+      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser, patcheliste.csv og mappen Lydfiler.",
       "Arkivet inneholder kundeopplysninger og kan inneholde upublisert lyd. Oppbevar det sikkert og kryptert.",
       "Lydfilene lagres uten ekstra ZIP-komprimering for effektiv eksport og tapsfri bevaring.",
       "",

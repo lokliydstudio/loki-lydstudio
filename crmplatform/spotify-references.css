@@ -1,0 +1,117 @@
+.spotify-reference-form {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.4fr) minmax(150px, .8fr) minmax(220px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  padding: 15px;
+  border-radius: 11px;
+  background: #efebe3;
+}
+
+.spotify-reference-form label {
+  display: grid;
+  gap: 6px;
+  color: #6e6a62;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.spotify-reference-form input {
+  width: 100%;
+  padding: 10px 11px;
+  border: 1px solid #d5d0c6;
+  border-radius: 8px;
+  background: white;
+  color: var(--ink);
+  font-size: 11px;
+  text-transform: none;
+}
+
+.spotify-reference-form .primary { height: 38px; }
+
+.spotify-reference-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.spotify-reference-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fffefa;
+}
+
+.spotify-reference-card iframe {
+  display: block;
+  width: 100%;
+  height: 352px;
+  border: 0;
+  background: #181818;
+}
+
+.spotify-reference-card.compact iframe { height: 152px; }
+
+.spotify-reference-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+}
+
+.spotify-reference-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.spotify-reference-copy strong {
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+
+.spotify-reference-copy span {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.spotify-reference-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 6px;
+}
+
+.spotify-reference-actions a { text-decoration: none; }
+
+.spotify-reference-note {
+  margin: 11px 0 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+[data-theme="dark"] .spotify-reference-form { background: #2a2a26; }
+[data-theme="dark"] .spotify-reference-form label { color: #aaa69c; }
+[data-theme="dark"] .spotify-reference-form input {
+  border-color: #4a4942;
+  background: #1f1f1c;
+  color: var(--ink);
+}
+[data-theme="dark"] .spotify-reference-card { background: #23231f; }
+
+@media (max-width: 1050px) {
+  .spotify-reference-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .spotify-reference-form .primary { width: 100%; }
+}
+
+@media (max-width: 760px) {
+  .spotify-reference-form,
+  .spotify-reference-list { grid-template-columns: 1fr; }
+}
