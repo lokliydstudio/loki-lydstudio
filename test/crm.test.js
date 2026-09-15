@@ -634,6 +634,16 @@ test("shared tasks and meeting notes are normalized", () => {
   assert.equal(note.attendees, "Leon, Charles");
 });
 
+test("shared task list can filter by exact assignee", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
+  assert.match(html, /id="task-assignee-filter"/);
+  assert.match(html, /Filtrer gjøremålslisten etter ansvarlig/);
+  assert.match(workspace, /\["Alle", "Leon", "Charles", "Begge"\]/);
+  assert.match(workspace, /task\.assignee === taskAssigneeFilter/);
+  assert.match(workspace, /data-task-filter/);
+});
+
 test("internal savings goals calculate bounded progress", () => {
   const goal = sanitizeGoal({
     title: "  Tur til Dublin  ",
