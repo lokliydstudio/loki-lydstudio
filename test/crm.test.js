@@ -22,7 +22,7 @@ const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { ONLINE_WINDOW_MS, presenceCollection, presenceHeartbeat, presenceLogin, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
-const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences } = require("../lib/crm-projects");
+const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences, sanitizeTimeEntries } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { decodeXlsxBase64, fikenContactsFromRows } = require("../lib/fiken-contact-import");
@@ -101,6 +101,31 @@ test("project workspace can add and remove patch channels up to 32", () => {
   assert.match(studio, /data-remove-channel/);
   assert.match(studio, /Maks 32 kanaler/);
   assert.match(studio, /removeEmptyPatchChannels/);
+});
+
+test("project time entries keep billable studio categories and valid hours", () => {
+  const entries = sanitizeTimeEntries([
+    { id: "one", date: "2026-09-15", category: "Innspilling", hours: 2.5, worker: "Leon", notes: "Vokal" },
+    { id: "two", date: "2026-09-16", category: "Editering", hours: 1.25, worker: "Charles" },
+    { id: "three", date: "2026-09-17", category: "Miks", hours: 3, worker: "Leon" },
+    { id: "invalid-category", category: "Mastering", hours: 4 },
+    { id: "invalid-hours", category: "Miks", hours: 25 },
+  ]);
+  assert.deepEqual(entries.map((entry) => entry.category), ["Innspilling", "Editering", "Miks"]);
+  assert.deepEqual(entries.map((entry) => entry.hours), [2.5, 1.25, 3]);
+  assert.equal(entries[0].notes, "Vokal");
+});
+
+test("project workspace exposes per-project time logging and backup", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  assert.match(html, /project-time\.css/);
+  assert.match(studio, /Timer på prosjektet/);
+  assert.match(studio, /Innspilling/);
+  assert.match(studio, /Editering/);
+  assert.match(studio, /data-delete-time/);
+  assert.match(studio, /timelogg\.csv/);
+  assert.match(studio, /timeTotals\(project\)\.total/);
 });
 
 test("projects keep only canonical Spotify reference tracks and playlists", () => {

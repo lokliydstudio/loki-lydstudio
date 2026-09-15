@@ -17,6 +17,7 @@
   let tracks = [];
   let audioComments = [];
   let selectedProjectId = null;
+  let activeOwner = "Leon";
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
@@ -119,6 +120,50 @@
       : '<tr class="patch-empty-row"><td colspan="9">Ingen kanaler i patchelisten. Legg til kanaler når du trenger dem.</td></tr>';
   }
 
+  function localDateValue(date = new Date()) {
+    const offset = date.getTimezoneOffset() * 60_000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+  }
+
+  function formatHours(value) {
+    return `${(Number(value) || 0).toLocaleString("nb-NO", { minimumFractionDigits: 0, maximumFractionDigits: 2 })} t`;
+  }
+
+  function timeTotals(project) {
+    const totals = { Innspilling: 0, Editering: 0, Miks: 0, total: 0 };
+    (project.timeEntries || []).forEach((entry) => {
+      if (Object.hasOwn(totals, entry.category)) totals[entry.category] += Number(entry.hours) || 0;
+      totals.total += Number(entry.hours) || 0;
+    });
+    return totals;
+  }
+
+  function timeSummary(project) {
+    const totals = timeTotals(project);
+    return [
+      ["Innspilling", totals.Innspilling, "recording"],
+      ["Editering", totals.Editering, "editing"],
+      ["Miks", totals.Miks, "mixing"],
+      ["Totalt", totals.total, "total"],
+    ].map(([label, hours, tone]) => `<article class="time-metric ${tone}"><span>${label}</span><strong>${formatHours(hours)}</strong><small>registrert arbeid</small></article>`).join("");
+  }
+
+  function timeEntryRows(project) {
+    const entries = [...(project.timeEntries || [])].sort((left, right) => String(right.date).localeCompare(String(left.date)) || String(right.createdAt).localeCompare(String(left.createdAt)));
+    if (!entries.length) return '<div class="time-empty">Ingen timer registrert på prosjektet ennå.</div>';
+    return entries.map((entry) => {
+      const date = new Date(`${entry.date}T12:00:00`).toLocaleDateString("nb-NO", { day: "2-digit", month: "short", year: "numeric" });
+      return `<article class="time-entry-row">
+        <time datetime="${esc(entry.date)}">${esc(date)}</time>
+        <span class="time-category ${String(entry.category).toLowerCase()}">${esc(entry.category)}</span>
+        <span>${esc(entry.worker)}</span>
+        <p>${esc(entry.notes || "Ingen merknad")}</p>
+        <strong>${formatHours(entry.hours)}</strong>
+        <button class="tiny-button danger" type="button" data-delete-time="${esc(entry.id)}" aria-label="Slett ${esc(entry.category.toLowerCase())} ${esc(date)}">Slett</button>
+      </article>`;
+    }).join("");
+  }
+
   function spotifyReferenceInput(value) {
     try {
       const url = new URL(String(value || "").trim());
@@ -215,6 +260,20 @@
         <label class="field">Dato<input id="project-date" type="date" value="${esc(project.sessionDate)}"></label>
         <label class="field field-wide">Prosjektnotater<textarea id="project-notes" placeholder="Leveranse, referanser, tidsplan og andre avtaler …">${esc(project.notes)}</textarea></label>
       </div>
+      <section class="studio-section project-time-section">
+        <div class="studio-section-head"><div><span class="kicker">TIMEFØRING</span><h3>Timer på prosjektet</h3><p>Registrer fakturerbart arbeid og se fordelingen mellom innspilling, editering og miks.</p></div><span class="state violet">Fakturagrunnlag</span></div>
+        <div class="time-summary" id="time-summary">${timeSummary(project)}</div>
+        <form class="time-entry-form" id="time-entry-form">
+          <label>Dato<input name="date" type="date" value="${localDateValue()}" required></label>
+          <label>Arbeidstype<select name="category" required><option>Innspilling</option><option>Editering</option><option>Miks</option></select></label>
+          <label>Timer<input name="hours" type="number" min="0.25" max="24" step="0.25" inputmode="decimal" placeholder="2,5" required></label>
+          <label>Utført av<select name="worker"><option ${activeOwner === "Leon" ? "selected" : ""}>Leon</option><option ${activeOwner === "Charles" ? "selected" : ""}>Charles</option></select></label>
+          <label class="time-note">Notat<input name="notes" maxlength="500" placeholder="F.eks. vokalopptak, comping eller miksrevisjon"></label>
+          <button class="primary" type="submit">+ Registrer timer</button>
+        </form>
+        <div class="time-entry-list" id="time-entry-list">${timeEntryRows(project)}</div>
+        <p class="time-help">Timer føres per arbeidsøkt og lagres direkte på prosjektet. Timeloggen følger med i ZIP-backupen.</p>
+      </section>
       <section class="studio-section">
         <div class="studio-section-head"><div><span class="kicker">LYTTEREFERANSER</span><h3>Referanselåter</h3><p>Koble Spotify-spillelister, album eller låter direkte til prosjektet.</p></div><span class="state green">Spotify</span></div>
         <form class="spotify-reference-form" id="spotify-reference-form">
@@ -252,11 +311,11 @@
     count.textContent = String(projects.length);
     list.innerHTML = projects.length ? projects.map((project) => `
       <button class="${project.id === selectedProjectId ? "active" : ""}" data-project-id="${esc(project.id)}">
-        <strong>${esc(project.name)}</strong><span>${esc(project.clientName || "Ingen kunde")} · ${esc(project.status)}</span>
+        <strong>${esc(project.name)}</strong><span>${esc(project.clientName || "Ingen kunde")} · ${esc(project.status)} · ${formatHours(timeTotals(project).total)}</span>
       </button>`).join("") : '<div class="project-empty">Ingen prosjekter ennå.</div>';
 
     const project = projects.find((item) => item.id === selectedProjectId);
-    workspace.innerHTML = project ? editorMarkup(project) : '<div class="project-empty">Opprett et prosjekt for å sette opp de 32 kanalene og laste opp lyd.</div>';
+    workspace.innerHTML = project ? editorMarkup(project) : '<div class="project-empty">Opprett et prosjekt for å sette opp patchelisten og laste opp lyd.</div>';
     const exportAll = document.getElementById("export-all-projects");
     if (exportAll) exportAll.disabled = projects.length === 0;
     bindRenderedControls();
@@ -282,6 +341,8 @@
     if (upload) upload.onsubmit = uploadAudio;
     const spotifyForm = document.getElementById("spotify-reference-form");
     if (spotifyForm) spotifyForm.onsubmit = addSpotifyReference;
+    const timeForm = document.getElementById("time-entry-form");
+    if (timeForm) timeForm.onsubmit = saveTimeEntry;
     bindSpotifyReferenceActions();
     document.querySelectorAll("[data-share-track]").forEach((button) => {
       button.onclick = () => shareTrack(button.dataset.shareTrack);
@@ -303,6 +364,7 @@
     });
     bindCommentActions();
     bindPatchRowActions();
+    bindTimeEntryActions();
     document.querySelectorAll("#project-workspace .project-fields input, #project-workspace .project-fields textarea, #project-workspace .project-fields select, #patch-body input").forEach((input) => {
       input.addEventListener("input", () => {
         const state = document.getElementById("project-save-state");
@@ -443,6 +505,86 @@
     updatePatchControls();
     markProjectUnsaved();
     toast(`${emptyRows.length} tomme ${emptyRows.length === 1 ? "kanal er" : "kanaler er"} fjernet.`);
+  }
+
+  function bindTimeEntryActions() {
+    document.querySelectorAll("[data-delete-time]").forEach((button) => {
+      button.onclick = () => deleteTimeEntry(button.dataset.deleteTime);
+    });
+  }
+
+  function refreshTimeLog(project) {
+    const summary = document.getElementById("time-summary");
+    const list = document.getElementById("time-entry-list");
+    if (!summary || !list || project.id !== selectedProjectId) return;
+    summary.innerHTML = timeSummary(project);
+    list.innerHTML = timeEntryRows(project);
+    const projectButtonCopy = document.querySelector(`[data-project-id="${CSS.escape(project.id)}"] span`);
+    if (projectButtonCopy) projectButtonCopy.textContent = `${project.clientName || "Ingen kunde"} · ${project.status} · ${formatHours(timeTotals(project).total)}`;
+    bindTimeEntryActions();
+  }
+
+  async function saveTimeEntry(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const project = projects.find((item) => item.id === selectedProjectId);
+    if (!project) return;
+    const values = new FormData(form);
+    const hours = Number(String(values.get("hours") || "").replace(",", "."));
+    if (!Number.isFinite(hours) || hours <= 0 || hours > 24) return toast("Registrer mellom 0,25 og 24 timer.");
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    button.textContent = "Lagrer …";
+    try {
+      const data = await request("/api/studio?action=projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          id: project.id,
+          changes: {
+            timeEntries: [...(project.timeEntries || []), {
+              id: `time-${crypto.randomUUID()}`,
+              date: values.get("date"),
+              category: values.get("category"),
+              hours,
+              worker: values.get("worker"),
+              notes: values.get("notes"),
+              createdAt: new Date().toISOString(),
+            }],
+          },
+        }),
+      });
+      projects = projects.map((item) => item.id === data.project.id ? data.project : item);
+      form.reset();
+      form.elements.date.value = localDateValue();
+      form.elements.worker.value = activeOwner;
+      button.textContent = "+ Registrer timer";
+      refreshTimeLog(data.project);
+      toast(`${formatHours(hours)} ${String(values.get("category")).toLowerCase()} er registrert.`);
+    } catch (error) {
+      toast(error.message || "Timene kunne ikke registreres.");
+    } finally {
+      button.disabled = false;
+      button.textContent = "+ Registrer timer";
+    }
+  }
+
+  async function deleteTimeEntry(id) {
+    const project = projects.find((item) => item.id === selectedProjectId);
+    const entry = project?.timeEntries?.find((item) => item.id === id);
+    if (!project || !entry || !confirm(`Slett ${formatHours(entry.hours)} ${entry.category.toLowerCase()} fra timeloggen?`)) return;
+    try {
+      const data = await request("/api/studio?action=projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: project.id, changes: { timeEntries: project.timeEntries.filter((item) => item.id !== id) } }),
+      });
+      projects = projects.map((item) => item.id === data.project.id ? data.project : item);
+      refreshTimeLog(data.project);
+      toast("Timeføringen er slettet.");
+    } catch (error) {
+      toast(error.message || "Timeføringen kunne ikke slettes.");
+    }
   }
 
   async function addSpotifyReference(event) {
@@ -633,6 +775,12 @@
     return `\ufeff${lines.map((row) => row.map(csvCell).join(";")).join("\r\n")}\r\n`;
   }
 
+  function timeLogCsv(entries) {
+    const headings = ["Dato", "Arbeidstype", "Utført av", "Timer", "Notat"];
+    const lines = [headings, ...(entries || []).map((entry) => [entry.date, entry.category, entry.worker, entry.hours, entry.notes])];
+    return `\ufeff${lines.map((row) => row.map(csvCell).join(";")).join("\r\n")}\r\n`;
+  }
+
   function exportEntries(manifest) {
     const encoder = new TextEncoder();
     const textEntry = (name, input) => ({ name, input, size: encoder.encode(input).byteLength });
@@ -644,7 +792,7 @@
       `Antall prosjekter: ${manifest.projects.length}`,
       `Antall lydfiler: ${manifest.files.length}`,
       "",
-      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser, patcheliste.csv og mappen Lydfiler.",
+      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser, patcheliste.csv, timelogg.csv og mappen Lydfiler.",
       "Arkivet inneholder kundeopplysninger og kan inneholde upublisert lyd. Oppbevar det sikkert og kryptert.",
       "Lydfilene lagres uten ekstra ZIP-komprimering for effektiv eksport og tapsfri bevaring.",
       "",
@@ -657,6 +805,7 @@
       const projectData = { ...project };
       entries.push(textEntry(`${root}/prosjekt.json`, `${JSON.stringify(projectData, null, 2)}\n`));
       entries.push(textEntry(`${root}/patcheliste.csv`, patchCsv(project.patch)));
+      entries.push(textEntry(`${root}/timelogg.csv`, timeLogCsv(project.timeEntries)));
       const projectFiles = manifest.files.filter((file) => file.projectId === project.id);
       projectFiles.forEach((file, index) => {
         entries.push({
@@ -900,9 +1049,10 @@
     };
   }
 
-  async function init() {
+  async function init(options = {}) {
     if (initialized) return;
     initialized = true;
+    activeOwner = String(options.user?.email || "").toLowerCase().startsWith("charles@") ? "Charles" : "Leon";
     setupModal();
     try {
       const [projectData, audioData] = await Promise.all([
