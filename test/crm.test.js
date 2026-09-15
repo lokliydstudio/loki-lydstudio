@@ -20,6 +20,7 @@ const { isOpenLead, leadPriority, mailPreferenceForLead, sortLeads, suppressedBy
 const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
+const { ONLINE_WINDOW_MS, activePresence, presenceCollection, presenceHeartbeat, presenceOwners } = require("../lib/crm-presence");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
@@ -800,4 +801,34 @@ test("CRM calendar UI uses an authenticated server feed without exposing its pri
   assert.match(studioApi, /loadGoogleCalendar/);
   assert.doesNotMatch(html, /private-[a-z0-9_-]+\/basic\.ics/i);
   assert.doesNotMatch(operations, /private-[a-z0-9_-]+\/basic\.ics/i);
+});
+
+test("presence is limited to the two active Loki owners and expires quickly", () => {
+  const now = new Date("2026-09-15T10:00:00.000Z");
+  const owners = presenceOwners();
+  assert.deepEqual(owners.map((owner) => owner.name).sort(), ["Charles", "Leon"]);
+  assert.equal(presenceCollection("leon@lokilyd.no"), "presence-leon");
+  assert.equal(presenceCollection("daniel@lokilyd.no"), null);
+  assert.equal(presenceHeartbeat("daniel@lokilyd.no", now), null);
+
+  const records = [
+    presenceHeartbeat("leon@lokilyd.no", now),
+    presenceHeartbeat("charles@lokilyd.no", new Date(now.getTime() - ONLINE_WINDOW_MS - 1)),
+    { email: "outside@example.com", name: "Ukjent", lastSeen: now.toISOString() },
+  ];
+  const visible = activePresence(records, "leon@lokilyd.no", now);
+  assert.deepEqual(visible, [{ name: "Leon", initial: "L", isCurrent: true, lastSeen: now.toISOString() }]);
+});
+
+test("CRM sidebar exposes authenticated live presence without hard-coded status", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "presence.js"), "utf8");
+  const endpoint = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "presence.js"), "utf8");
+  assert.match(html, /id="presence-list"/);
+  assert.match(html, /Pålogget nå/);
+  assert.match(client, /\/api\/crm\/presence/);
+  assert.match(client, /visibilitychange/);
+  assert.match(endpoint, /requireUser\(req, res\)/);
+  assert.match(endpoint, /activePresence/);
+  assert.doesNotMatch(client, /charles@lokilyd\.no|leon@lokilyd\.no/);
 });

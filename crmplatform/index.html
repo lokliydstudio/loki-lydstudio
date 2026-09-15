@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="/crmplatform/fiken-import.css?v=20260914-fiken-contacts">
     <link rel="stylesheet" href="/crmplatform/mail-reader.css">
     <link rel="stylesheet" href="/crmplatform/operations.css?v=20260915-google-calendar">
+    <link rel="stylesheet" href="/crmplatform/presence.css?v=20260915-presence">
     <link rel="stylesheet" href="/crmplatform/prospects.css">
     <link rel="stylesheet" href="/crmplatform/audio-comments.css?v=20260914-feedback">
     <link rel="stylesheet" href="/crmplatform/spotify-references.css?v=20260914-spotify">
@@ -46,6 +47,7 @@
         <button data-view-target="funding"><span class="nav-icon">✦</span>Støtteordninger</button>
       </nav>
       <div class="connection"><span class="dot amber" id="connection-dot"></span><div><strong id="connection-title">Kobler til</strong><small id="connection-copy">E-post og Jottacloud</small></div></div>
+      <section class="presence-card" aria-labelledby="presence-title"><div class="presence-head"><strong id="presence-title">Pålogget nå</strong><span id="presence-count">—</span></div><ul class="presence-list" id="presence-list" aria-live="polite"><li class="presence-empty">Kontrollerer aktivitet …</li></ul></section>
       <div class="profile"><span class="profile-circle">L</span><div><strong id="profile-name">Loki</strong><span id="profile-email">Ikke innlogget</span><button class="logout" id="logout">Logg ut</button></div></div>
     </aside>
 
@@ -174,6 +176,7 @@
   <script src="/crmplatform/fiken-import.js?v=20260914-fiken-contacts"></script>
   <script src="/crmplatform/prospects.js"></script>
   <script src="/crmplatform/theme.js"></script>
+  <script src="/crmplatform/presence.js?v=20260915-presence"></script>
   <script>
     (() => {
       const stages = ["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig"];
