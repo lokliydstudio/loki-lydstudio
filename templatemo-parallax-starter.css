@@ -90,7 +90,7 @@ img {
 .nav-links {
     list-style: none;
     display: flex;
-    gap: 35px;
+    gap: clamp(14px, 2.1vw, 35px);
 }
 
 .nav-links a {
