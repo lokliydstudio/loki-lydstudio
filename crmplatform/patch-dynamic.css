@@ -1,0 +1,11 @@
+.patch-table{min-width:1140px}
+.patch-table th:last-child,.patch-table td:last-child{width:46px;border-right:0;text-align:center}
+.patch-remove-button{width:28px;height:28px;border:1px solid #ded8ce;border-radius:7px;background:#fff;color:var(--danger);font-size:18px;line-height:1;cursor:pointer}
+.patch-remove-button:hover{border-color:#d49b91;background:#fff2ef}
+.patch-empty-row td{padding:28px!important;color:var(--muted)!important;text-align:center!important;font-size:10px}
+.patch-help{margin-top:9px;color:var(--muted);font-size:8px}
+.patch-actions{flex-wrap:wrap;justify-content:flex-end}
+.patch-actions button:disabled{cursor:not-allowed;opacity:.45}
+html[data-theme="dark"] .patch-remove-button{border-color:#5d4944;background:#332522;color:#ff9e8d}
+html[data-theme="dark"] .patch-remove-button:hover{background:#402925}
+@media(max-width:900px){.patch-actions{justify-content:flex-start}.studio-section-head{align-items:flex-start;flex-direction:column}}

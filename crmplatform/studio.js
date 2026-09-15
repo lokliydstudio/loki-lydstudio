@@ -97,8 +97,8 @@
     bindCommentActions(card);
   }
 
-  function patchRows(project) {
-    return project.patch.map((row) => `
+  function patchRow(row) {
+    return `
       <tr data-channel="${row.channel}">
         <td><span class="channel-number">${row.channel}</span></td>
         <td><input type="text" data-field="source" value="${esc(row.source)}" aria-label="Kanal ${row.channel} lydkilde" placeholder="Vokal, kick, gitar …"></td>
@@ -108,7 +108,15 @@
         <td><input type="text" data-field="destination" value="${esc(row.destination)}" aria-label="Kanal ${row.channel} routing" placeholder="Input ${row.channel}"></td>
         <td><input type="checkbox" data-field="phantom" ${row.phantom ? "checked" : ""} aria-label="Kanal ${row.channel} phantom power"></td>
         <td><input type="text" data-field="notes" value="${esc(row.notes)}" aria-label="Kanal ${row.channel} notat" placeholder="Pad, fase, HPF …"></td>
-      </tr>`).join("");
+        <td><button class="patch-remove-button" type="button" data-remove-channel="${row.channel}" aria-label="Fjern kanal ${row.channel}" title="Fjern kanal ${row.channel}">×</button></td>
+      </tr>`;
+  }
+
+  function patchRows(project) {
+    const rows = Array.isArray(project.patch) ? project.patch : [];
+    return rows.length
+      ? rows.map(patchRow).join("")
+      : '<tr class="patch-empty-row"><td colspan="9">Ingen kanaler i patchelisten. Legg til kanaler når du trenger dem.</td></tr>';
   }
 
   function spotifyReferenceInput(value) {
@@ -219,8 +227,9 @@
         <p class="spotify-reference-note">Referansene lagres på prosjektet og følger med i prosjektets ZIP-backup.</p>
       </section>
       <section class="studio-section">
-        <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>32-kanals patcheliste</h3><p>Fysisk input → mikrofon / DI → preamp → lydkortets input.</p></div><div class="button-row"><button class="secondary" id="print-patch" type="button">⎙ Skriv ut patcheliste</button><span class="state green">32 kanaler</span></div></div>
-        <div class="patch-wrap"><table class="patch-table"><thead><tr><th>CH</th><th>KILDE</th><th>FYSISK INPUT</th><th>MIK / DI</th><th>PREAMP</th><th>ROUTING</th><th>+48V</th><th>NOTAT</th></tr></thead><tbody id="patch-body">${patchRows(project)}</tbody></table></div>
+        <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>Patcheliste</h3><p>Bruk bare kanalene økten trenger. Fysisk input → mikrofon / DI → preamp → lydkortets input.</p></div><div class="button-row patch-actions"><button class="secondary" id="remove-empty-patch" type="button">Fjern tomme</button><button class="secondary" id="add-patch-channel" type="button">+ Legg til kanal</button><button class="secondary" id="print-patch" type="button">⎙ Skriv ut</button><span class="state green" id="patch-channel-count">${project.patch.length} / 32</span></div></div>
+        <div class="patch-wrap"><table class="patch-table"><thead><tr><th>CH</th><th>KILDE</th><th>FYSISK INPUT</th><th>MIK / DI</th><th>PREAMP</th><th>ROUTING</th><th>+48V</th><th>NOTAT</th><th>FJERN</th></tr></thead><tbody id="patch-body">${patchRows(project)}</tbody></table></div>
+        <p class="patch-help">Maks 32 kanaler. Fjernede kanaler blir borte når prosjektet lagres.</p>
       </section>
       <section class="studio-section">
         <div class="studio-section-head"><div><span class="kicker">LYDLEVERANSER</span><h3>Mikser og demoer</h3><p>Last opp privat, lytt her og kopier en tidsbegrenset kundelenke.</p></div><span class="state violet">Privat lagring</span></div>
@@ -263,6 +272,10 @@
     if (exportProject) exportProject.onclick = () => exportProjects(selectedProjectId, exportProject);
     const printPatch = document.getElementById("print-patch");
     if (printPatch) printPatch.onclick = printPatchList;
+    const addPatch = document.getElementById("add-patch-channel");
+    if (addPatch) addPatch.onclick = addPatchChannel;
+    const removeEmptyPatch = document.getElementById("remove-empty-patch");
+    if (removeEmptyPatch) removeEmptyPatch.onclick = removeEmptyPatchChannels;
     const deleteButton = document.getElementById("delete-project");
     if (deleteButton) deleteButton.onclick = deleteProject;
     const upload = document.getElementById("audio-upload-form");
@@ -289,6 +302,7 @@
       form.onsubmit = (event) => saveAudioComment(event, form.dataset.commentForm);
     });
     bindCommentActions();
+    bindPatchRowActions();
     document.querySelectorAll("#project-workspace .project-fields input, #project-workspace .project-fields textarea, #project-workspace .project-fields select, #patch-body input").forEach((input) => {
       input.addEventListener("input", () => {
         const state = document.getElementById("project-save-state");
@@ -345,7 +359,7 @@
   }
 
   function collectPatch() {
-    return [...document.querySelectorAll("#patch-body tr")].map((row) => {
+    return [...document.querySelectorAll("#patch-body tr[data-channel]")].map((row) => {
       const value = (field) => row.querySelector(`[data-field="${field}"]`);
       return {
         channel: Number(row.dataset.channel),
@@ -358,6 +372,77 @@
         notes: value("notes").value,
       };
     });
+  }
+
+  function markProjectUnsaved() {
+    const state = document.getElementById("project-save-state");
+    if (state) state.textContent = "Ulagrede endringer";
+  }
+
+  function updatePatchControls() {
+    const body = document.getElementById("patch-body");
+    if (!body) return;
+    const rows = [...body.querySelectorAll("tr[data-channel]")];
+    if (!rows.length) body.innerHTML = '<tr class="patch-empty-row"><td colspan="9">Ingen kanaler i patchelisten. Legg til kanaler når du trenger dem.</td></tr>';
+    const count = document.getElementById("patch-channel-count");
+    if (count) count.textContent = `${rows.length} / 32`;
+    const add = document.getElementById("add-patch-channel");
+    if (add) {
+      add.disabled = rows.length >= 32;
+      add.title = rows.length >= 32 ? "Patchelisten har nådd maksgrensen på 32 kanaler" : "Legg til en ledig kanal";
+    }
+    const removeEmpty = document.getElementById("remove-empty-patch");
+    if (removeEmpty) removeEmpty.disabled = rows.length === 0;
+  }
+
+  function bindPatchRowActions() {
+    document.querySelectorAll("[data-remove-channel]").forEach((button) => {
+      button.onclick = () => removePatchChannel(button);
+    });
+    updatePatchControls();
+  }
+
+  function addPatchChannel() {
+    const body = document.getElementById("patch-body");
+    if (!body) return;
+    const used = new Set(collectPatch().map((row) => row.channel));
+    const channel = Array.from({ length: 32 }, (_, index) => index + 1).find((number) => !used.has(number));
+    if (!channel) return toast("Patchelisten kan ha maksimalt 32 kanaler.");
+    body.querySelector(".patch-empty-row")?.remove();
+    const holder = document.createElement("tbody");
+    holder.innerHTML = patchRow({ channel, source: "", connection: "", microphone: "", preamp: "", destination: `Input ${channel}`, phantom: false, notes: "" });
+    const newRow = holder.firstElementChild;
+    const following = [...body.querySelectorAll("tr[data-channel]")].find((row) => Number(row.dataset.channel) > channel);
+    body.insertBefore(newRow, following || null);
+    bindPatchRowActions();
+    markProjectUnsaved();
+    newRow.querySelector('[data-field="source"]')?.focus();
+  }
+
+  function rowHasPatchData(row) {
+    const channel = Number(row.dataset.channel);
+    return [...row.querySelectorAll('input[type="text"]')].some((input) => input.value.trim() && input.value.trim() !== `Input ${channel}`)
+      || row.querySelector('input[type="checkbox"]')?.checked;
+  }
+
+  function removePatchChannel(button) {
+    const row = button.closest("tr[data-channel]");
+    if (!row) return;
+    const channel = Number(row.dataset.channel);
+    if (rowHasPatchData(row) && !confirm(`Fjern kanal ${channel} og innholdet i denne raden?`)) return;
+    row.remove();
+    updatePatchControls();
+    markProjectUnsaved();
+  }
+
+  function removeEmptyPatchChannels() {
+    const rows = [...document.querySelectorAll("#patch-body tr[data-channel]")];
+    const emptyRows = rows.filter((row) => !rowHasPatchData(row));
+    if (!emptyRows.length) return toast("Patchelisten har ingen tomme kanaler.");
+    emptyRows.forEach((row) => row.remove());
+    updatePatchControls();
+    markProjectUnsaved();
+    toast(`${emptyRows.length} tomme ${emptyRows.length === 1 ? "kanal er" : "kanaler er"} fjernet.`);
   }
 
   async function addSpotifyReference(event) {
@@ -504,7 +589,8 @@
       });
       projects = projects.map((project) => project.id === data.project.id ? data.project : project);
       render();
-      toast("Prosjekt og 32-kanals patch er lagret.");
+      const channelCount = data.project.patch.length;
+      toast(`Prosjekt og patcheliste med ${channelCount} ${channelCount === 1 ? "kanal" : "kanaler"} er lagret.`);
     } catch (error) {
       button.disabled = false;
       button.textContent = "Lagre prosjekt";

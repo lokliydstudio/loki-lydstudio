@@ -62,17 +62,19 @@ test("customer listening tokens are scoped and expire independently of owner acc
   assert.equal(auth.verifyToken(token, "audio-share"), null);
 });
 
-test("project patches always contain exactly 32 numbered channels", () => {
+test("project patches preserve chosen channels and enforce the 32-channel interface limit", () => {
   const patch = sanitizePatch([
     { channel: 1, source: "Vokal", microphone: "U87", phantom: true },
     { channel: 32, source: "Talkback", destination: "ADAT 32" },
     { channel: 33, source: "Skal avvises" },
   ]);
-  assert.equal(patch.length, 32);
-  assert.deepEqual(patch.map((row) => row.channel), Array.from({ length: 32 }, (_, index) => index + 1));
+  assert.equal(patch.length, 2);
+  assert.deepEqual(patch.map((row) => row.channel), [1, 32]);
   assert.equal(patch[0].source, "Vokal");
   assert.equal(patch[0].phantom, true);
-  assert.equal(patch[31].destination, "ADAT 32");
+  assert.equal(patch[1].destination, "ADAT 32");
+  assert.deepEqual(sanitizePatch([]), []);
+  assert.equal(sanitizePatch().length, 32);
 });
 
 test("projects sanitize status, email and patch data", () => {
@@ -85,7 +87,20 @@ test("projects sanitize status, email and patch data", () => {
   assert.equal(project.name, "Ny singel");
   assert.equal(project.clientEmail, "artist@example.com");
   assert.equal(project.status, "Planlegges");
-  assert.equal(project.patch[1].source, "Kick in");
+  assert.equal(project.patch.length, 1);
+  assert.equal(project.patch[0].channel, 2);
+  assert.equal(project.patch[0].source, "Kick in");
+  assert.deepEqual(sanitizeProject({ patch: [] }, project).patch, []);
+});
+
+test("project workspace can add and remove patch channels up to 32", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  assert.match(html, /patch-dynamic\.css/);
+  assert.match(studio, /id="add-patch-channel"/);
+  assert.match(studio, /data-remove-channel/);
+  assert.match(studio, /Maks 32 kanaler/);
+  assert.match(studio, /removeEmptyPatchChannels/);
 });
 
 test("projects keep only canonical Spotify reference tracks and playlists", () => {
