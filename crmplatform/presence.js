@@ -22,7 +22,7 @@
   async function refresh() {
     if (stopped || document.hidden) return;
     try {
-      const response = await fetch("/api/crm/presence", { method: "POST", credentials: "same-origin" });
+      const response = await fetch("/api/studio?action=presence", { method: "POST", credentials: "same-origin" });
       const data = await response.json().catch(() => ({}));
       if (response.status === 401) {
         stopped = true;
@@ -39,7 +39,7 @@
   function leave() {
     stopped = true;
     clearInterval(timer);
-    return fetch("/api/crm/presence", { method: "DELETE", credentials: "same-origin", keepalive: true }).catch(() => {});
+    return fetch("/api/studio?action=presence", { method: "DELETE", credentials: "same-origin", keepalive: true }).catch(() => {});
   }
 
   function init() {

@@ -823,10 +823,10 @@ test("presence is limited to the two active Loki owners and expires quickly", ()
 test("CRM sidebar exposes authenticated live presence without hard-coded status", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const client = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "presence.js"), "utf8");
-  const endpoint = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "presence.js"), "utf8");
+  const endpoint = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
   assert.match(html, /id="presence-list"/);
   assert.match(html, /Pålogget nå/);
-  assert.match(client, /\/api\/crm\/presence/);
+  assert.match(client, /\/api\/studio\?action=presence/);
   assert.match(client, /visibilitychange/);
   assert.match(endpoint, /requireUser\(req, res\)/);
   assert.match(endpoint, /activePresence/);

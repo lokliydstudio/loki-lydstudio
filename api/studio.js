@@ -8,6 +8,7 @@ const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadGoogleCalendar } = require("../lib/crm-calendar");
 const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
+const { activePresence, presenceCollection, presenceHeartbeat, presenceOwners } = require("../lib/crm-presence");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
@@ -567,6 +568,23 @@ async function googleCalendarHandler(req, res) {
   return res.status(200).json(calendar);
 }
 
+async function presenceHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  if (!["GET", "POST", "DELETE"].includes(req.method)) return res.status(405).json({ error: "Method not allowed" });
+  const collection = presenceCollection(user.email);
+  if (!collection) return res.status(403).json({ error: "Brukeren har ikke tilgang til tilstedeværelsesstatus." });
+
+  if (req.method === "POST") await writeCollection(collection, [presenceHeartbeat(user.email)]);
+  else if (req.method === "DELETE") await writeCollection(collection, []);
+
+  const records = await Promise.all(presenceOwners().map(async (owner) => {
+    const items = await readCollection(presenceCollection(owner.email));
+    return items[0] || null;
+  }));
+  return res.status(200).json({ users: activePresence(records.filter(Boolean), user.email), onlineWindowSeconds: 150 });
+}
+
 async function quotesHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
@@ -716,6 +734,7 @@ module.exports = async function handler(req, res) {
     if (action === "activities") return await activitiesHandler(req, res);
     if (action === "bookings") return await bookingsHandler(req, res);
     if (action === "google-calendar") return await googleCalendarHandler(req, res);
+    if (action === "presence") return await presenceHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);
     if (action === "backup") return await backupHandler(req, res);
     if (action === "fiken") return await fikenHandler(req, res);
