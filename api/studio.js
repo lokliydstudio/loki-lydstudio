@@ -8,7 +8,7 @@ const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadGoogleCalendar } = require("../lib/crm-calendar");
 const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
-const { activePresence, presenceCollection, presenceHeartbeat, presenceOwners } = require("../lib/crm-presence");
+const { presenceCollection, presenceHeartbeat, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
@@ -575,14 +575,15 @@ async function presenceHandler(req, res) {
   const collection = presenceCollection(user.email);
   if (!collection) return res.status(403).json({ error: "Brukeren har ikke tilgang til tilstedeværelsesstatus." });
 
-  if (req.method === "POST") await writeCollection(collection, [presenceHeartbeat(user.email)]);
-  else if (req.method === "DELETE") await writeCollection(collection, []);
+  const existing = (await readCollection(collection))[0] || {};
+  if (req.method === "POST") await writeCollection(collection, [presenceHeartbeat(user.email, existing)]);
+  else if (req.method === "DELETE") await writeCollection(collection, [presenceOffline(user.email, existing)]);
 
   const records = await Promise.all(presenceOwners().map(async (owner) => {
     const items = await readCollection(presenceCollection(owner.email));
     return items[0] || null;
   }));
-  return res.status(200).json({ users: activePresence(records.filter(Boolean), user.email), onlineWindowSeconds: 150 });
+  return res.status(200).json({ users: presenceStatus(records.filter(Boolean), user.email), onlineWindowSeconds: 150 });
 }
 
 async function quotesHandler(req, res) {

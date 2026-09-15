@@ -20,7 +20,7 @@ const { isOpenLead, leadPriority, mailPreferenceForLead, sortLeads, suppressedBy
 const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
-const { ONLINE_WINDOW_MS, activePresence, presenceCollection, presenceHeartbeat, presenceOwners } = require("../lib/crm-presence");
+const { ONLINE_WINDOW_MS, presenceCollection, presenceHeartbeat, presenceLogin, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
@@ -805,19 +805,29 @@ test("CRM calendar UI uses an authenticated server feed without exposing its pri
 
 test("presence is limited to the two active Loki owners and expires quickly", () => {
   const now = new Date("2026-09-15T10:00:00.000Z");
+  const leonLogin = presenceLogin("leon@lokilyd.no", {}, new Date("2026-09-15T09:30:00.000Z"));
+  const charlesLogin = presenceLogin("charles@lokilyd.no", {}, new Date("2026-09-14T08:15:00.000Z"));
   const owners = presenceOwners();
   assert.deepEqual(owners.map((owner) => owner.name).sort(), ["Charles", "Leon"]);
   assert.equal(presenceCollection("leon@lokilyd.no"), "presence-leon");
   assert.equal(presenceCollection("daniel@lokilyd.no"), null);
-  assert.equal(presenceHeartbeat("daniel@lokilyd.no", now), null);
+  assert.equal(presenceHeartbeat("daniel@lokilyd.no", {}, now), null);
 
   const records = [
-    presenceHeartbeat("leon@lokilyd.no", now),
-    presenceHeartbeat("charles@lokilyd.no", new Date(now.getTime() - ONLINE_WINDOW_MS - 1)),
+    presenceHeartbeat("leon@lokilyd.no", leonLogin, now),
+    presenceHeartbeat("charles@lokilyd.no", charlesLogin, new Date(now.getTime() - ONLINE_WINDOW_MS - 1)),
     { email: "outside@example.com", name: "Ukjent", lastSeen: now.toISOString() },
   ];
-  const visible = activePresence(records, "leon@lokilyd.no", now);
-  assert.deepEqual(visible, [{ name: "Leon", initial: "L", isCurrent: true, lastSeen: now.toISOString() }]);
+  const visible = presenceStatus(records, "leon@lokilyd.no", now);
+  assert.deepEqual(visible.map((owner) => owner.name), ["Leon", "Charles"]);
+  assert.equal(visible[0].online, true);
+  assert.equal(visible[0].isCurrent, true);
+  assert.equal(visible[0].lastLoginAt, leonLogin.lastLoginAt);
+  assert.equal(visible[1].online, false);
+  assert.equal(visible[1].lastLoginAt, charlesLogin.lastLoginAt);
+  const loggedOut = presenceOffline("leon@lokilyd.no", records[0], now);
+  assert.equal(loggedOut.online, false);
+  assert.equal(loggedOut.lastLoginAt, leonLogin.lastLoginAt);
 });
 
 test("CRM sidebar exposes authenticated live presence without hard-coded status", () => {
@@ -828,7 +838,17 @@ test("CRM sidebar exposes authenticated live presence without hard-coded status"
   assert.match(html, /Pålogget nå/);
   assert.match(client, /\/api\/studio\?action=presence/);
   assert.match(client, /visibilitychange/);
+  assert.match(client, /Sist pålogget/);
+  assert.match(client, /name: "Leon"/);
+  assert.match(client, /name: "Charles"/);
   assert.match(endpoint, /requireUser\(req, res\)/);
-  assert.match(endpoint, /activePresence/);
+  assert.match(endpoint, /presenceStatus/);
   assert.doesNotMatch(client, /charles@lokilyd\.no|leon@lokilyd\.no/);
+});
+
+test("successful magic-link login records the actual login time", () => {
+  const callback = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "auth-callback.js"), "utf8");
+  assert.match(callback, /presenceLogin/);
+  assert.match(callback, /writeCollection/);
+  assert.match(callback, /Could not record CRM login/);
 });
