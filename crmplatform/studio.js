@@ -18,10 +18,78 @@
   let audioComments = [];
   let selectedProjectId = null;
   let activeOwner = "Leon";
+  let getContacts = () => [];
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
   })[char]);
+
+  function contactDisplayName(contact) {
+    const storedName = String(contact?.name || "").trim();
+    if (storedName && !storedName.includes("@")) return storedName;
+    if (contact?.artistName) return String(contact.artistName).trim();
+    if (contact?.company) return String(contact.company).trim();
+    return String(contact?.email || storedName).split("@")[0].replace(/[._-]+/g, " ").replace(/\b\p{L}/gu, (letter) => letter.toUpperCase()).trim();
+  }
+
+  function contactEmailChoices(query = "") {
+    const needle = String(query).trim().toLowerCase();
+    const seen = new Set();
+    return (getContacts() || [])
+      .map((contact) => ({
+        email: String(contact?.email || "").trim(),
+        name: contactDisplayName(contact),
+        artistName: String(contact?.artistName || "").trim(),
+        company: String(contact?.company || "").trim(),
+      }))
+      .filter((contact) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email))
+      .filter((contact) => {
+        const key = contact.email.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        if (!needle) return true;
+        return key.startsWith(needle)
+          || contact.name.toLowerCase().startsWith(needle)
+          || contact.artistName.toLowerCase().startsWith(needle)
+          || contact.company.toLowerCase().startsWith(needle);
+      })
+      .sort((left, right) => left.name.localeCompare(right.name, "nb") || left.email.localeCompare(right.email, "nb"));
+  }
+
+  function refreshContactEmailList(query = "") {
+    const list = document.getElementById("project-contact-emails");
+    if (!list) return;
+    list.innerHTML = contactEmailChoices(query).map((contact) => {
+      const context = [contact.name, contact.artistName, contact.company]
+        .filter(Boolean)
+        .filter((value, index, values) => values.indexOf(value) === index)
+        .join(" · ");
+      return `<option value="${esc(contact.email)}" label="${esc(context)}"></option>`;
+    }).join("");
+  }
+
+  function bindContactEmailLookup(emailInput, nameInput) {
+    if (!emailInput || !nameInput) return;
+    const selectExactMatch = () => {
+      const email = emailInput.value.trim().toLowerCase();
+      const match = contactEmailChoices().find((contact) => contact.email.toLowerCase() === email);
+      if (!match) return;
+      if (!nameInput.value.trim() || nameInput.dataset.contactAutofilled === "true") {
+        nameInput.value = match.artistName || match.name || match.company;
+        nameInput.dataset.contactAutofilled = "true";
+        nameInput.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+    };
+    emailInput.addEventListener("input", () => {
+      refreshContactEmailList(emailInput.value);
+      selectExactMatch();
+    });
+    emailInput.addEventListener("focus", () => refreshContactEmailList(emailInput.value));
+    emailInput.addEventListener("change", selectExactMatch);
+    nameInput.addEventListener("input", () => {
+      if (document.activeElement === nameInput) delete nameInput.dataset.contactAutofilled;
+    });
+  }
 
   function toast(text) {
     const node = document.getElementById("toast");
@@ -255,7 +323,7 @@
       <div class="project-fields">
         <label class="field">Prosjektnavn<input id="project-name" value="${esc(project.name)}"></label>
         <label class="field">Kunde / artist<input id="project-client" value="${esc(project.clientName)}"></label>
-        <label class="field">Kundens e-post<input id="project-email" type="email" value="${esc(project.clientEmail)}"></label>
+        <label class="field">Kundens e-post<input id="project-email" type="email" list="project-contact-emails" autocomplete="off" placeholder="Skriv navn eller e-post" value="${esc(project.clientEmail)}"><small class="contact-lookup-hint">Forslag fra kontaktregisteret</small></label>
         <label class="field">Status<select id="project-status">${statuses.map((status) => `<option ${status === project.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
         <label class="field">Dato<input id="project-date" type="date" value="${esc(project.sessionDate)}"></label>
         <label class="field field-wide">Prosjektnotater<textarea id="project-notes" placeholder="Leveranse, referanser, tidsplan og andre avtaler …">${esc(project.notes)}</textarea></label>
@@ -337,6 +405,8 @@
     if (removeEmptyPatch) removeEmptyPatch.onclick = removeEmptyPatchChannels;
     const deleteButton = document.getElementById("delete-project");
     if (deleteButton) deleteButton.onclick = deleteProject;
+    refreshContactEmailList();
+    bindContactEmailLookup(document.getElementById("project-email"), document.getElementById("project-client"));
     const upload = document.getElementById("audio-upload-form");
     if (upload) upload.onsubmit = uploadAudio;
     const spotifyForm = document.getElementById("spotify-reference-form");
@@ -1018,12 +1088,17 @@
 
   function setupModal() {
     const modal = document.getElementById("project-modal");
+    const form = document.getElementById("project-form");
     const close = () => modal.classList.remove("open");
-    document.getElementById("new-project").onclick = () => modal.classList.add("open");
+    document.getElementById("new-project").onclick = () => {
+      refreshContactEmailList();
+      modal.classList.add("open");
+    };
     document.getElementById("export-all-projects").onclick = (event) => exportProjects(null, event.currentTarget);
     document.getElementById("close-project-modal").onclick = close;
     document.getElementById("cancel-project-modal").onclick = close;
-    document.getElementById("project-form").onsubmit = async (event) => {
+    bindContactEmailLookup(form.elements.clientEmail, form.elements.clientName);
+    form.onsubmit = async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
       const values = new FormData(form);
@@ -1038,6 +1113,7 @@
         projects.unshift(data.project);
         selectedProjectId = data.project.id;
         form.reset();
+        delete form.elements.clientName.dataset.contactAutofilled;
         close();
         render();
         toast("Prosjekt opprettet med 32 klare kanaler.");
@@ -1053,6 +1129,7 @@
     if (initialized) return;
     initialized = true;
     activeOwner = String(options.user?.email || "").toLowerCase().startsWith("charles@") ? "Charles" : "Leon";
+    getContacts = typeof options.getContacts === "function" ? options.getContacts : () => [];
     setupModal();
     try {
       const [projectData, audioData] = await Promise.all([

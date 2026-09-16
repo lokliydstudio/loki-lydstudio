@@ -902,3 +902,15 @@ test("successful magic-link login records the actual login time", () => {
   assert.match(callback, /writeCollection/);
   assert.match(callback, /Could not record CRM login/);
 });
+
+test("project customer email fields suggest saved CRM contacts", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  assert.match(html, /name="clientEmail"[^>]+list="project-contact-emails"/);
+  assert.match(html, /<datalist id="project-contact-emails"><\/datalist>/);
+  assert.match(html, /LokiStudio\.init\(\{user:data\.user,getContacts:\(\)=>leads\}\)/);
+  assert.match(studio, /function contactEmailChoices\(query = ""\)/);
+  assert.match(studio, /key\.startsWith\(needle\)/);
+  assert.match(studio, /nameInput\.value = match\.artistName \|\| match\.name \|\| match\.company/);
+  assert.match(studio, /id="project-email"[^>]+list="project-contact-emails"/);
+});

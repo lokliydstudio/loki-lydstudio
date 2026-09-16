@@ -1,0 +1,16 @@
+.contact-lookup-hint {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-transform: none;
+}
+
+.field .contact-lookup-hint {
+  margin-top: -2px;
+}
+
+html[data-theme="dark"] .contact-lookup-hint {
+  color: #aaa69d;
+}
