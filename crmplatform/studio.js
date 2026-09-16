@@ -56,16 +56,49 @@
       .sort((left, right) => left.name.localeCompare(right.name, "nb") || left.email.localeCompare(right.email, "nb"));
   }
 
-  function refreshContactEmailList(query = "") {
-    const list = document.getElementById("project-contact-emails");
-    if (!list) return;
-    list.innerHTML = contactEmailChoices(query).map((contact) => {
+  function applyContactEmailChoice(contact, emailInput, nameInput) {
+    emailInput.value = contact.email;
+    if (!nameInput.value.trim() || nameInput.dataset.contactAutofilled === "true") {
+      nameInput.value = contact.artistName || contact.name || contact.company;
+      nameInput.dataset.contactAutofilled = "true";
+      nameInput.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    const suggestions = document.getElementById(emailInput.dataset.contactSuggestions);
+    if (suggestions) suggestions.hidden = true;
+  }
+
+  function renderContactEmailSuggestions(emailInput, nameInput) {
+    const suggestions = document.getElementById(emailInput?.dataset.contactSuggestions);
+    if (!suggestions) return;
+    const query = emailInput.value.trim();
+    const choices = query ? contactEmailChoices(query).slice(0, 8) : [];
+    suggestions.innerHTML = choices.map((contact) => {
       const context = [contact.name, contact.artistName, contact.company]
         .filter(Boolean)
         .filter((value, index, values) => values.indexOf(value) === index)
         .join(" · ");
-      return `<option value="${esc(contact.email)}" label="${esc(context)}"></option>`;
+      return `<button type="button" role="option" data-contact-email="${esc(contact.email)}"><strong>${esc(contact.email)}</strong><span>${esc(context)}</span></button>`;
     }).join("");
+    suggestions.hidden = choices.length === 0;
+    suggestions.querySelectorAll("[data-contact-email]").forEach((button, index, buttons) => {
+      button.onpointerdown = (event) => event.preventDefault();
+      button.onclick = () => {
+        const contact = choices.find((item) => item.email === button.dataset.contactEmail);
+        if (contact) applyContactEmailChoice(contact, emailInput, nameInput);
+      };
+      button.onkeydown = (event) => {
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          buttons[(index + 1) % buttons.length].focus();
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          buttons[(index - 1 + buttons.length) % buttons.length].focus();
+        } else if (event.key === "Escape") {
+          suggestions.hidden = true;
+          emailInput.focus();
+        }
+      };
+    });
   }
 
   function bindContactEmailLookup(emailInput, nameInput) {
@@ -74,17 +107,26 @@
       const email = emailInput.value.trim().toLowerCase();
       const match = contactEmailChoices().find((contact) => contact.email.toLowerCase() === email);
       if (!match) return;
-      if (!nameInput.value.trim() || nameInput.dataset.contactAutofilled === "true") {
-        nameInput.value = match.artistName || match.name || match.company;
-        nameInput.dataset.contactAutofilled = "true";
-        nameInput.dispatchEvent(new Event("input", { bubbles: true }));
-      }
+      applyContactEmailChoice(match, emailInput, nameInput);
     };
     emailInput.addEventListener("input", () => {
-      refreshContactEmailList(emailInput.value);
+      renderContactEmailSuggestions(emailInput, nameInput);
       selectExactMatch();
     });
-    emailInput.addEventListener("focus", () => refreshContactEmailList(emailInput.value));
+    emailInput.addEventListener("focus", () => renderContactEmailSuggestions(emailInput, nameInput));
+    emailInput.addEventListener("blur", () => {
+      const suggestions = document.getElementById(emailInput.dataset.contactSuggestions);
+      if (suggestions) setTimeout(() => { suggestions.hidden = true; }, 120);
+    });
+    emailInput.addEventListener("keydown", (event) => {
+      const suggestions = document.getElementById(emailInput.dataset.contactSuggestions);
+      if (event.key === "ArrowDown" && suggestions && !suggestions.hidden) {
+        event.preventDefault();
+        suggestions.querySelector("button")?.focus();
+      } else if (event.key === "Escape" && suggestions) {
+        suggestions.hidden = true;
+      }
+    });
     emailInput.addEventListener("change", selectExactMatch);
     nameInput.addEventListener("input", () => {
       if (document.activeElement === nameInput) delete nameInput.dataset.contactAutofilled;
@@ -323,7 +365,7 @@
       <div class="project-fields">
         <label class="field">Prosjektnavn<input id="project-name" value="${esc(project.name)}"></label>
         <label class="field">Kunde / artist<input id="project-client" value="${esc(project.clientName)}"></label>
-        <label class="field">Kundens e-post<input id="project-email" type="email" list="project-contact-emails" autocomplete="off" placeholder="Skriv navn eller e-post" value="${esc(project.clientEmail)}"><small class="contact-lookup-hint">Forslag fra kontaktregisteret</small></label>
+        <label class="field">Kundens e-post<span class="contact-lookup-control"><input id="project-email" type="email" autocomplete="off" aria-autocomplete="list" aria-controls="project-contact-suggestions-editor" data-contact-suggestions="project-contact-suggestions-editor" placeholder="Skriv navn eller e-post" value="${esc(project.clientEmail)}"><span class="contact-suggestion-list" id="project-contact-suggestions-editor" role="listbox" hidden></span></span><small class="contact-lookup-hint">Forslag fra kontaktregisteret</small></label>
         <label class="field">Status<select id="project-status">${statuses.map((status) => `<option ${status === project.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
         <label class="field">Dato<input id="project-date" type="date" value="${esc(project.sessionDate)}"></label>
         <label class="field field-wide">Prosjektnotater<textarea id="project-notes" placeholder="Leveranse, referanser, tidsplan og andre avtaler …">${esc(project.notes)}</textarea></label>
@@ -405,7 +447,6 @@
     if (removeEmptyPatch) removeEmptyPatch.onclick = removeEmptyPatchChannels;
     const deleteButton = document.getElementById("delete-project");
     if (deleteButton) deleteButton.onclick = deleteProject;
-    refreshContactEmailList();
     bindContactEmailLookup(document.getElementById("project-email"), document.getElementById("project-client"));
     const upload = document.getElementById("audio-upload-form");
     if (upload) upload.onsubmit = uploadAudio;
@@ -1090,10 +1131,7 @@
     const modal = document.getElementById("project-modal");
     const form = document.getElementById("project-form");
     const close = () => modal.classList.remove("open");
-    document.getElementById("new-project").onclick = () => {
-      refreshContactEmailList();
-      modal.classList.add("open");
-    };
+    document.getElementById("new-project").onclick = () => modal.classList.add("open");
     document.getElementById("export-all-projects").onclick = (event) => exportProjects(null, event.currentTarget);
     document.getElementById("close-project-modal").onclick = close;
     document.getElementById("cancel-project-modal").onclick = close;

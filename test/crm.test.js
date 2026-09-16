@@ -906,11 +906,12 @@ test("successful magic-link login records the actual login time", () => {
 test("project customer email fields suggest saved CRM contacts", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
-  assert.match(html, /name="clientEmail"[^>]+list="project-contact-emails"/);
-  assert.match(html, /<datalist id="project-contact-emails"><\/datalist>/);
+  assert.match(html, /name="clientEmail"[^>]+aria-autocomplete="list"/);
+  assert.match(html, /id="project-contact-suggestions-new" role="listbox" hidden/);
   assert.match(html, /LokiStudio\.init\(\{user:data\.user,getContacts:\(\)=>leads\}\)/);
   assert.match(studio, /function contactEmailChoices\(query = ""\)/);
   assert.match(studio, /key\.startsWith\(needle\)/);
-  assert.match(studio, /nameInput\.value = match\.artistName \|\| match\.name \|\| match\.company/);
-  assert.match(studio, /id="project-email"[^>]+list="project-contact-emails"/);
+  assert.match(studio, /nameInput\.value = contact\.artistName \|\| contact\.name \|\| contact\.company/);
+  assert.match(studio, /data-contact-suggestions="project-contact-suggestions-editor"/);
+  assert.match(studio, /data-contact-email=/);
 });
