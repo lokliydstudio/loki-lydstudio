@@ -21,6 +21,7 @@ const { mailConfig, sendMail } = require("../lib/crm-mail");
 const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { ONLINE_WINDOW_MS, presenceCollection, presenceHeartbeat, presenceLogin, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
+const { actorName, notificationPayload, publicKey: pushPublicKey, publicSubscriptionStatus, sanitizeSubscription, taskNotification } = require("../lib/crm-push");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences, sanitizeTimeEntries } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
@@ -706,6 +707,57 @@ test("shared task list can filter by exact assignee", () => {
   assert.match(workspace, /\["Alle", "Leon", "Charles", "Begge"\]/);
   assert.match(workspace, /task\.assignee === taskAssigneeFilter/);
   assert.match(workspace, /data-task-filter/);
+});
+
+test("CRM push subscriptions are private, owner-scoped and safely normalized", () => {
+  const subscription = sanitizeSubscription({
+    endpoint: "https://push.example.test/send/device-1",
+    keys: { p256dh: "A_secure-public-key_123", auth: "auth_secret_123" },
+    device: "  iPhone  ",
+  }, "leon@lokilyd.no");
+  assert.equal(subscription.userEmail, "leon@lokilyd.no");
+  assert.equal(subscription.device, "iPhone");
+  assert.equal(subscription.id.length, 32);
+  assert.match(pushPublicKey(), /^[A-Za-z0-9_-]{80,100}$/);
+  assert.equal(sanitizeSubscription({ endpoint: "http://push.example.test", keys: subscription.keys }, "leon@lokilyd.no"), null);
+  assert.equal(sanitizeSubscription({ endpoint: subscription.endpoint, keys: subscription.keys }, "daniel@lokilyd.no"), null);
+  assert.deepEqual(publicSubscriptionStatus([subscription], "leon@lokilyd.no"), {
+    subscribed: true,
+    deviceCount: 1,
+    devices: [{ id: subscription.id, device: "iPhone", updatedAt: subscription.updatedAt }],
+  });
+});
+
+test("task push messages identify who created or completed the task", () => {
+  const task = { id: "task-1", title: "Ring artisten", assignee: "Charles", completed: false };
+  const created = taskNotification(null, task, "leon@lokilyd.no");
+  assert.equal(actorName("leon@lokilyd.no"), "Leon");
+  assert.match(created.body, /Leon la til/);
+  assert.match(created.body, /Ansvarlig: Charles/);
+  const completed = taskNotification(task, { ...task, completed: true }, "charles@lokilyd.no");
+  assert.match(completed.title, /fullført/i);
+  assert.match(completed.body, /Charles fullførte/);
+  assert.equal(taskNotification(task, { ...task, priority: "Høy" }, "leon@lokilyd.no"), null);
+  assert.equal(notificationPayload({ url: "https://evil.example/" }).url, "/crmplatform/");
+});
+
+test("CRM is installable and exposes user-activated iPhone and Android push", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "push.js"), "utf8");
+  const worker = fs.readFileSync(path.join(__dirname, "..", "crm-sw.js"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "crm-manifest.webmanifest"), "utf8"));
+  const studio = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  assert.match(html, /id="push-toggle"/);
+  assert.match(html, /crm-manifest\.webmanifest/);
+  assert.match(client, /Notification\.requestPermission/);
+  assert.match(client, /registration\.pushManager\.subscribe/);
+  assert.match(client, /Legg til på Hjem-skjermen/);
+  assert.match(worker, /showNotification/);
+  assert.match(worker, /notificationclick/);
+  assert.match(studio, /action === "push"/);
+  assert.match(studio, /taskNotification/);
+  assert.equal(manifest.display, "standalone");
+  assert.equal(manifest.scope, "/crmplatform/");
 });
 
 test("internal savings goals calculate bounded progress", () => {

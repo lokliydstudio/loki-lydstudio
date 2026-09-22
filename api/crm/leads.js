@@ -3,6 +3,7 @@ const { requireUser } = require("../../lib/crm-auth");
 const { leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../../lib/crm-leads");
 const { classifyEnvelope } = require("../../lib/crm-mail-sort");
 const { sanitizeActivity } = require("../../lib/crm-operations");
+const { actorName, sendPush } = require("../../lib/crm-push");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 const { decodeXlsxBase64, parseFikenContacts } = require("../../lib/fiken-contact-import");
 
@@ -246,6 +247,14 @@ async function handler(req, res) {
           } catch (activityError) {
             console.error("New lead activity log failed", activityError?.message);
           }
+          for (const lead of createdLeads.filter((item) => !item.importedFromFiken)) {
+            await sendPush(user.email, {
+              title: "Ny kontakt i Loki CRM",
+              body: `${actorName(user.email)} la til «${lead.name}».`,
+              tag: `lead-${lead.id}`,
+              url: "/crmplatform/#leads",
+            });
+          }
         }
       }
       const views = await leadViews();
@@ -316,6 +325,14 @@ async function handler(req, res) {
         }
       } catch (activityError) {
         console.error("Lead update activity log failed", activityError?.message);
+      }
+      if (previous.stage !== updated.stage) {
+        await sendPush(user.email, {
+          title: "Kontakt flyttet i salgsløpet",
+          body: `${actorName(user.email)} flyttet «${updated.name}» til «${updated.stage}».`,
+          tag: `lead-${updated.id}`,
+          url: "/crmplatform/#leads",
+        });
       }
       return res.status(200).json({ lead: current[index], persistent: true });
     }

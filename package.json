@@ -20,7 +20,8 @@
     "mailparser": "^3.9.24",
     "next": "latest",
     "nodemailer": "^10.0.6",
-    "stripe": "^18.0.0"
+    "stripe": "^18.0.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

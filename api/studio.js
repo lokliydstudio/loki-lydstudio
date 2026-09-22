@@ -9,6 +9,18 @@ const { loadGoogleCalendar } = require("../lib/crm-calendar");
 const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { presenceCollection, presenceHeartbeat, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
+const {
+  COLLECTION: PUSH_COLLECTION,
+  MAX_SUBSCRIPTIONS,
+  actorName,
+  publicKey: pushPublicKey,
+  publicSubscriptionStatus,
+  pushConfigured,
+  sanitizeSubscription,
+  sendPush,
+  subscriptionId,
+  taskNotification,
+} = require("../lib/crm-push");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
@@ -23,8 +35,15 @@ function publicBaseUrl(req) {
   return `${req.headers["x-forwarded-proto"] || "https"}://${host}`;
 }
 
+function audioTimestamp(comment) {
+  const total = Math.max(0, Math.round(Number(comment?.timestampSeconds) || 0));
+  const minutes = Math.floor(total / 60);
+  return `${String(minutes).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 async function projectsHandler(req, res) {
-  if (!requireUser(req, res)) return;
+  const user = requireUser(req, res);
+  if (!user) return;
   if (req.method === "GET") return res.status(200).json({ projects: await readCollection("projects") });
 
   if (req.method === "POST") {
@@ -32,6 +51,12 @@ async function projectsHandler(req, res) {
     const project = sanitizeProject(req.body?.project || req.body || {});
     projects.unshift(project);
     await writeCollection("projects", projects);
+    await sendPush(user.email, {
+      title: "Nytt prosjekt i Loki CRM",
+      body: `${actorName(user.email)} opprettet «${project.name}».`,
+      tag: `project-${project.id}`,
+      url: "/crmplatform/#projects",
+    });
     return res.status(201).json({ project });
   }
 
@@ -154,6 +179,12 @@ async function audioHandler(req, res) {
     if (!track) return res.status(400).json({ error: "Lydfilen kunne ikke verifiseres." });
     tracks.unshift(track);
     await writeCollection("audio", tracks);
+    await sendPush(user.email, {
+      title: "Ny lydleveranse",
+      body: `${actorName(user.email)} lastet opp «${track.title || track.filename}».`,
+      tag: `audio-${track.id}`,
+      url: "/crmplatform/#projects",
+    });
     return res.status(201).json({ track });
   }
 
@@ -216,6 +247,12 @@ async function audioCommentsHandler(req, res) {
     if (!comment) return res.status(400).json({ error: "Skriv en kommentar før du lagrer." });
     comments.unshift(comment);
     await writeCollection("audio-comments", comments);
+    await sendPush(user.email, {
+      title: "Ny tilbakemelding på lyd",
+      body: `${actorName(user.email)} kommenterte «${track.title || track.filename}» ved ${audioTimestamp(comment)}.`,
+      tag: `audio-comment-${track.id}`,
+      url: "/crmplatform/#projects",
+    });
     return res.status(201).json({ comment: publicAudioComment(comment) });
   }
 
@@ -287,6 +324,12 @@ async function publicCommentsHandler(req, res) {
     if (duplicate) return res.status(200).json({ comment: publicAudioComment(duplicate) });
     comments.unshift(comment);
     await writeCollection("audio-comments", comments);
+    await sendPush("", {
+      title: "Ny kundetilbakemelding",
+      body: `En kunde kommenterte «${track.title || track.filename}» ved ${audioTimestamp(comment)}.`,
+      tag: `audio-comment-${track.id}`,
+      url: "/crmplatform/#projects",
+    }, { includeActor: true });
     return res.status(201).json({ comment: publicAudioComment(comment) });
   }
 
@@ -364,6 +407,23 @@ async function workspaceHandler(req, res) {
     const item = { ...sanitized, kind };
     items.unshift(item);
     await writeCollection("workspace", items);
+    if (kind === "task") {
+      await sendPush(user.email, taskNotification(null, item, user.email));
+    } else if (kind === "note") {
+      await sendPush(user.email, {
+        title: item.type === "møte" ? "Nytt møtereferat" : "Nytt internt notat",
+        body: `${actorName(user.email)} la til «${item.title}».`,
+        tag: `${kind}-${item.id}`,
+        url: "/crmplatform/#workspace-tools",
+      });
+    } else if (kind === "goal") {
+      await sendPush(user.email, {
+        title: "Nytt internt mål",
+        body: `${actorName(user.email)} la til «${item.title}».`,
+        tag: `${kind}-${item.id}`,
+        url: "/crmplatform/#workspace-tools",
+      });
+    }
     return res.status(201).json({ item });
   }
 
@@ -380,6 +440,17 @@ async function workspaceHandler(req, res) {
     if (!updated) return res.status(400).json({ error: "Fyll ut de obligatoriske feltene." });
     items[index] = { ...updated, kind: current.kind };
     await writeCollection("workspace", items);
+    if (current.kind === "task") {
+      const notification = taskNotification(current, items[index], user.email);
+      if (notification) await sendPush(user.email, notification);
+    } else if (current.kind === "goal" && !current.completed && items[index].completed) {
+      await sendPush(user.email, {
+        title: "Internt mål fullført",
+        body: `${actorName(user.email)} fullførte «${items[index].title}».`,
+        tag: `goal-${items[index].id}`,
+        url: "/crmplatform/#workspace-tools",
+      });
+    }
     return res.status(200).json({ item: items[index] });
   }
 
@@ -533,6 +604,12 @@ async function bookingsHandler(req, res) {
     bookings.push(booking);
     await writeCollection("bookings", bookings);
     await appendLeadActivity({ leadId: booking.leadId, type: "Booking", details: `${booking.service} booket ${booking.date} kl. ${booking.startTime}–${booking.endTime}.` }, user.email);
+    await sendPush(user.email, {
+      title: "Ny booking i Loki CRM",
+      body: `${actorName(user.email)} booket «${booking.title}» ${booking.date} kl. ${booking.startTime}.`,
+      tag: `booking-${booking.id}`,
+      url: "/crmplatform/#operations",
+    });
     return res.status(201).json({ booking });
   }
 
@@ -540,12 +617,21 @@ async function bookingsHandler(req, res) {
     const id = cleanText(req.body?.id, 120);
     const index = bookings.findIndex((item) => item.id === id);
     if (index < 0) return res.status(404).json({ error: "Bookingen ble ikke funnet." });
+    const previous = bookings[index];
     const booking = sanitizeBooking(req.body?.changes || {}, bookings[index], user.email);
     if (!booking) return res.status(400).json({ error: "Fyll ut tittel, dato og et gyldig tidsrom." });
     const conflict = bookingConflict(bookings, booking);
     if (conflict) return res.status(409).json({ error: `Tiden overlapper med «${conflict.title}» (${conflict.startTime}–${conflict.endTime}).` });
     bookings[index] = booking;
     await writeCollection("bookings", bookings);
+    if (booking.status !== previous.status || booking.date !== previous.date || booking.startTime !== previous.startTime) {
+      await sendPush(user.email, {
+        title: "Booking oppdatert",
+        body: `${actorName(user.email)} oppdaterte «${booking.title}» til ${booking.date} kl. ${booking.startTime} (${booking.status}).`,
+        tag: `booking-${booking.id}`,
+        url: "/crmplatform/#operations",
+      });
+    }
     return res.status(200).json({ booking });
   }
 
@@ -586,6 +672,41 @@ async function presenceHandler(req, res) {
   return res.status(200).json({ users: presenceStatus(records.filter(Boolean), user.email), onlineWindowSeconds: 150 });
 }
 
+async function pushHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  if (!["GET", "POST", "DELETE"].includes(req.method)) return res.status(405).json({ error: "Method not allowed" });
+
+  const subscriptions = await readCollection(PUSH_COLLECTION);
+  if (req.method === "GET") {
+    return res.status(200).json({
+      configured: pushConfigured(),
+      publicKey: pushConfigured() ? pushPublicKey() : "",
+      ...publicSubscriptionStatus(subscriptions, user.email),
+    });
+  }
+
+  if (!pushConfigured()) return res.status(503).json({ error: "Pushvarsler er ikke konfigurert ennå." });
+
+  if (req.method === "POST") {
+    const incoming = req.body?.subscription || req.body;
+    const id = subscriptionId(String(incoming?.endpoint || ""));
+    const existing = subscriptions.find((item) => item.id === id) || {};
+    const subscription = sanitizeSubscription(incoming, user.email, existing);
+    if (!subscription) return res.status(400).json({ error: "Nettleserabonnementet er ugyldig." });
+    const remaining = subscriptions.filter((item) => item.id !== subscription.id);
+    remaining.unshift(subscription);
+    await writeCollection(PUSH_COLLECTION, remaining.slice(0, MAX_SUBSCRIPTIONS));
+    return res.status(201).json({ ok: true, subscribed: true, device: subscription.device });
+  }
+
+  const endpoint = String(req.body?.endpoint || "");
+  const id = subscriptionId(endpoint);
+  const remaining = subscriptions.filter((item) => !(item.id === id && item.userEmail === user.email));
+  await writeCollection(PUSH_COLLECTION, remaining);
+  return res.status(200).json({ ok: true, subscribed: false });
+}
+
 async function quotesHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
@@ -601,6 +722,12 @@ async function quotesHandler(req, res) {
     quotes.unshift(quote);
     await writeCollection("quotes", quotes);
     await appendLeadActivity({ leadId: quote.leadId, type: "Tilbud", details: `Tilbud ${quote.number} opprettet på ${quote.total.toLocaleString("nb-NO")} kr.` }, user.email);
+    await sendPush(user.email, {
+      title: "Nytt tilbud i Loki CRM",
+      body: `${actorName(user.email)} opprettet tilbud ${quote.number} for «${quote.customerName}».`,
+      tag: `quote-${quote.id}`,
+      url: "/crmplatform/#operations",
+    });
     return res.status(201).json({ quote });
   }
 
@@ -615,6 +742,12 @@ async function quotesHandler(req, res) {
     await writeCollection("quotes", quotes);
     if (quote.status !== previousStatus) {
       await appendLeadActivity({ leadId: quote.leadId, type: "Tilbud", details: `Tilbud ${quote.number} markert som «${quote.status}».` }, user.email);
+      await sendPush(user.email, {
+        title: "Tilbudsstatus oppdatert",
+        body: `${actorName(user.email)} markerte tilbud ${quote.number} som «${quote.status}».`,
+        tag: `quote-${quote.id}`,
+        url: "/crmplatform/#operations",
+      });
     }
     return res.status(200).json({ quote });
   }
@@ -736,6 +869,7 @@ module.exports = async function handler(req, res) {
     if (action === "bookings") return await bookingsHandler(req, res);
     if (action === "google-calendar") return await googleCalendarHandler(req, res);
     if (action === "presence") return await presenceHandler(req, res);
+    if (action === "push") return await pushHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);
     if (action === "backup") return await backupHandler(req, res);
     if (action === "fiken") return await fikenHandler(req, res);

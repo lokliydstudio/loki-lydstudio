@@ -113,7 +113,8 @@
   }
   .top-actions { flex: 0 0 auto; gap: 7px; }
   .top-actions .primary { min-height: 42px; padding: 10px 12px; }
-  .theme-toggle { flex: 0 0 42px; width: 42px; min-height: 42px; }
+  .theme-toggle,
+  .push-toggle { flex: 0 0 42px; width: 42px; min-height: 42px; }
 
   .content { width: 100%; max-width: none; padding: 16px 14px 30px; }
   .panel { min-width: 0; padding: 16px; border-radius: 12px; }
