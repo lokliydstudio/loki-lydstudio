@@ -1,4 +1,4 @@
-const { sessionCookie, verifyToken } = require("../../lib/crm-auth");
+const { clearLoginChallengeCookie, sessionCookie, verifyToken } = require("../../lib/crm-auth");
 const { presenceCollection, presenceLogin } = require("../../lib/crm-presence");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 
@@ -16,6 +16,6 @@ module.exports = async function handler(req, res) {
       console.error("Could not record CRM login", error?.message);
     }
   }
-  res.setHeader("Set-Cookie", sessionCookie(data.email));
+  res.setHeader("Set-Cookie", [sessionCookie(data.email), clearLoginChallengeCookie()]);
   return res.redirect(302, "/crmplatform/");
 };

@@ -2,51 +2,119 @@
 <html lang="nb">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Sikker innlogging til Loki Lydstudio">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Loki Studio · Intern innlogging</title>
   <style>
-    :root{--ink:#191918;--lime:#d9ff53;--panel:#242420;--line:#42413b}*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{display:grid;place-items:center;padding:22px;background:#191918;color:#fff;font-family:Arial,Helvetica,sans-serif}main{width:min(440px,100%);padding:38px;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 30px 90px rgba(0,0,0,.45)}.brand{display:flex;align-items:center;gap:14px;margin-bottom:36px}.mark{position:relative;width:68px;height:54px;overflow:hidden}.mark img{position:absolute;width:157px;height:157px;max-width:none;left:-45px;top:-52px;filter:brightness(0) invert(1)}.brand-copy{display:flex;flex-direction:column;line-height:.95;letter-spacing:.12em}.brand-copy strong{font-size:18px}.brand-copy span{margin-top:7px;color:#8e8b84;font-size:9px;letter-spacing:.28em}.kicker{color:var(--lime);font-size:9px;font-weight:800;letter-spacing:.18em}h1{margin:9px 0 12px;font:500 30px Georgia,serif}p{margin:0 0 24px;color:#b9b6ae;font-size:12px;line-height:1.6}form{display:grid;gap:11px}label{color:#a8a49b;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}input{width:100%;padding:14px;border:1px solid #55534c;border-radius:9px;background:#171716;color:#fff;font:inherit;font-size:13px}input:focus{outline:3px solid rgba(217,255,83,.2);border-color:var(--lime)}button{margin-top:5px;padding:13px 18px;border:0;border-radius:9px;background:var(--lime);color:var(--ink);font:800 12px Arial,sans-serif;cursor:pointer;box-shadow:0 3px 0 #b9d938}button:disabled{opacity:.6;cursor:wait}.feedback{min-height:34px;margin-top:16px;color:var(--lime);font-size:11px;line-height:1.5}.privacy{margin:18px 0 0;padding-top:16px;border-top:1px solid #393833;color:#85827b;font-size:9px}
+    :root{--ink:#191918;--lime:#d9ff53;--panel:#242420;--line:#42413b;--muted:#b9b6ae}*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{display:grid;place-items:center;padding:max(22px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(22px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));background:#191918;color:#fff;font-family:Arial,Helvetica,sans-serif}main{width:min(460px,100%);padding:38px;border:1px solid var(--line);border-radius:18px;background:var(--panel);box-shadow:0 30px 90px rgba(0,0,0,.45)}.brand{display:flex;align-items:center;gap:14px;margin-bottom:36px}.mark{position:relative;width:68px;height:54px;overflow:hidden}.mark img{position:absolute;width:157px;height:157px;max-width:none;left:-45px;top:-52px;filter:brightness(0) invert(1)}.brand-copy{display:flex;flex-direction:column;line-height:.95;letter-spacing:.12em}.brand-copy strong{font-size:18px}.brand-copy span{margin-top:7px;color:#8e8b84;font-size:9px;letter-spacing:.28em}.kicker{color:var(--lime);font-size:9px;font-weight:800;letter-spacing:.18em}h1{margin:9px 0 12px;font:500 30px Georgia,serif}p{margin:0 0 24px;color:var(--muted);font-size:12px;line-height:1.6}form{display:grid;gap:11px}label{color:#a8a49b;font-size:9px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}input{width:100%;min-height:48px;padding:14px;border:1px solid #55534c;border-radius:9px;background:#171716;color:#fff;font:16px Arial,sans-serif}input:focus{outline:3px solid rgba(217,255,83,.2);border-color:var(--lime)}button{min-height:46px;margin-top:5px;padding:13px 18px;border:0;border-radius:9px;background:var(--lime);color:var(--ink);font:800 12px Arial,sans-serif;cursor:pointer;box-shadow:0 3px 0 #b9d938}button:disabled{opacity:.6;cursor:wait}.feedback{min-height:34px;margin-top:16px;color:var(--lime);font-size:11px;line-height:1.5}.privacy{margin:18px 0 0;padding-top:16px;border-top:1px solid #393833;color:#85827b;font-size:9px}.code-step[hidden],.request-step[hidden]{display:none}.sent-copy{margin-bottom:16px}.sent-copy strong{color:#fff}.code-input{text-align:center;font:700 26px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em}.code-help{margin:13px 0 0;color:#8e8b84;font-size:10px}.code-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:15px}.text-button{min-height:40px;margin:0;padding:8px 10px;border:1px solid #4c4b45;background:transparent;color:#d6d2ca;font-size:10px;box-shadow:none}.text-button:hover{border-color:#77746c}.or{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:22px 0;color:#77746c;font-size:9px}.or:before,.or:after{content:"";height:1px;background:#3e3d38}.link-note{margin:0;color:#9f9b92;text-align:center;font-size:10px}.noscript{color:#ffb3a5;font-size:11px}@media(max-width:520px){body{place-items:start center}main{margin-top:4vh;padding:26px 22px;border-radius:15px}.brand{margin-bottom:27px}h1{font-size:27px}.code-actions{display:grid;grid-template-columns:1fr 1fr}.text-button{width:100%}}
   </style>
 </head>
 <body>
   <main>
     <div class="brand"><span class="mark"><img src="/assets/brand/loki-symbol.png" alt="Loki Lydstudio"></span><span class="brand-copy"><strong>LOKI</strong><span>STUDIO</span></span></div>
     <span class="kicker">INTERN ARBEIDSFLATE</span>
-    <h1>Logg inn med e-post</h1>
-    <p>Be om en engangslenke til din godkjente @lokilyd.no-adresse. Lenken er gyldig i 15 minutter.</p>
-    <form id="login-form">
-      <label for="email">E-postadresse</label>
-      <input id="email" name="email" type="email" autocomplete="email" placeholder="navn@lokilyd.no" required>
-      <button type="submit">Send sikker innloggingslenke</button>
-    </form>
+    <h1>Logg inn sikkert</h1>
+    <section class="request-step" id="request-step">
+      <p>Få en sekssifret engangskode og en sikker innloggingslenke til din godkjente @lokilyd.no-adresse. Begge er gyldige i 15 minutter.</p>
+      <form id="login-form">
+        <label for="email">E-postadresse</label>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="navn@lokilyd.no" required>
+        <button type="submit">Send kode og innloggingslenke</button>
+      </form>
+    </section>
+    <section class="code-step" id="code-step" hidden>
+      <p class="sent-copy">Skriv inn koden som ble sendt til <strong id="sent-email"></strong>.</p>
+      <form id="code-form">
+        <label for="code">Sekssifret engangskode</label>
+        <input class="code-input" id="code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" pattern="[0-9]{3} ?[0-9]{3}" placeholder="000 000" required aria-describedby="code-help">
+        <button type="submit">Logg inn med kode</button>
+      </form>
+      <p class="code-help" id="code-help">Koden kan bare brukes i nettleseren som ba om den.</p>
+      <div class="code-actions"><button class="text-button" id="resend-code" type="button">Send ny kode</button><button class="text-button" id="change-email" type="button">Bytt e-postadresse</button></div>
+      <div class="or">ELLER</div>
+      <p class="link-note">Du kan også trykke på innloggingslenken i samme e-post.</p>
+    </section>
     <div class="feedback" id="feedback" aria-live="polite"></div>
     <p class="privacy">CRM-innholdet leveres ikke før en gyldig, signert økt er bekreftet på serveren.</p>
+    <noscript><p class="noscript">JavaScript må være aktivert for å bruke kodeinnlogging. Innloggingslenken i e-posten fungerer fortsatt.</p></noscript>
   </main>
   <script>
-    const form = document.getElementById("login-form");
+    const requestStep = document.getElementById("request-step");
+    const codeStep = document.getElementById("code-step");
+    const requestForm = document.getElementById("login-form");
+    const codeForm = document.getElementById("code-form");
+    const emailInput = document.getElementById("email");
+    const codeInput = document.getElementById("code");
+    const sentEmail = document.getElementById("sent-email");
     const feedback = document.getElementById("feedback");
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const button = form.querySelector("button");
+
+    async function requestCode() {
+      const email = emailInput.value.trim().toLowerCase();
+      const button = requestForm.querySelector("button");
       button.disabled = true;
-      feedback.textContent = "Sender sikker lenke …";
+      feedback.textContent = "Sender kode og sikker lenke …";
       try {
         const response = await fetch("/api/crm/auth-request", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email: new FormData(form).get("email") }),
+          credentials: "same-origin",
+          body: JSON.stringify({ email }),
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error);
-        feedback.textContent = "Hvis adressen er godkjent, er innloggingslenken sendt. Sjekk innboksen.";
-        form.reset();
+        sentEmail.textContent = email;
+        requestStep.hidden = true;
+        codeStep.hidden = false;
+        codeInput.value = "";
+        feedback.textContent = "Sjekk innboksen. Koden og lenken er gyldige i 15 minutter.";
+        codeInput.focus();
       } catch (error) {
-        feedback.textContent = error.message || "Kunne ikke sende innloggingslenken.";
+        feedback.textContent = error.message || "Kunne ikke sende innloggingskoden.";
       } finally {
         button.disabled = false;
       }
+    }
+
+    requestForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await requestCode();
+    });
+
+    codeInput.addEventListener("input", () => {
+      const digits = codeInput.value.replace(/\D/g, "").slice(0, 6);
+      codeInput.value = digits.length > 3 ? `${digits.slice(0, 3)} ${digits.slice(3)}` : digits;
+    });
+
+    codeForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = codeForm.querySelector("button");
+      button.disabled = true;
+      feedback.textContent = "Kontrollerer engangskoden …";
+      try {
+        const response = await fetch("/api/crm/auth-code", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({ email: emailInput.value, code: codeInput.value }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error);
+        feedback.textContent = "Innlogging godkjent. Åpner CRM …";
+        location.replace("/crmplatform/");
+      } catch (error) {
+        feedback.textContent = error.message || "Koden kunne ikke bekreftes.";
+        codeInput.select();
+        button.disabled = false;
+      }
+    });
+
+    document.getElementById("resend-code").addEventListener("click", requestCode);
+    document.getElementById("change-email").addEventListener("click", () => {
+      codeStep.hidden = true;
+      requestStep.hidden = false;
+      feedback.textContent = "";
+      emailInput.focus();
     });
   </script>
 </body>

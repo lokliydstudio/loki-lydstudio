@@ -55,6 +55,71 @@ test("tokens cannot be reused for another purpose", () => {
   assert.equal(auth.verifyToken(token, "session"), null);
 });
 
+test("email login challenges issue a six-digit code bound to email and browser", () => {
+  const challenge = auth.createLoginChallenge("leon@lokilyd.no", 60);
+  assert.match(challenge.code, /^\d{6}$/);
+  assert.equal(auth.verifyToken(challenge.token, "login-code").email, "leon@lokilyd.no");
+
+  const req = { headers: { cookie: `loki_crm_login_challenge=${encodeURIComponent(challenge.token)}` } };
+  assert.equal(auth.verifyLoginCode(req, "leon@lokilyd.no", challenge.code).email, "leon@lokilyd.no");
+  assert.equal(auth.verifyLoginCode(req, "charles@lokilyd.no", challenge.code), null);
+  assert.equal(auth.verifyLoginCode(req, "leon@lokilyd.no", "000000"), null);
+  assert.match(auth.loginChallengeCookie(challenge.token), /HttpOnly; Secure; SameSite=Strict; Max-Age=900/);
+});
+
+test("a valid emailed code creates an owner session and consumes the browser challenge", async () => {
+  const handler = require("../api/crm/auth-code");
+  const challenge = auth.createLoginChallenge("charles@lokilyd.no", 60);
+  const result = { headers: {} };
+  const req = {
+    method: "POST",
+    body: { email: "charles@lokilyd.no", code: challenge.code },
+    headers: {
+      cookie: `loki_crm_login_challenge=${encodeURIComponent(challenge.token)}`,
+      "x-forwarded-for": "192.0.2.44",
+    },
+  };
+  const res = {
+    setHeader(name, value) { result.headers[name] = value; return this; },
+    status(value) { result.status = value; return this; },
+    json(value) { result.body = value; return value; },
+  };
+  await handler(req, res);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.user.email, "charles@lokilyd.no");
+  assert.equal(Array.isArray(result.headers["Set-Cookie"]), true);
+  assert.match(result.headers["Set-Cookie"][0], /^loki_crm_session=/);
+  assert.match(result.headers["Set-Cookie"][1], /^loki_crm_login_challenge=;/);
+});
+
+test("CRM login offers both an emailed one-time code and a secure link", () => {
+  const login = fs.readFileSync(path.join(__dirname, "..", "crm-login.html"), "utf8");
+  const request = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "auth-request.js"), "utf8");
+  const codeHandler = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "auth-code.js"), "utf8");
+  assert.match(login, /id="code-form"/);
+  assert.match(login, /autocomplete="one-time-code"/);
+  assert.match(login, /\/api\/crm\/auth-code/);
+  assert.match(login, /Du kan også trykke på innloggingslenken/);
+  assert.match(request, /Din engangskode til Loki Studio/);
+  assert.match(request, /Logg inn med lenke/);
+  assert.match(codeHandler, /verifyLoginCode/);
+  assert.match(codeHandler, /clearLoginChallengeCookie/);
+  assert.match(codeHandler, /presenceLogin/);
+});
+
+test("CRM has a dedicated touch-safe mobile layout", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const mobile = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "mobile.css"), "utf8");
+  assert.match(html, /crmplatform\/mobile\.css/);
+  assert.match(mobile, /@media screen and \(max-width: 760px\)/);
+  assert.match(mobile, /position: fixed !important/);
+  assert.match(mobile, /safe-area-inset-bottom/);
+  assert.match(mobile, /\.inbox-list-panel \{ max-height: 58dvh/);
+  assert.match(mobile, /\.crm-category-switch[\s\S]*overflow-x: auto/);
+  assert.match(mobile, /\.google-calendar-grid \{ min-width: 650px/);
+  assert.match(mobile, /font-size: 16px !important/);
+});
+
 test("customer listening tokens are scoped and expire independently of owner access", () => {
   const token = auth.createScopedToken("track-123", "audio-share", 60);
   assert.equal(auth.verifyScopedToken(token, "audio-share").subject, "track-123");

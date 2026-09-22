@@ -1,0 +1,349 @@
+.auth-code-form[hidden] { display: none; }
+.auth-code-form { margin-top: 14px; }
+.auth-code-form #auth-code {
+  text-align: center;
+  font: 700 24px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .18em;
+}
+.auth-back {
+  min-height: 40px;
+  border: 1px solid #4c4b45;
+  border-radius: 8px;
+  background: transparent;
+  color: #d6d2ca;
+  font-size: 9px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media screen and (max-width: 760px) {
+  html {
+    scroll-padding-top: 82px;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body { overflow-x: hidden; }
+  .app { display: block; min-height: 100dvh; }
+  .workspace { min-width: 0; padding-bottom: calc(74px + env(safe-area-inset-bottom)); }
+
+  .sidebar {
+    position: fixed !important;
+    z-index: 80;
+    inset: auto 0 0 0;
+    display: block;
+    width: 100%;
+    height: calc(70px + env(safe-area-inset-bottom));
+    min-height: 0;
+    padding: 6px max(6px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(6px, env(safe-area-inset-left));
+    overflow: hidden;
+    border-top: 1px solid #363530;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, .18);
+  }
+
+  .sidebar > .brand,
+  .sidebar > .connection,
+  .sidebar > .presence-card,
+  .sidebar > .profile { display: none !important; }
+
+  .nav {
+    display: flex !important;
+    width: 100%;
+    height: 58px;
+    gap: 4px;
+    margin: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar { display: none; }
+  .nav button {
+    position: relative;
+    flex: 0 0 78px;
+    width: 78px !important;
+    min-height: 56px;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: 23px 1fr;
+    justify-items: center;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 4px 4px !important;
+    border-radius: 9px;
+    color: #aaa79f;
+    font-size: 7px !important;
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    white-space: normal;
+    scroll-snap-align: center;
+  }
+  .nav button.active { box-shadow: inset 0 -3px var(--lime); }
+  .nav-icon { font-size: 18px; line-height: 1; }
+  .nav .count {
+    position: absolute;
+    top: 3px;
+    right: 7px;
+    display: grid !important;
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    font-size: 7px;
+  }
+
+  .topbar {
+    position: sticky !important;
+    top: 0;
+    z-index: 40;
+    min-height: 70px;
+    padding: max(11px, env(safe-area-inset-top)) 14px 11px;
+    gap: 10px;
+  }
+  .topbar > div:first-child { min-width: 0; }
+  .topbar .eyebrow,
+  .topbar .version { display: none; }
+  .topbar h1 {
+    max-width: 48vw;
+    margin: 0;
+    overflow: hidden;
+    font-size: clamp(21px, 6vw, 26px);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .top-actions { flex: 0 0 auto; gap: 7px; }
+  .top-actions .primary { min-height: 42px; padding: 10px 12px; }
+  .theme-toggle { flex: 0 0 42px; width: 42px; min-height: 42px; }
+
+  .content { width: 100%; max-width: none; padding: 16px 14px 30px; }
+  .panel { min-width: 0; padding: 16px; border-radius: 12px; }
+  .panel-head { align-items: flex-start; gap: 12px; }
+  .panel-head .button-row { flex-wrap: wrap; justify-content: flex-end; }
+  .section-intro,
+  .customer-directory-head,
+  .lead-section-divider,
+  .document-tools,
+  .studio-section-head,
+  .project-toolbar,
+  .rental-head,
+  .google-calendar-head {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .section-intro h2,
+  .customer-directory-head h2,
+  .lead-section-divider h2 { font-size: 24px; }
+  .section-intro .button-row,
+  .lead-tools,
+  .customer-directory-tools { width: 100%; align-items: stretch; flex-direction: column; }
+  .search,
+  .customer-directory-tools .search { width: 100%; }
+
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea { font-size: 16px !important; }
+  .primary,
+  .secondary,
+  .dark-button,
+  .tiny-button,
+  .link-button { min-height: 42px; }
+
+  .hero { min-height: 0; padding: 22px; border-radius: 14px; }
+  .hero:after { right: -160px; top: -90px; opacity: .45; }
+  .hero h2 { max-width: 92%; font-size: 23px; line-height: 1.15; }
+  .hero .dark-button { width: 100%; }
+
+  .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 14px 0; }
+  .metric { min-width: 0; min-height: 94px; padding: 14px; }
+  .metric strong { font-size: 22px; }
+  .metric small { line-height: 1.35; }
+  .grid-2,
+  .workspace-grid,
+  .ops-layout,
+  .studio-layout,
+  .funding-grid,
+  .project-grid { grid-template-columns: minmax(0, 1fr); }
+  .automation { margin-top: 14px; }
+
+  .inbox { display: grid; height: auto; min-height: 0; gap: 14px; overflow: visible; }
+  .inbox-list-panel { max-height: 58dvh; overflow: hidden; }
+  .inbox-list-panel .panel-head { flex-direction: column; }
+  .inbox-list-panel .button-row { width: 100%; justify-content: space-between; }
+  .inbox-toolbar { display: flex; overflow-x: auto; scrollbar-width: none; }
+  .inbox-toolbar::-webkit-scrollbar { display: none; }
+  .inbox-tab { flex: 0 0 auto; min-height: 42px; }
+  #message-list { max-height: none; flex: 1 1 auto; }
+  .message { grid-template-columns: 38px minmax(0, 1fr); padding: 14px 5px; }
+  .message time { display: none; }
+  .draft { height: auto; max-height: none; padding: 16px; overflow: visible; }
+  .draft-head { align-items: flex-start; flex-direction: column; }
+  .draft h2 { overflow-wrap: anywhere; font-size: 22px; }
+  .mail-reader { margin: 14px 0; }
+  .mail-reader-body { padding: 13px; font-size: 14px; }
+  .draft textarea { min-height: 190px; padding: 14px; }
+  .mail-actions,
+  .draft > .button-row { display: grid; grid-template-columns: 1fr; }
+  .draft > .button-row button,
+  .mail-actions button { width: 100%; }
+
+  .crm-category-switch {
+    display: flex;
+    gap: 8px;
+    margin: 0 -14px 18px;
+    padding: 6px 14px;
+    overflow-x: auto;
+    border-right: 0;
+    border-left: 0;
+    border-radius: 0;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .crm-category-switch::-webkit-scrollbar { display: none; }
+  .crm-category-tab { flex: 0 0 218px; padding: 13px; scroll-snap-align: center; }
+  .customer-directory { padding: 16px; }
+  .customer-directory-grid { grid-template-columns: 1fr; }
+  .customer-directory-card { grid-template-columns: 38px minmax(0, 1fr) 30px; gap: 10px; }
+  .customer-directory-status { display: none; }
+  .customer-directory-copy strong { white-space: normal; overflow-wrap: anywhere; }
+
+  .pipeline {
+    display: flex;
+    grid-template-columns: none;
+    gap: 8px;
+    margin-right: -14px;
+    padding: 1px 14px 9px 0;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .pipeline::-webkit-scrollbar { display: none; }
+  .pipeline .pipeline-tab { flex: 0 0 132px; scroll-snap-align: start; }
+  .crm-head { display: none; }
+  .crm-row:not(.crm-head) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 9px 12px;
+    padding: 16px;
+  }
+  .crm-row:not(.crm-head) > :nth-child(1) { grid-column: 1; grid-row: 1; }
+  .crm-row:not(.crm-head) > :nth-child(2) { grid-column: 1 / -1; grid-row: 2; display: flex; }
+  .crm-row:not(.crm-head) > :nth-child(3) { grid-column: 2; grid-row: 1; display: block; }
+  .crm-row:not(.crm-head) > :nth-child(4) { grid-column: 1; grid-row: 3; display: block; }
+  .crm-row:not(.crm-head) > :nth-child(5) { grid-column: 1 / -1; grid-row: 4; display: flex; }
+  .crm-row:not(.crm-head) > :nth-child(6) { grid-column: 1 / -1; grid-row: 5; display: flex; justify-content: flex-start; }
+  .lead-row-actions { justify-content: flex-start; }
+  .lead-relevance-button { min-height: 38px; }
+
+  .prospect-metrics,
+  .ops-metrics,
+  .rental-metrics,
+  .fiken-metrics,
+  .time-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .prospect-card,
+  .prospect-list-head { grid-template-columns: minmax(0, 1fr) 54px 20px; }
+  .prospect-card { padding: 14px 12px; }
+  .prospect-detail { padding: 16px; }
+
+  .project-list-panel { padding: 9px; overflow: hidden; }
+  .project-list {
+    display: flex;
+    grid-template-columns: none;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .project-list::-webkit-scrollbar { display: none; }
+  .project-list button { flex: 0 0 82%; scroll-snap-align: center; }
+  .project-toolbar { padding: 18px 16px; }
+  .project-toolbar h2 { font-size: 23px; overflow-wrap: anywhere; }
+  .project-toolbar .button-row { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .project-toolbar .button-row .primary { grid-column: 1 / -1; }
+  .project-fields { grid-template-columns: 1fr; padding: 16px; }
+  .studio-section { padding: 17px 16px; }
+  .patch-wrap { max-width: 100%; overscroll-behavior-x: contain; }
+  .patch-table th:first-child,
+  .patch-table td:first-child { position: sticky; left: 0; z-index: 2; }
+  .patch-table th:first-child { background: #242420; }
+  .patch-table td:first-child { background: var(--panel); }
+  .audio-form,
+  .spotify-reference-form { grid-template-columns: 1fr; padding: 13px; }
+  .track-main { grid-template-columns: 1fr; }
+  .track-actions { justify-content: stretch; }
+  .track-actions > * { flex: 1; text-align: center; }
+  .mix-feedback { padding: 13px; }
+  .mix-comment-form { grid-template-columns: 54px minmax(0, 1fr); }
+  .mix-comment { grid-template-columns: 52px minmax(0, 1fr) 26px; }
+  .spotify-reference-list { grid-template-columns: 1fr; }
+  .spotify-reference-card iframe { height: 252px; }
+  .time-entry-form { grid-template-columns: 1fr 1fr; padding: 13px; }
+
+  .rental-workbook { overflow: hidden; }
+  .rental-sheet-wrap { width: 100%; max-height: 62dvh; overscroll-behavior: contain; }
+  .rental-metrics article { min-width: 0; }
+  .rental-key-grid { grid-template-columns: 1fr; }
+
+  .google-calendar-panel { overflow: hidden; }
+  .google-calendar-actions { justify-content: flex-start; }
+  .google-calendar-nav { grid-template-columns: 1fr; padding: 13px 16px; }
+  .google-calendar-nav h3,
+  .google-calendar-nav .button-row,
+  .google-calendar-nav > span { grid-column: 1; grid-row: auto; justify-self: start; text-align: left; }
+  .google-calendar-month { width: 100%; padding: 10px; overflow-x: auto; overscroll-behavior-x: contain; }
+  .google-calendar-weekdays,
+  .google-calendar-grid { min-width: 650px; }
+  .google-calendar-day { min-height: 84px; }
+  .google-calendar-sidebar { min-height: 0; padding: 16px; }
+
+  .document-actions { flex-wrap: wrap; }
+  .document-actions .tiny-button { min-height: 38px; }
+  .doc-row { padding: 13px; }
+
+  .quote-lines { overflow-x: auto; }
+  .quote-line { min-width: 520px; }
+  .booking-card { grid-template-columns: 48px minmax(0, 1fr); }
+  .booking-actions { grid-column: 1 / -1; justify-content: stretch; }
+  .booking-actions > * { flex: 1; }
+
+  .modal-backdrop { align-items: end; padding: 0; }
+  .modal,
+  .ops-modal,
+  .rental-modal,
+  .lead-profile-modal {
+    width: 100%;
+    max-height: min(92dvh, 850px);
+    padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+  }
+  .modal .button-row { display: grid; grid-template-columns: 1fr 1fr; }
+  .modal .button-row button { width: 100%; }
+  .toast { left: 14px; right: 14px; bottom: calc(82px + env(safe-area-inset-bottom)); }
+
+  .auth-gate { padding: 14px; }
+  .auth-card { max-height: 92dvh; padding: 25px 21px; overflow-y: auto; }
+  .auth-card input { min-height: 48px; }
+}
+
+@media screen and (max-width: 430px) {
+  .topbar h1 { max-width: 42vw; }
+  .top-actions .primary { padding-inline: 10px; font-size: 9px; }
+  .metrics,
+  .prospect-metrics,
+  .ops-metrics,
+  .rental-metrics,
+  .fiken-metrics,
+  .time-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .time-entry-form { grid-template-columns: 1fr; }
+  .time-note,
+  .time-entry-form .primary { grid-column: auto; }
+  .project-toolbar .button-row { grid-template-columns: 1fr; }
+  .project-toolbar .button-row .primary { grid-column: auto; }
+  .mix-feedback-head { align-items: flex-start; flex-direction: column; }
+  .mix-comment { grid-template-columns: 48px minmax(0, 1fr); }
+  .mix-comment-delete { grid-column: 2; justify-self: end; }
+}
+
+@media screen and (display-mode: standalone) and (max-width: 760px) {
+  .topbar { padding-top: max(11px, env(safe-area-inset-top)); }
+}
