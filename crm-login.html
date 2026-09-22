@@ -92,7 +92,7 @@
       button.disabled = true;
       feedback.textContent = "Kontrollerer engangskoden …";
       try {
-        const response = await fetch("/api/crm/auth-code", {
+        const response = await fetch("/api/crm/auth-request", {
           method: "POST",
           headers: { "content-type": "application/json" },
           credentials: "same-origin",

@@ -56,7 +56,6 @@
     "api/crm/mailbox.js": { "maxDuration": 30 },
     "api/crm/send.js": { "maxDuration": 30 },
     "api/crm/auth-request.js": { "maxDuration": 30 },
-    "api/crm/auth-code.js": { "maxDuration": 30 },
     "api/crm/draft.js": { "maxDuration": 30 },
     "api/crm/leads.js": { "maxDuration": 30 },
     "api/studio.js": { "maxDuration": 60 },

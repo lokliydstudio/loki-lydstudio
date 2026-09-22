@@ -68,7 +68,7 @@ test("email login challenges issue a six-digit code bound to email and browser",
 });
 
 test("a valid emailed code creates an owner session and consumes the browser challenge", async () => {
-  const handler = require("../api/crm/auth-code");
+  const handler = require("../api/crm/auth-request");
   const challenge = auth.createLoginChallenge("charles@lokilyd.no", 60);
   const result = { headers: {} };
   const req = {
@@ -95,16 +95,15 @@ test("a valid emailed code creates an owner session and consumes the browser cha
 test("CRM login offers both an emailed one-time code and a secure link", () => {
   const login = fs.readFileSync(path.join(__dirname, "..", "crm-login.html"), "utf8");
   const request = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "auth-request.js"), "utf8");
-  const codeHandler = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "auth-code.js"), "utf8");
   assert.match(login, /id="code-form"/);
   assert.match(login, /autocomplete="one-time-code"/);
-  assert.match(login, /\/api\/crm\/auth-code/);
+  assert.match(login, /\/api\/crm\/auth-request/);
   assert.match(login, /Du kan også trykke på innloggingslenken/);
   assert.match(request, /Din engangskode til Loki Studio/);
   assert.match(request, /Logg inn med lenke/);
-  assert.match(codeHandler, /verifyLoginCode/);
-  assert.match(codeHandler, /clearLoginChallengeCookie/);
-  assert.match(codeHandler, /presenceLogin/);
+  assert.match(request, /verifyLoginCode/);
+  assert.match(request, /clearLoginChallengeCookie/);
+  assert.match(request, /presenceLogin/);
 });
 
 test("CRM has a dedicated touch-safe mobile layout", () => {
