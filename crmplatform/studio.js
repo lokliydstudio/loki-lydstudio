@@ -19,6 +19,11 @@
   let selectedProjectId = null;
   let activeOwner = "Leon";
   let getContacts = () => [];
+  let contactDirectory = [];
+  const ownerContacts = [
+    { name: "Leon Frick", email: "leon@lokilyd.no", role: "Grunnlegger" },
+    { name: "Charles Wise", email: "charles@lokilyd.no", role: "Grunnlegger" },
+  ];
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
@@ -35,7 +40,7 @@
   function contactEmailChoices(query = "") {
     const needle = String(query).trim().toLowerCase();
     const seen = new Set();
-    return (getContacts() || [])
+    return [...ownerContacts, ...contactDirectory, ...(getContacts() || [])]
       .map((contact) => ({
         email: String(contact?.email || "").trim(),
         name: contactDisplayName(contact),
@@ -45,13 +50,13 @@
       .filter((contact) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email))
       .filter((contact) => {
         const key = contact.email.toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        if (!needle) return true;
-        return key.startsWith(needle)
+        const matches = !needle || key.startsWith(needle)
           || contact.name.toLowerCase().startsWith(needle)
           || contact.artistName.toLowerCase().startsWith(needle)
           || contact.company.toLowerCase().startsWith(needle);
+        if (!matches || seen.has(key)) return false;
+        seen.add(key);
+        return true;
       })
       .sort((left, right) => left.name.localeCompare(right.name, "nb") || left.email.localeCompare(right.email, "nb"));
   }
@@ -1170,13 +1175,15 @@
     getContacts = typeof options.getContacts === "function" ? options.getContacts : () => [];
     setupModal();
     try {
-      const [projectData, audioData] = await Promise.all([
+      const [projectData, audioData, contactData] = await Promise.all([
         request("/api/studio?action=projects"),
         request("/api/studio?action=audio"),
+        request("/api/crm/leads").catch(() => ({ leads: [] })),
       ]);
       projects = projectData.projects || [];
       tracks = audioData.tracks || [];
       audioComments = audioData.comments || [];
+      contactDirectory = contactData.leads || [];
       selectedProjectId = projects[0]?.id || null;
       render();
     } catch (error) {

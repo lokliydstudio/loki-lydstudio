@@ -910,6 +910,9 @@ test("project customer email fields suggest saved CRM contacts", () => {
   assert.match(html, /id="project-contact-suggestions-new" role="listbox" hidden/);
   assert.match(html, /LokiStudio\.init\(\{user:data\.user,getContacts:\(\)=>leads\}\)/);
   assert.match(studio, /function contactEmailChoices\(query = ""\)/);
+  assert.match(studio, /request\("\/api\/crm\/leads"\)/);
+  assert.match(studio, /email: "leon@lokilyd\.no"/);
+  assert.match(studio, /email: "charles@lokilyd\.no"/);
   assert.match(studio, /key\.startsWith\(needle\)/);
   assert.match(studio, /nameInput\.value = contact\.artistName \|\| contact\.name \|\| contact\.company/);
   assert.match(studio, /data-contact-suggestions="project-contact-suggestions-editor"/);
