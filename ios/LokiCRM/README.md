@@ -12,20 +12,24 @@ The website remains the source of truth. This app displays the complete private 
 
 ## Build
 
-Open `LokiCRM.xcodeproj` with Xcode 26. The project is generated from `project.yml` with XcodeGen and uses bundle IDs `no.lokilyd.crm` and `no.lokilyd.crm.widget`, plus App Group `group.no.lokilyd.crm`. Confirm these identifiers and the Apple development team before distributing. The simulator build can be verified without signing:
+Open `LokiCRM.xcodeproj` with Xcode 26. The project is generated from `project.yml` with XcodeGen and uses bundle IDs `no.lokilyd.crm` and `no.lokilyd.crm.widget`, plus App Group `group.no.lokilyd.crm`. The configured Apple team is `M9XU3X5VZ6`. The simulator build can be verified without signing:
 
 ```sh
 xcodebuild -project LokiCRM.xcodeproj -scheme LokiCRM -configuration Debug -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO build
 ```
 
-The icon is the existing Loki logo enlarged mechanically from the website asset; the mark itself has not been redesigned.
+The App Store icon uses the supplied Loki mark on a fully opaque lime background, as required by Apple. The older transparent icon is retained in the asset folder as a source reference, but is not assigned to the app icon set.
+
+## TestFlight
+
+Version 1.0 (build 2) was uploaded to App Store Connect on September 26, 2026 and assigned to the private internal group **Leon**. The authorized tester is `leon.frick@live.no`. On Leon's iPhone, install Apple's TestFlight app, open the invitation sent to that address (or sign in to TestFlight with the same Apple account), and install **Loki CRM** there. App Store Connect showed the tester as **Invited** when this build was assigned; installation and on-device behavior still require confirmation on the iPhone.
+
+For a future build, increment `CURRENT_PROJECT_VERSION` in `project.yml`, regenerate the Xcode project with `xcodegen generate --spec project.yml`, archive it, and export/upload using `ExportOptions-TestFlight.plist`. App Store Connect API credentials, distribution certificate, and profiles are stored outside this repository on the signing Mac.
 
 ## To use on a physical iPhone
 
-1. Sign in with the Loki Apple Developer team in Xcode and enable **App Groups** for both app and widget using `group.no.lokilyd.crm`.
-2. Enable **Push Notifications** and **Background Modes → Remote notifications** for the app. Confirm that the app ID and provisioning profiles match the bundle IDs above.
-3. Connect the iPhone to this Mac and install the development build from Xcode, or prepare a TestFlight distribution. The iPhone was offline when this project was built, so it has not been installed on the device yet.
-4. Log in to the CRM in the app once. On the home screen, long-press, select **Add Widget**, and choose **Loki Gjøreliste**.
-5. To enable native push, create an APNs authentication key for this app in the Apple Developer account. Store its values as Vercel secrets named `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_PRIVATE_KEY` (the contents of the `.p8` key), and `APNS_BUNDLE_ID=no.lokilyd.crm`. Redeploy the website backend, then activate notifications in the app's Settings tab. Never commit the `.p8` file or paste it into the website frontend.
+1. Install build 2 using the private TestFlight invitation sent to `leon.frick@live.no`.
+2. Log in to the CRM in the app once. On the home screen, long-press, select **Add Widget**, and choose **Loki Gjøreliste**.
+3. To enable native push, create an APNs authentication key for this app in the Apple Developer account. Store its values as Vercel secrets named `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_PRIVATE_KEY` (the contents of the `.p8` key), and `APNS_BUNDLE_ID=no.lokilyd.crm`. Redeploy the website backend, then activate notifications in the app's Settings tab. Never commit the `.p8` file or paste it into the website frontend.
 
-The APNs key, signed physical-device build, and live-device delivery still need to be completed. Simulator builds cannot prove physical push delivery.
+The signed TestFlight build is available, but the APNs key and live-device push delivery still need to be completed. Simulator builds cannot prove physical push delivery.
