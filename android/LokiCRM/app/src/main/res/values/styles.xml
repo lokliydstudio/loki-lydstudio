@@ -1,0 +1,14 @@
+<resources>
+    <style name="LokiTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">#DFFF55</item>
+        <item name="android:statusBarColor">#20211F</item>
+        <item name="android:navigationBarColor">#20211F</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+    <color name="loki_bg">#F5F2EB</color>
+    <color name="loki_card">#FFFFFF</color>
+    <color name="loki_text">#20211F</color>
+    <color name="loki_muted">#686A62</color>
+</resources>

@@ -40,9 +40,9 @@ test("mobile tasks page uses the same owner-only middleware", async () => {
   assert.equal(await middleware(authorized), undefined);
 });
 
-test("server and iOS source directories are not publicly served", async () => {
+test("server and native app source directories are not publicly served", async () => {
   const { default: middleware } = await loadMiddleware();
-  for (const path of ["/lib/crm-auth.js", "/test/crm.test.js", "/ios/LokiCRM/project.yml", "/bridge/README.md", "/build/blob-upload-entry.js"]) {
+  for (const path of ["/lib/crm-auth.js", "/test/crm.test.js", "/ios/LokiCRM/project.yml", "/android/LokiCRM/README.md", "/bridge/README.md", "/build/blob-upload-entry.js"]) {
     const response = await middleware(new Request(`https://www.lokilyd.no${path}`));
     assert.equal(response.status, 404, path);
   }
