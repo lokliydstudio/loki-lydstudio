@@ -29,6 +29,15 @@ const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sa
 const { decodeXlsxBase64, fikenContactsFromRows } = require("../lib/fiken-contact-import");
 const { publicSummary } = require("../lib/crm-prospect-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const {
+  bookingConflict: tenantBookingConflict,
+  createLoginChallenge: createTenantLoginChallenge,
+  publicAccount: publicTenantAccount,
+  sanitizeAccount: sanitizeTenantAccount,
+  sanitizeBooking: sanitizeTenantBooking,
+  sessionCookie: tenantSessionCookie,
+  verifyLoginCode: verifyTenantLoginCode,
+} = require("../lib/tenant-booking");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
 
 test("only active owners can receive CRM tokens", () => {
@@ -1017,6 +1026,59 @@ test("successful magic-link login records the actual login time", () => {
   assert.match(callback, /presenceLogin/);
   assert.match(callback, /writeCollection/);
   assert.match(callback, /Could not record CRM login/);
+});
+
+test("tenant booking accounts are limited to Studio C or Studio D", () => {
+  const account = sanitizeTenantAccount({ name: "  Ola   Musiker ", email: "OLA@EXAMPLE.COM", studio: "Studio C" });
+  assert.equal(account.name, "Ola Musiker");
+  assert.equal(account.email, "ola@example.com");
+  assert.equal(account.studio, "Studio C");
+  assert.equal(account.status, "pending");
+  assert.equal(sanitizeTenantAccount({ name: "Ugyldig", email: "u@example.com", studio: "Studio B" }), null);
+  assert.deepEqual(Object.keys(publicTenantAccount(account)).sort(), ["email", "id", "name", "status", "studio"]);
+});
+
+test("approved tenant accounts use a separate signed login challenge and session cookie", () => {
+  const account = sanitizeTenantAccount({ name: "Dina", email: "dina@example.com", studio: "Studio D", status: "approved" });
+  const challenge = createTenantLoginChallenge(account, 60);
+  assert.match(challenge.code, /^\d{6}$/);
+  const request = { headers: { cookie: `loki_booking_challenge=${encodeURIComponent(challenge.token)}` } };
+  assert.equal(verifyTenantLoginCode(request, account.email, challenge.code).accountId, account.id);
+  assert.equal(verifyTenantLoginCode(request, "annen@example.com", challenge.code), null);
+  assert.match(tenantSessionCookie(account), /^loki_booking_session=/);
+  assert.match(tenantSessionCookie(account), /HttpOnly; Secure; SameSite=Strict/);
+  assert.equal(createTenantLoginChallenge({ ...account, status: "pending" }), null);
+});
+
+test("tenant bookings collide only inside their own studio", () => {
+  const accountC = sanitizeTenantAccount({ name: "C-bruker", email: "c@example.com", studio: "Studio C", status: "approved" });
+  const accountD = sanitizeTenantAccount({ name: "D-bruker", email: "d@example.com", studio: "Studio D", status: "approved" });
+  const bookingC = sanitizeTenantBooking({ title: "Øving", date: "2026-10-10", startTime: "10:00", endTime: "12:00" }, accountC);
+  const overlapC = sanitizeTenantBooking({ title: "Produksjon", date: "2026-10-10", startTime: "11:30", endTime: "13:00" }, accountC);
+  const sameTimeD = sanitizeTenantBooking({ title: "Miks", date: "2026-10-10", startTime: "11:30", endTime: "13:00" }, accountD);
+  assert.equal(tenantBookingConflict([bookingC], overlapC).id, bookingC.id);
+  assert.equal(tenantBookingConflict([bookingC], sameTimeD), null);
+  assert.equal(bookingC.studio, "Studio C");
+  assert.equal(sanitizeTenantBooking({ title: "Baklengs", date: "2026-10-10", startTime: "14:00", endTime: "13:00" }, accountC), null);
+});
+
+test("external booking portal is isolated from CRM and exposes approval administration", () => {
+  const portal = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
+  const api = fs.readFileSync(path.join(__dirname, "..", "api", "booking.js"), "utf8");
+  const crm = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  assert.match(portal, /Søk om tilgang/);
+  assert.match(portal, /Studio C/);
+  assert.match(portal, /Studio D/);
+  assert.match(portal, /kan ikke slettes eller endres/);
+  assert.doesNotMatch(client, /api\/studio|crm-login|crmplatform/);
+  assert.match(api, /requireUser\(req, res\)/);
+  assert.match(api, /item\.studio === account\.studio/);
+  assert.match(api, /req\.method !== "POST"/);
+  assert.match(api, /action === "admin-booking"/);
+  assert.match(api, /to: address/);
+  assert.match(crm, /id="tenant-user-list"/);
+  assert.match(crm, /Åpne bookingportalen/);
 });
 
 test("project customer email fields suggest saved CRM contacts", () => {

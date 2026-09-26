@@ -12,6 +12,18 @@
       ]
     },
     {
+      "source": "/booking/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'" }
+      ]
+    },
+    {
       "source": "/api/crm/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
@@ -20,6 +32,14 @@
     },
     {
       "source": "/api/studio",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "no-referrer" }
+      ]
+    },
+    {
+      "source": "/api/booking",
       "headers": [
         { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
@@ -58,7 +78,8 @@
     }
   ],
   "redirects": [
-    { "source": "/crmplatform", "destination": "/crmplatform/", "permanent": false }
+    { "source": "/crmplatform", "destination": "/crmplatform/", "permanent": false },
+    { "source": "/booking", "destination": "/booking/", "permanent": false }
   ],
   "functions": {
     "api/crm/mailbox.js": { "maxDuration": 30 },
@@ -67,6 +88,7 @@
     "api/crm/draft.js": { "maxDuration": 30 },
     "api/crm/leads.js": { "maxDuration": 30 },
     "api/studio.js": { "maxDuration": 60 },
+    "api/booking.js": { "maxDuration": 30 },
     "api/crm/documents.js": { "maxDuration": 30 },
     "api/crm/funding-sync.js": { "maxDuration": 30 }
   },

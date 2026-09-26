@@ -768,7 +768,7 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, rentals, projects, audio, audioComments, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, audioComments, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("rentals"),
@@ -783,6 +783,8 @@ async function backupHandler(req, res) {
     readCollection("funding-monitor"),
     readCollection("cold-call-pool"),
     readCollection("cold-call-runs"),
+    readCollection("tenant-booking-users"),
+    readCollection("tenant-bookings"),
   ]);
   const projectExport = createProjectExport(projects, audio, "", audioComments);
   const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
@@ -806,6 +808,8 @@ async function backupHandler(req, res) {
     fundingMonitor: funding,
     coldCallPool: prospects,
     coldCallRuns: prospectRuns,
+    tenantBookingUsers,
+    tenantBookings,
   });
 }
 

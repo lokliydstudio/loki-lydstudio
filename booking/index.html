@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#20201d">
+  <title>Loki Studio · Booking</title>
+  <link rel="icon" href="/assets/brand/loki-icon-192.png">
+  <link rel="stylesheet" href="/booking/booking.css?v=20260926-1">
+</head>
+<body>
+  <main class="auth-shell" id="auth-shell">
+    <section class="auth-brand">
+      <img src="/assets/brand/loki-symbol.png" alt="Loki Studio">
+      <div><strong>LOKI</strong><span>STUDIO BOOKING</span></div>
+      <p>Privat bookingkalender for leietakere i Studio C og Studio D.</p>
+    </section>
+    <section class="auth-card">
+      <div id="login-view">
+        <span class="kicker">LEIETAKERPORTAL</span>
+        <h1>Logg inn</h1>
+        <p class="intro">Få en engangskode sendt til e-postadressen som er godkjent av Loki Lydstudio.</p>
+        <form id="login-form">
+          <label>E-postadresse<input name="email" type="email" autocomplete="email" required maxlength="254" placeholder="navn@eksempel.no"></label>
+          <button class="primary" type="submit">Send engangskode</button>
+        </form>
+        <form id="code-form" hidden>
+          <label>6-sifret kode<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9 ]{6,7}" required maxlength="7" placeholder="000 000"></label>
+          <button class="primary" type="submit">Logg inn</button>
+          <button class="text-button" id="change-email" type="button">Bruk en annen e-post</button>
+        </form>
+        <div class="auth-divider"><span>Ny bruker?</span></div>
+        <button class="secondary wide" id="show-register" type="button">Søk om tilgang</button>
+      </div>
+      <div id="register-view" hidden>
+        <span class="kicker">NY BOOKINGBRUKER</span>
+        <h1>Søk om tilgang</h1>
+        <p class="intro">Leon eller Charles må godkjenne kontoen før du kan se eller opprette bookinger.</p>
+        <form id="register-form">
+          <label>Fullt navn<input name="name" required autocomplete="name" maxlength="160"></label>
+          <label>E-postadresse<input name="email" type="email" required autocomplete="email" maxlength="254"></label>
+          <label>Hvilket studio?<select name="studio" required><option value="">Velg studio</option><option>Studio C</option><option>Studio D</option></select></label>
+          <button class="primary" type="submit">Send søknad</button>
+          <button class="text-button" id="show-login" type="button">Tilbake til innlogging</button>
+        </form>
+      </div>
+      <p class="form-status" id="auth-status" role="status" aria-live="polite"></p>
+      <p class="privacy-note">Kontoen gir bare tilgang til kalenderen for ditt studio – aldri til Loki CRM.</p>
+    </section>
+  </main>
+
+  <main class="portal" id="portal" hidden>
+    <header class="portal-header">
+      <a class="portal-brand" href="/booking/" aria-label="Loki Studio booking"><img src="/assets/brand/loki-symbol.png" alt=""><span><strong>LOKI</strong><small>STUDIO BOOKING</small></span></a>
+      <div class="user-box"><div><strong id="user-name"></strong><span id="user-studio"></span></div><button class="secondary" id="logout" type="button">Logg ut</button></div>
+    </header>
+    <section class="portal-content">
+      <div class="portal-intro"><div><span class="kicker">LEIETAKERKALENDER</span><h1 id="calendar-heading">Booking</h1><p>Se ledige tider og opprett bookinger for studioet du tilhører.</p></div><button class="primary" id="new-booking" type="button">+ Book tid</button></div>
+      <section class="calendar-card">
+        <nav class="calendar-nav"><button class="round-button" id="month-prev" type="button" aria-label="Forrige måned">←</button><button class="secondary" id="month-today" type="button">I dag</button><h2 id="month-title"></h2><button class="round-button" id="month-next" type="button" aria-label="Neste måned">→</button></nav>
+        <div class="calendar-scroll" tabindex="0">
+          <div class="weekdays" aria-hidden="true"><span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span></div>
+          <div class="calendar-grid" id="calendar-grid"></div>
+        </div>
+      </section>
+      <section class="agenda-card"><div class="agenda-head"><div><span class="kicker">BOOKINGER</span><h2>Kommende tider</h2></div><span id="booking-total">0 bookinger</span></div><div class="agenda" id="agenda"></div></section>
+      <aside class="rules"><strong>Viktig</strong><p>Du kan opprette bookinger og se kalenderen for ditt studio. En booking kan ikke slettes eller endres i portalen. Kontakt Leon, Charles eller de andre i studioet dersom tiden må overtas, og kontakt Loki Lydstudio dersom den skal slettes.</p></aside>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="booking-modal" hidden>
+    <section class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-title">
+      <div class="modal-head"><div><span class="kicker" id="booking-studio-label"></span><h2 id="booking-title">Book tid</h2></div><button class="close" id="close-modal" type="button" aria-label="Lukk">×</button></div>
+      <form id="booking-form">
+        <label>Tittel / aktivitet<input name="title" required maxlength="180" placeholder="Øving, produksjon, innspilling …"></label>
+        <div class="time-grid"><label>Dato<input name="date" type="date" required></label><label>Fra<input name="startTime" type="time" required value="10:00" step="900"></label><label>Til<input name="endTime" type="time" required value="12:00" step="900"></label></div>
+        <label>Praktisk informasjon <span>(valgfritt)</span><textarea name="notes" maxlength="2000" placeholder="Hvem kommer, behov eller annen informasjon …"></textarea></label>
+        <div class="modal-actions"><button class="secondary" id="cancel-modal" type="button">Avbryt</button><button class="primary" type="submit">Bekreft booking</button></div>
+      </form>
+      <p class="form-status" id="booking-status" role="status" aria-live="polite"></p>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/booking/booking.js?v=20260926-1"></script>
+</body>
+</html>

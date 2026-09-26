@@ -6,6 +6,9 @@
   let googleCalendar = { configured: false, calendarName: "Loki-kalender", refreshedAt: "" };
   let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1, 12);
   let selectedGoogleEvent = "";
+  let tenantUsers = [];
+  let tenantBookings = [];
+  let selectedTenantStudio = "Studio C";
   let getLeads = () => [];
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -179,6 +182,96 @@
     renderMetrics();
   }
 
+  function tenantStatus(status) {
+    return ({ pending: "Venter", approved: "Godkjent", rejected: "Avslått", suspended: "Deaktivert" })[status] || status;
+  }
+
+  function tenantStatusClass(status) {
+    if (status === "approved") return "green";
+    if (status === "pending") return "amber";
+    return "neutral";
+  }
+
+  function renderTenantAdmin() {
+    const userList = document.getElementById("tenant-user-list");
+    const bookingList = document.getElementById("tenant-admin-bookings");
+    if (!userList || !bookingList) return;
+    const today = localDate();
+    const visibleUsers = tenantUsers
+      .filter((item) => item.studio === selectedTenantStudio)
+      .sort((left, right) => `${left.status === "pending" ? "0" : "1"}${left.name}`.localeCompare(`${right.status === "pending" ? "0" : "1"}${right.name}`, "nb"));
+    const visibleBookings = tenantBookings
+      .filter((item) => item.studio === selectedTenantStudio && item.date >= today)
+      .sort((left, right) => `${left.date} ${left.startTime}`.localeCompare(`${right.date} ${right.startTime}`));
+    const pending = tenantUsers.filter((item) => item.status === "pending").length;
+    document.getElementById("tenant-pending-state").textContent = `${pending} venter`;
+    document.getElementById("tenant-pending-state").className = `state ${pending ? "amber" : "green"}`;
+    document.getElementById("tenant-count-c").textContent = String(tenantBookings.filter((item) => item.studio === "Studio C" && item.date >= today).length);
+    document.getElementById("tenant-count-d").textContent = String(tenantBookings.filter((item) => item.studio === "Studio D" && item.date >= today).length);
+    document.getElementById("tenant-user-summary").textContent = `${visibleUsers.filter((item) => item.status === "approved").length} aktive`;
+    document.getElementById("tenant-booking-summary").textContent = `${visibleBookings.length} kommende`;
+    document.querySelectorAll("[data-tenant-studio]").forEach((button) => {
+      const active = button.dataset.tenantStudio === selectedTenantStudio;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    userList.innerHTML = visibleUsers.length ? visibleUsers.map((account) => {
+      const actions = account.status === "pending"
+        ? `<button class="tiny-button" data-tenant-user-status="approved" data-tenant-user-id="${esc(account.id)}">Godkjenn</button><button class="tiny-button danger" data-tenant-user-status="rejected" data-tenant-user-id="${esc(account.id)}">Avslå</button>`
+        : account.status === "approved"
+          ? `<button class="tiny-button danger" data-tenant-user-status="suspended" data-tenant-user-id="${esc(account.id)}">Deaktiver</button>`
+          : `<button class="tiny-button" data-tenant-user-status="approved" data-tenant-user-id="${esc(account.id)}">Aktiver</button>`;
+      return `<article class="tenant-user-row"><div class="tenant-avatar">${esc(account.name.slice(0, 1).toUpperCase())}</div><div><strong>${esc(account.name)}</strong><span>${esc(account.email)}</span><small>${account.lastLoginAt ? `Sist innlogget ${esc(new Intl.DateTimeFormat("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(account.lastLoginAt)))}` : "Har ikke logget inn"}</small></div><em class="state ${tenantStatusClass(account.status)}">${esc(tenantStatus(account.status))}</em><div class="tenant-row-actions">${actions}</div></article>`;
+    }).join("") : `<div class="empty">Ingen brukere for ${esc(selectedTenantStudio)}.</div>`;
+    bookingList.innerHTML = visibleBookings.length ? visibleBookings.map((booking) => {
+      const date = bookingDate(booking.date);
+      return `<article class="tenant-booking-row"><div class="booking-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></div><div><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span>${booking.notes ? `<small>${esc(booking.notes)}</small>` : ""}</div><button class="tiny-button danger" data-tenant-booking-delete="${esc(booking.id)}">Slett</button></article>`;
+    }).join("") : `<div class="empty">Ingen kommende bookinger i ${esc(selectedTenantStudio)}.</div>`;
+    document.querySelectorAll("[data-tenant-user-status]").forEach((button) => {
+      button.onclick = () => updateTenantUser(button.dataset.tenantUserId, button.dataset.tenantUserStatus, button);
+    });
+    document.querySelectorAll("[data-tenant-booking-delete]").forEach((button) => {
+      button.onclick = () => deleteTenantBooking(button.dataset.tenantBookingDelete);
+    });
+    renderMetrics();
+  }
+
+  async function loadTenantAdmin() {
+    const button = document.getElementById("refresh-tenant-booking");
+    if (button) { button.disabled = true; button.textContent = "Oppdaterer …"; }
+    try {
+      const data = await api("/api/booking?action=admin");
+      tenantUsers = data.users || [];
+      tenantBookings = data.bookings || [];
+      renderTenantAdmin();
+    } catch (error) { toast(error.message); }
+    finally { if (button) { button.disabled = false; button.textContent = "Oppdater"; } }
+  }
+
+  async function updateTenantUser(id, status, button) {
+    const account = tenantUsers.find((item) => item.id === id);
+    const verb = status === "approved" ? "godkjenne" : status === "rejected" ? "avslå" : "deaktivere";
+    if (!account || !confirm(`Vil du ${verb} bookingkontoen til ${account.name}?`)) return;
+    button.disabled = true;
+    try {
+      const data = await api("/api/booking?action=admin-user", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
+      tenantUsers = tenantUsers.map((item) => item.id === id ? data.user : item);
+      renderTenantAdmin();
+      toast(status === "approved" ? "Brukeren er godkjent og har fått e-post." : "Tilgangen er oppdatert.");
+    } catch (error) { toast(error.message); button.disabled = false; }
+  }
+
+  async function deleteTenantBooking(id) {
+    const booking = tenantBookings.find((item) => item.id === id);
+    if (!booking || !confirm(`Slett «${booking.title}» ${booking.date} kl. ${booking.startTime}? Brukeren får beskjed på e-post.`)) return;
+    try {
+      await api(`/api/booking?action=admin-booking&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      tenantBookings = tenantBookings.filter((item) => item.id !== id);
+      renderTenantAdmin();
+      toast("Bookingen er slettet, og brukeren er varslet.");
+    } catch (error) { toast(error.message); }
+  }
+
   function lineMarkup(item = {}) {
     return `<div class="quote-line"><input data-quote-field="description" required maxlength="180" value="${esc(item.description || "")}" placeholder="Innspilling, miks …"><input data-quote-field="quantity" type="number" required min="0.25" step="0.25" value="${esc(item.quantity || 1)}"><select data-quote-field="unit">${["time", "låt", "dag", "stk"].map((unit) => `<option ${unit === (item.unit || "time") ? "selected" : ""}>${unit}</option>`).join("")}</select><input data-quote-field="unitPrice" type="number" required min="0" step="50" value="${esc(item.unitPrice ?? 550)}"><button class="icon-button" data-remove-quote-line type="button" aria-label="Fjern linje">×</button></div>`;
   }
@@ -224,10 +317,16 @@
   function renderMetrics() {
     const today = localDate();
     const upcoming = bookings.filter((booking) => booking.date >= today && !["Avlyst", "Fullført"].includes(booking.status));
+    const tenantUpcoming = tenantBookings.filter((booking) => booking.date >= today);
     const now = new Date().toISOString();
     const googleUpcoming = googleEvents.filter((event) => event.endAt >= now);
     const sessions = [...upcoming.map((booking) => ({
       key: `${booking.date}|${booking.startTime}|${String(booking.title || "").toLowerCase()}`,
+      date: booking.date,
+      startTime: booking.startTime,
+      startAt: `${booking.date}T${booking.startTime}:00`,
+    })), ...tenantUpcoming.map((booking) => ({
+      key: `tenant|${booking.studio}|${booking.date}|${booking.startTime}|${String(booking.title || "").toLowerCase()}`,
       date: booking.date,
       startTime: booking.startTime,
       startAt: `${booking.date}T${booking.startTime}:00`,
@@ -483,6 +582,10 @@
     document.getElementById("new-quote").onclick = () => openQuote();
     document.getElementById("crm-backup").onclick = createBackup;
     document.getElementById("refresh-google-calendar").onclick = () => loadGoogleCalendar(true);
+    document.getElementById("refresh-tenant-booking").onclick = loadTenantAdmin;
+    document.querySelectorAll("[data-tenant-studio]").forEach((button) => {
+      button.onclick = () => { selectedTenantStudio = button.dataset.tenantStudio; renderTenantAdmin(); };
+    });
     document.getElementById("calendar-previous").onclick = () => {
       calendarCursor = new Date(calendarCursor.getFullYear(), calendarCursor.getMonth() - 1, 1, 12);
       selectedGoogleEvent = "";
@@ -532,14 +635,18 @@
   }
 
   async function reload() {
-    const [bookingData, quoteData] = await Promise.all([
+    const [bookingData, quoteData, tenantData] = await Promise.all([
       api("/api/studio?action=bookings"),
       api("/api/studio?action=quotes"),
+      api("/api/booking?action=admin"),
     ]);
     bookings = bookingData.bookings || [];
     quotes = quoteData.quotes || [];
+    tenantUsers = tenantData.users || [];
+    tenantBookings = tenantData.bookings || [];
     renderBookings();
     renderQuotes();
+    renderTenantAdmin();
     await loadGoogleCalendar();
   }
 
