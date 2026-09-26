@@ -22,13 +22,13 @@ The App Store icon uses the supplied Loki mark on a fully opaque lime background
 
 ## TestFlight
 
-Version 1.0 (build 2) was uploaded to App Store Connect on September 26, 2026 and assigned to the private internal group **Leon**. The authorized tester is `leon.frick@live.no`. On Leon's iPhone, install Apple's TestFlight app, open the invitation sent to that address (or sign in to TestFlight with the same Apple account), and install **Loki CRM** there. App Store Connect showed the tester as **Invited** when this build was assigned; installation and on-device behavior still require confirmation on the iPhone.
+Version 1.0 (build 2) was uploaded to App Store Connect on September 26, 2026 and assigned to the private internal group **Leon**. On Leon's iPhone, install Apple's TestFlight app, open the invitation sent to his Apple account (or sign in to TestFlight with that account), and install **Loki CRM** there. App Store Connect showed the tester as **Invited** when this build was assigned; installation and on-device behavior still require confirmation on the iPhone.
 
 For a future build, increment `CURRENT_PROJECT_VERSION` in `project.yml`, regenerate the Xcode project with `xcodegen generate --spec project.yml`, archive it, and export/upload using `ExportOptions-TestFlight.plist`. App Store Connect API credentials, distribution certificate, and profiles are stored outside this repository on the signing Mac.
 
 ## To use on a physical iPhone
 
-1. Install build 2 using the private TestFlight invitation sent to `leon.frick@live.no`.
+1. Install build 2 using the private TestFlight invitation sent to Leon's Apple account.
 2. Log in to the CRM in the app once. On the home screen, long-press, select **Add Widget**, and choose **Loki Gjøreliste**.
 3. To enable native push, create an APNs authentication key for this app in the Apple Developer account. Store its values as Vercel secrets named `APNS_TEAM_ID`, `APNS_KEY_ID`, `APNS_PRIVATE_KEY` (the contents of the `.p8` key), and `APNS_BUNDLE_ID=no.lokilyd.crm`. Redeploy the website backend, then activate notifications in the app's Settings tab. Never commit the `.p8` file or paste it into the website frontend.
 
