@@ -9,7 +9,7 @@
   const localDate = (date = new Date()) => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
   async function api(action, options = {}) {
-    const response = await fetch(`/api/booking?action=${encodeURIComponent(action)}`, {
+    const response = await fetch(`/api/studio?action=tenant-${encodeURIComponent(action)}`, {
       credentials: "same-origin",
       ...options,
       headers: options.body ? { "content-type": "application/json", ...(options.headers || {}) } : options.headers,

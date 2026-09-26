@@ -240,7 +240,7 @@
     const button = document.getElementById("refresh-tenant-booking");
     if (button) { button.disabled = true; button.textContent = "Oppdaterer …"; }
     try {
-      const data = await api("/api/booking?action=admin");
+      const data = await api("/api/studio?action=tenant-admin");
       tenantUsers = data.users || [];
       tenantBookings = data.bookings || [];
       renderTenantAdmin();
@@ -254,7 +254,7 @@
     if (!account || !confirm(`Vil du ${verb} bookingkontoen til ${account.name}?`)) return;
     button.disabled = true;
     try {
-      const data = await api("/api/booking?action=admin-user", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
+      const data = await api("/api/studio?action=tenant-admin-user", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, status }) });
       tenantUsers = tenantUsers.map((item) => item.id === id ? data.user : item);
       renderTenantAdmin();
       toast(status === "approved" ? "Brukeren er godkjent og har fått e-post." : "Tilgangen er oppdatert.");
@@ -265,7 +265,7 @@
     const booking = tenantBookings.find((item) => item.id === id);
     if (!booking || !confirm(`Slett «${booking.title}» ${booking.date} kl. ${booking.startTime}? Brukeren får beskjed på e-post.`)) return;
     try {
-      await api(`/api/booking?action=admin-booking&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      await api(`/api/studio?action=tenant-admin-booking&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       tenantBookings = tenantBookings.filter((item) => item.id !== id);
       renderTenantAdmin();
       toast("Bookingen er slettet, og brukeren er varslet.");
@@ -638,7 +638,7 @@
     const [bookingData, quoteData, tenantData] = await Promise.all([
       api("/api/studio?action=bookings"),
       api("/api/studio?action=quotes"),
-      api("/api/booking?action=admin"),
+      api("/api/studio?action=tenant-admin"),
     ]);
     bookings = bookingData.bookings || [];
     quotes = quoteData.quotes || [];

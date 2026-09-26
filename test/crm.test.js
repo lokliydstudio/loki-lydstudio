@@ -31,11 +31,14 @@ const { publicSummary } = require("../lib/crm-prospect-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const {
   bookingConflict: tenantBookingConflict,
+  SESSION_MAX_AGE_SECONDS,
   createLoginChallenge: createTenantLoginChallenge,
+  createSessionToken: createTenantSessionToken,
   publicAccount: publicTenantAccount,
   sanitizeAccount: sanitizeTenantAccount,
   sanitizeBooking: sanitizeTenantBooking,
   sessionCookie: tenantSessionCookie,
+  sessionFromRequest: tenantSessionFromRequest,
   verifyLoginCode: verifyTenantLoginCode,
 } = require("../lib/tenant-booking");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
@@ -1047,7 +1050,21 @@ test("approved tenant accounts use a separate signed login challenge and session
   assert.equal(verifyTenantLoginCode(request, "annen@example.com", challenge.code), null);
   assert.match(tenantSessionCookie(account), /^loki_booking_session=/);
   assert.match(tenantSessionCookie(account), /HttpOnly; Secure; SameSite=Strict/);
+  assert.equal(SESSION_MAX_AGE_SECONDS, 60 * 60 * 24 * 400);
+  assert.match(tenantSessionCookie(account), /Max-Age=34560000/);
   assert.equal(createTenantLoginChallenge({ ...account, status: "pending" }), null);
+});
+
+test("tenant sessions remain valid on the same device but account changes revoke them", async () => {
+  const account = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
+  const token = createTenantSessionToken(account);
+  const request = { headers: { cookie: `loki_booking_session=${encodeURIComponent(token)}` } };
+  assert.equal(tenantSessionFromRequest(request).accountId, account.id);
+  const { tenantForRequest } = require("../lib/tenant-booking-handler")._test;
+  assert.equal((await tenantForRequest(request, [account])).id, account.id);
+  assert.equal(await tenantForRequest(request, [{ ...account, status: "suspended" }]), null);
+  assert.equal(await tenantForRequest(request, [{ ...account, sessionVersion: 1 }]), null);
+  assert.equal(await tenantForRequest(request, [{ ...account, studio: "Studio D" }]), null);
 });
 
 test("tenant bookings collide only inside their own studio", () => {
@@ -1065,17 +1082,20 @@ test("tenant bookings collide only inside their own studio", () => {
 test("external booking portal is isolated from CRM and exposes approval administration", () => {
   const portal = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
   const client = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
-  const api = fs.readFileSync(path.join(__dirname, "..", "api", "booking.js"), "utf8");
+  const api = fs.readFileSync(path.join(__dirname, "..", "lib", "tenant-booking-handler.js"), "utf8");
+  const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
   const crm = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   assert.match(portal, /Søk om tilgang/);
   assert.match(portal, /Studio C/);
   assert.match(portal, /Studio D/);
   assert.match(portal, /kan ikke slettes eller endres/);
-  assert.doesNotMatch(client, /api\/studio|crm-login|crmplatform/);
+  assert.doesNotMatch(client, /crm-login|crmplatform/);
+  assert.match(client, /action=tenant-/);
   assert.match(api, /requireUser\(req, res\)/);
   assert.match(api, /item\.studio === account\.studio/);
   assert.match(api, /req\.method !== "POST"/);
   assert.match(api, /action === "admin-booking"/);
+  assert.match(studioApi, /tenantBookingHandler/);
   assert.match(api, /to: address/);
   assert.match(crm, /id="tenant-user-list"/);
   assert.match(crm, /Åpne bookingportalen/);

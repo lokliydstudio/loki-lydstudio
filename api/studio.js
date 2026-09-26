@@ -26,6 +26,7 @@ const { sanitizeProject } = require("../lib/crm-projects");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
 const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
+const tenantBookingHandler = require("../lib/tenant-booking-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 
 function publicBaseUrl(req) {
@@ -871,6 +872,7 @@ module.exports = async function handler(req, res) {
     if (action === "rentals") return await rentalsHandler(req, res);
     if (action === "activities") return await activitiesHandler(req, res);
     if (action === "bookings") return await bookingsHandler(req, res);
+    if (action.startsWith("tenant-")) return await tenantBookingHandler(req, res);
     if (action === "google-calendar") return await googleCalendarHandler(req, res);
     if (action === "presence") return await presenceHandler(req, res);
     if (action === "push") return await pushHandler(req, res);
