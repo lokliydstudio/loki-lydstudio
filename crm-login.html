@@ -16,7 +16,7 @@
     <span class="kicker">INTERN ARBEIDSFLATE</span>
     <h1>Logg inn sikkert</h1>
     <section class="request-step" id="request-step">
-      <p>Få en sekssifret engangskode og en sikker innloggingslenke til din godkjente @lokilyd.no-adresse. Begge er gyldige i 15 minutter.</p>
+      <p>Få en sekssifret engangskode og en sikker innloggingslenke til din godkjente @lokilyd.no-adresse. Etterpå huskes denne enheten automatisk.</p>
       <form id="login-form">
         <label for="email">E-postadresse</label>
         <input id="email" name="email" type="email" autocomplete="email" placeholder="navn@lokilyd.no" required>
@@ -48,6 +48,10 @@
     const codeInput = document.getElementById("code");
     const sentEmail = document.getElementById("sent-email");
     const feedback = document.getElementById("feedback");
+
+    fetch("/api/crm/auth-status", { credentials: "same-origin" })
+      .then((response) => { if (response.ok) location.replace("/crmplatform/"); })
+      .catch(() => {});
 
     async function requestCode() {
       const email = emailInput.value.trim().toLowerCase();

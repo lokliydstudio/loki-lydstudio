@@ -29,6 +29,17 @@ test("CRM HTML is available to a signed owner session", async () => {
   assert.equal(await middleware(request), undefined);
 });
 
+test("mobile tasks page uses the same owner-only middleware", async () => {
+  const { default: middleware } = await loadMiddleware();
+  const unauthorized = await middleware(new Request("https://www.lokilyd.no/crmplatform/tasks.html"));
+  assert.equal(unauthorized.status, 307);
+  const session = auth.createToken("charles@lokilyd.no", "session", 60);
+  const authorized = new Request("https://www.lokilyd.no/crmplatform/tasks.html", {
+    headers: { cookie: `loki_crm_session=${encodeURIComponent(session)}` },
+  });
+  assert.equal(await middleware(authorized), undefined);
+});
+
 test("a token for a former team member cannot unlock CRM HTML", async () => {
   const { default: middleware } = await loadMiddleware();
   const session = auth.createToken("leon@lokilyd.no", "session", 60);

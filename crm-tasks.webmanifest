@@ -1,0 +1,16 @@
+{
+  "id": "/crmplatform/tasks.html",
+  "name": "Loki Gjøreliste",
+  "short_name": "Gjøreliste",
+  "description": "Leon og Charles sin private gjøreliste",
+  "lang": "nb",
+  "start_url": "/crmplatform/tasks.html",
+  "scope": "/crmplatform/",
+  "display": "standalone",
+  "background_color": "#191918",
+  "theme_color": "#191918",
+  "icons": [
+    { "src": "/assets/brand/loki-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/brand/loki-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

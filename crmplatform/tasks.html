@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#191918">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Loki Oppgaver">
+  <link rel="manifest" href="/crm-tasks.webmanifest">
+  <link rel="apple-touch-icon" href="/assets/brand/loki-icon-192.png">
+  <link rel="stylesheet" href="/crmplatform/tasks.css">
+  <title>Loki Studio · Gjøreliste</title>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar"><a class="brand" href="/crmplatform/#workspace-tools"><img src="/assets/brand/loki-symbol.png" alt=""><span>LOKI <small>STUDIO</small></span></a><a class="crm-link" href="/crmplatform/#workspace-tools">Hele CRM →</a></header>
+    <section class="intro"><span class="eyebrow">INTERN ARBEIDSFLATE</span><h1>Gjøreliste</h1><p id="summary">Laster oppgaver …</p></section>
+    <section class="card" aria-labelledby="new-heading"><h2 id="new-heading">Ny oppgave</h2><form id="task-form"><label>Hva skal gjøres?<input name="title" maxlength="200" required placeholder="Skriv en oppgave"></label><div class="form-row"><label>Ansvarlig<select name="assignee"><option>Begge</option><option>Leon</option><option>Charles</option></select></label><label>Frist<input name="dueDate" type="date"></label></div><button class="add" type="submit">+ Legg til</button></form></section>
+    <section class="card" aria-labelledby="list-heading"><div class="list-heading"><div><span class="eyebrow">DELT MELLOM LEON OG CHARLES</span><h2 id="list-heading">Oppgaver</h2></div><button class="refresh" id="refresh" type="button" aria-label="Oppdater gjøreliste">↻</button></div><div class="filters" role="group" aria-label="Filtrer oppgaver"><button class="active" type="button" data-filter="open" aria-pressed="true">Åpne</button><button type="button" data-filter="mine" aria-pressed="false">Mine</button><button type="button" data-filter="all" aria-pressed="false">Alle</button></div><div id="tasks" class="tasks" aria-live="polite"></div></section>
+    <p class="install-note">På iPhone: åpne denne siden i Safari, trykk Del og velg «Legg til på Hjem-skjerm». Da får du rask tilgang til den oppdaterte gjørelistevisningen.</p>
+    <p class="status" id="status" role="status" aria-live="polite"></p>
+  </main>
+  <script src="/crmplatform/tasks.js" defer></script>
+</body>
+</html>

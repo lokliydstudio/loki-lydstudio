@@ -105,6 +105,36 @@ test("a valid emailed code creates an owner session and consumes the browser cha
   assert.match(result.headers["Set-Cookie"][1], /^loki_crm_login_challenge=;/);
 });
 
+test("CRM owner sessions persist on a device and renew on a valid status check", async () => {
+  assert.equal(auth.SESSION_MAX_AGE_SECONDS, 60 * 60 * 24 * 400);
+  const cookie = auth.sessionCookie("leon@lokilyd.no");
+  assert.match(cookie, /HttpOnly; Secure; SameSite=Strict; Max-Age=34560000/);
+  const token = decodeURIComponent(cookie.split(";")[0].split("=")[1]);
+  assert.equal(auth.verifyToken(token, "session").email, "leon@lokilyd.no");
+  const handler = require("../api/crm/auth-status");
+  const result = { headers: {} };
+  await handler({ method: "GET", headers: { cookie: cookie.split(";")[0] } }, {
+    setHeader(name, value) { result.headers[name] = value; return this; },
+    status(value) { result.status = value; return this; },
+    json(value) { result.body = value; return value; },
+  });
+  assert.equal(result.status, 200);
+  assert.equal(result.body.user.email, "leon@lokilyd.no");
+  assert.match(result.headers["Set-Cookie"], /^loki_crm_session=/);
+});
+
+test("mobile tasks shortcut uses the private CRM workspace and its own start URL", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.html"), "utf8");
+  const script = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.js"), "utf8");
+  const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "crm-tasks.webmanifest"), "utf8"));
+  assert.equal(manifest.start_url, "/crmplatform/tasks.html");
+  assert.match(html, /Legg til på Hjem-skjerm/);
+  assert.match(script, /\/api\/crm\/auth-status/);
+  assert.match(script, /\/api\/studio\?action=workspace/);
+  assert.match(script, /method: "PATCH"/);
+  assert.match(script, /method: "POST"/);
+});
+
 test("CRM login offers both an emailed one-time code and a secure link", () => {
   const login = fs.readFileSync(path.join(__dirname, "..", "crm-login.html"), "utf8");
   const request = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "auth-request.js"), "utf8");
