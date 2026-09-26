@@ -110,6 +110,10 @@ export default async function middleware(request) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
+  if (["/lib/", "/test/", "/ios/", "/bridge/", "/build/"].some((prefix) => pathname.startsWith(prefix))) {
+    return new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } });
+  }
+
   if (pathname === "/medlem" || pathname === "/medlem.html") {
     return validMemberCredentials(request) ? undefined : unauthorizedMember();
   }
@@ -122,5 +126,5 @@ export default async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/medlem", "/medlem.html", "/crmplatform", "/crmplatform/:path*"],
+  matcher: ["/medlem", "/medlem.html", "/crmplatform", "/crmplatform/:path*", "/lib/:path*", "/test/:path*", "/ios/:path*", "/bridge/:path*", "/build/:path*"],
 };

@@ -1,0 +1,460 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1435A30BFE3BE602BE8338E0 /* LokiCRMApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 083D067C61645E9D3CE1B539 /* LokiCRMApp.swift */; };
+		2E8F7D9163EFB1F5E349FDA2 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0341B5D7763EBF16D2F3580C /* WidgetSnapshot.swift */; };
+		80335C220F9CA1936A1628F1 /* Views.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF720D3ABAA744181F6C5F68 /* Views.swift */; };
+		8F88C53FE42EE08F6EFB1A4C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E746621CAEF3D394CBE878EC /* Assets.xcassets */; };
+		9AD9C786CF70D907C519F977 /* LokiCRMWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 612DC023B95BFEFFD53F3AF2 /* LokiCRMWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A9B6CF59CD0DAB8342215912 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0341B5D7763EBF16D2F3580C /* WidgetSnapshot.swift */; };
+		CC556102EA05DB1D33F5A094 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E675C1AEE3871F1BBF835F0B /* AppModel.swift */; };
+		DC70AA88EFBD9C2E79749BA8 /* LokiTasksWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F45F0FD2801B1C24A3F69686 /* LokiTasksWidget.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8003B476354567B4BF10EE8B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 46E1ACC0CBE01D2D40FDFB25 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 15FD356C641DDB20DB6D83EA;
+			remoteInfo = LokiCRMWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		161D733D210B839D4D831BE8 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				9AD9C786CF70D907C519F977 /* LokiCRMWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		0341B5D7763EBF16D2F3580C /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		083D067C61645E9D3CE1B539 /* LokiCRMApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LokiCRMApp.swift; sourceTree = "<group>"; };
+		35571A36B4BB2AA9999481DF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		3FDDE8D8921107722EBE7FF0 /* LokiCRMWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LokiCRMWidget.entitlements; sourceTree = "<group>"; };
+		489B6CE48B61137699E51943 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		612DC023B95BFEFFD53F3AF2 /* LokiCRMWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = LokiCRMWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		B045CBF29182EE6BE672CB9F /* LokiCRMDebug.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LokiCRMDebug.entitlements; sourceTree = "<group>"; };
+		BF720D3ABAA744181F6C5F68 /* Views.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Views.swift; sourceTree = "<group>"; };
+		E675C1AEE3871F1BBF835F0B /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		E746621CAEF3D394CBE878EC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F45F0FD2801B1C24A3F69686 /* LokiTasksWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LokiTasksWidget.swift; sourceTree = "<group>"; };
+		F4EEC3ECF42BFACEACA1036D /* LokiCRMRelease.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = LokiCRMRelease.entitlements; sourceTree = "<group>"; };
+		F6630910DD3ADE423A163A14 /* LokiCRM.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = LokiCRM.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		14293940AE5F2FF52E10B369 = {
+			isa = PBXGroup;
+			children = (
+				F76D8F5CA016B09E918B4222 /* App */,
+				48AE1C0C5DEC8204DD75704D /* Shared */,
+				B712F8B29654F76FC1E5FC6E /* Widget */,
+				8C946EF29A7E67708B1D018D /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		48AE1C0C5DEC8204DD75704D /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				0341B5D7763EBF16D2F3580C /* WidgetSnapshot.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		8C946EF29A7E67708B1D018D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				F6630910DD3ADE423A163A14 /* LokiCRM.app */,
+				612DC023B95BFEFFD53F3AF2 /* LokiCRMWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B712F8B29654F76FC1E5FC6E /* Widget */ = {
+			isa = PBXGroup;
+			children = (
+				489B6CE48B61137699E51943 /* Info.plist */,
+				3FDDE8D8921107722EBE7FF0 /* LokiCRMWidget.entitlements */,
+				F45F0FD2801B1C24A3F69686 /* LokiTasksWidget.swift */,
+			);
+			path = Widget;
+			sourceTree = "<group>";
+		};
+		F76D8F5CA016B09E918B4222 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				E675C1AEE3871F1BBF835F0B /* AppModel.swift */,
+				E746621CAEF3D394CBE878EC /* Assets.xcassets */,
+				35571A36B4BB2AA9999481DF /* Info.plist */,
+				083D067C61645E9D3CE1B539 /* LokiCRMApp.swift */,
+				B045CBF29182EE6BE672CB9F /* LokiCRMDebug.entitlements */,
+				F4EEC3ECF42BFACEACA1036D /* LokiCRMRelease.entitlements */,
+				BF720D3ABAA744181F6C5F68 /* Views.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		15FD356C641DDB20DB6D83EA /* LokiCRMWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A54289EFBC2FC1B83F89B464 /* Build configuration list for PBXNativeTarget "LokiCRMWidget" */;
+			buildPhases = (
+				95CD5049B9547D1661FEBFA6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LokiCRMWidget;
+			packageProductDependencies = (
+			);
+			productName = LokiCRMWidget;
+			productReference = 612DC023B95BFEFFD53F3AF2 /* LokiCRMWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		FA8D91F5F5B77C95E28F5BEC /* LokiCRM */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F9C4B4EE647FC181210E6262 /* Build configuration list for PBXNativeTarget "LokiCRM" */;
+			buildPhases = (
+				01DFB8E85F0A0B3A2914E085 /* Sources */,
+				0261902340632AA8D372CC9A /* Resources */,
+				161D733D210B839D4D831BE8 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B8C2709E0710F8366FCA439F /* PBXTargetDependency */,
+			);
+			name = LokiCRM;
+			packageProductDependencies = (
+			);
+			productName = LokiCRM;
+			productReference = F6630910DD3ADE423A163A14 /* LokiCRM.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		46E1ACC0CBE01D2D40FDFB25 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					15FD356C641DDB20DB6D83EA = {
+						DevelopmentTeam = 8DH23LDJDY;
+						ProvisioningStyle = Automatic;
+					};
+					FA8D91F5F5B77C95E28F5BEC = {
+						DevelopmentTeam = 8DH23LDJDY;
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 39B2266FB52A76ACE64C823E /* Build configuration list for PBXProject "LokiCRM" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 14293940AE5F2FF52E10B369;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 8C946EF29A7E67708B1D018D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FA8D91F5F5B77C95E28F5BEC /* LokiCRM */,
+				15FD356C641DDB20DB6D83EA /* LokiCRMWidget */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		0261902340632AA8D372CC9A /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F88C53FE42EE08F6EFB1A4C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		01DFB8E85F0A0B3A2914E085 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CC556102EA05DB1D33F5A094 /* AppModel.swift in Sources */,
+				1435A30BFE3BE602BE8338E0 /* LokiCRMApp.swift in Sources */,
+				80335C220F9CA1936A1628F1 /* Views.swift in Sources */,
+				A9B6CF59CD0DAB8342215912 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		95CD5049B9547D1661FEBFA6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC70AA88EFBD9C2E79749BA8 /* LokiTasksWidget.swift in Sources */,
+				2E8F7D9163EFB1F5E349FDA2 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B8C2709E0710F8366FCA439F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 15FD356C641DDB20DB6D83EA /* LokiCRMWidget */;
+			targetProxy = 8003B476354567B4BF10EE8B /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		249CFA5EAC5E31F2B2DAEF20 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widget/LokiCRMWidget.entitlements;
+				INFOPLIST_FILE = Widget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = no.lokilyd.crm.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		46C27AB01F0FF0BCE8738701 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/LokiCRMRelease.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = no.lokilyd.crm;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		6A6060E94402915B4771D72F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 8DH23LDJDY;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		B06197BD57DAA76674C87430 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widget/LokiCRMWidget.entitlements;
+				INFOPLIST_FILE = Widget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = no.lokilyd.crm.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C59DD152792A7ACBA21C60C7 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 8DH23LDJDY;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		DBC242EE6FDCF37C601DC41F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/LokiCRMDebug.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = App/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = no.lokilyd.crm;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		39B2266FB52A76ACE64C823E /* Build configuration list for PBXProject "LokiCRM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6A6060E94402915B4771D72F /* Debug */,
+				C59DD152792A7ACBA21C60C7 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		A54289EFBC2FC1B83F89B464 /* Build configuration list for PBXNativeTarget "LokiCRMWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B06197BD57DAA76674C87430 /* Debug */,
+				249CFA5EAC5E31F2B2DAEF20 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		F9C4B4EE647FC181210E6262 /* Build configuration list for PBXNativeTarget "LokiCRM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DBC242EE6FDCF37C601DC41F /* Debug */,
+				46C27AB01F0FF0BCE8738701 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 46E1ACC0CBE01D2D40FDFB25 /* Project object */;
+}

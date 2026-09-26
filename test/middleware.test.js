@@ -40,6 +40,14 @@ test("mobile tasks page uses the same owner-only middleware", async () => {
   assert.equal(await middleware(authorized), undefined);
 });
 
+test("server and iOS source directories are not publicly served", async () => {
+  const { default: middleware } = await loadMiddleware();
+  for (const path of ["/lib/crm-auth.js", "/test/crm.test.js", "/ios/LokiCRM/project.yml", "/bridge/README.md", "/build/blob-upload-entry.js"]) {
+    const response = await middleware(new Request(`https://www.lokilyd.no${path}`));
+    assert.equal(response.status, 404, path);
+  }
+});
+
 test("a token for a former team member cannot unlock CRM HTML", async () => {
   const { default: middleware } = await loadMiddleware();
   const session = auth.createToken("leon@lokilyd.no", "session", 60);

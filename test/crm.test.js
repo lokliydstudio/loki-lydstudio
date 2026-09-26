@@ -22,6 +22,7 @@ const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { ONLINE_WINDOW_MS, presenceCollection, presenceHeartbeat, presenceLogin, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
 const { actorName, notificationPayload, publicKey: pushPublicKey, publicSubscriptionStatus, sanitizeSubscription, taskNotification } = require("../lib/crm-push");
+const { apnsBearerToken, sanitizeNativeDevice } = require("../lib/crm-native-push");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences, sanitizeTimeEntries } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
@@ -781,6 +782,32 @@ test("task push messages identify who created or completed the task", () => {
   assert.match(completed.body, /Charles fullførte/);
   assert.equal(taskNotification(task, { ...task, priority: "Høy" }, "leon@lokilyd.no"), null);
   assert.equal(notificationPayload({ url: "https://evil.example/" }).url, "/crmplatform/");
+});
+
+test("native iPhone push devices require an approved CRM owner and a valid APNs token", () => {
+  const input = { token: "a".repeat(64), environment: "sandbox", device: "Leon iPhone" };
+  const device = sanitizeNativeDevice(input, "leon@lokilyd.no");
+  assert.equal(device.userEmail, "leon@lokilyd.no");
+  assert.equal(device.environment, "sandbox");
+  assert.ok(sanitizeNativeDevice({ ...input, token: "b".repeat(80) }, "leon@lokilyd.no"));
+  assert.equal(sanitizeNativeDevice(input, "daniel@lokilyd.no"), null);
+  assert.equal(sanitizeNativeDevice({ ...input, token: "short" }, "leon@lokilyd.no"), null);
+  assert.equal(sanitizeNativeDevice({ ...input, environment: "other" }, "leon@lokilyd.no"), null);
+});
+
+test("APNs bearer tokens use an ES256 signature", () => {
+  const crypto = require("node:crypto");
+  const { privateKey, publicKey } = crypto.generateKeyPairSync("ec", { namedCurve: "prime256v1" });
+  process.env.APNS_PRIVATE_KEY = privateKey.export({ type: "pkcs8", format: "pem" });
+  process.env.APNS_KEY_ID = "TESTKEY123";
+  process.env.APNS_TEAM_ID = "TESTTEAM12";
+  const [header, claims, signature] = apnsBearerToken().split(".");
+  assert.equal(JSON.parse(Buffer.from(header, "base64url")).alg, "ES256");
+  assert.equal(JSON.parse(Buffer.from(claims, "base64url")).iss, "TESTTEAM12");
+  assert.equal(crypto.verify("sha256", Buffer.from(`${header}.${claims}`), { key: publicKey, dsaEncoding: "ieee-p1363" }, Buffer.from(signature, "base64url")), true);
+  delete process.env.APNS_PRIVATE_KEY;
+  delete process.env.APNS_KEY_ID;
+  delete process.env.APNS_TEAM_ID;
 });
 
 test("CRM is installable and exposes user-activated iPhone and Android push", () => {

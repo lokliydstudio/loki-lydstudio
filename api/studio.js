@@ -8,6 +8,7 @@ const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadGoogleCalendar } = require("../lib/crm-calendar");
 const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
+const { COLLECTION: NATIVE_PUSH_COLLECTION, MAX_DEVICES: MAX_NATIVE_PUSH_DEVICES, deviceId: nativeDeviceId, nativePushConfigured, sanitizeNativeDevice } = require("../lib/crm-native-push");
 const { presenceCollection, presenceHeartbeat, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
 const {
   COLLECTION: PUSH_COLLECTION,
@@ -708,6 +709,24 @@ async function pushHandler(req, res) {
   return res.status(200).json({ ok: true, subscribed: false });
 }
 
+async function nativePushHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  if (!["GET", "POST", "DELETE"].includes(req.method)) return res.status(405).json({ error: "Method not allowed" });
+  const devices = await readCollection(NATIVE_PUSH_COLLECTION);
+  if (req.method === "GET") return res.status(200).json({ configured: nativePushConfigured(), deviceCount: devices.filter((item) => item.userEmail === user.email).length });
+  const id = nativeDeviceId(String(req.body?.token || "").trim().toLowerCase());
+  if (req.method === "DELETE") {
+    await writeCollection(NATIVE_PUSH_COLLECTION, devices.filter((item) => !(item.id === id && item.userEmail === user.email)));
+    return res.status(200).json({ ok: true });
+  }
+  const previous = devices.find((item) => item.id === id) || {};
+  const device = sanitizeNativeDevice(req.body, user.email, previous);
+  if (!device) return res.status(400).json({ error: "Ugyldig iPhone-enhet." });
+  await writeCollection(NATIVE_PUSH_COLLECTION, [device, ...devices.filter((item) => item.id !== id)].slice(0, MAX_NATIVE_PUSH_DEVICES));
+  return res.status(201).json({ ok: true, configured: nativePushConfigured() });
+}
+
 async function quotesHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
@@ -876,6 +895,7 @@ module.exports = async function handler(req, res) {
     if (action === "google-calendar") return await googleCalendarHandler(req, res);
     if (action === "presence") return await presenceHandler(req, res);
     if (action === "push") return await pushHandler(req, res);
+    if (action === "native-push") return await nativePushHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);
     if (action === "backup") return await backupHandler(req, res);
     if (action === "fiken") return await fikenHandler(req, res);
