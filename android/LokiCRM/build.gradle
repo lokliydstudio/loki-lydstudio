@@ -1,3 +1,12 @@
 plugins {
     id 'com.android.application' version '9.0.1' apply false
 }
+
+// iCloud/Jottacloud may duplicate generated resource files inside Documents.
+// Keep disposable Gradle output in Gradle's local cache instead of the synced repo.
+def outputRoot = new File(gradle.gradleUserHomeDir,
+        "loki-crm-build/${Integer.toHexString(rootProject.projectDir.canonicalPath.hashCode())}")
+layout.buildDirectory.set(new File(outputRoot, 'root'))
+subprojects {
+    layout.buildDirectory.set(new File(outputRoot, name))
+}

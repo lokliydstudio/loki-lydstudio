@@ -18,7 +18,7 @@ Open this directory in Android Studio or build with JDK 17+ and an Android SDK w
 ./gradlew assembleDebug
 ```
 
-The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Install it on an Android test device with `adb install -r app/build/outputs/apk/debug/app-debug.apk`, then log in through the CRM tab using the normal emailed code. Add the **Loki CRM** widget from Android's widget picker. Turn on background task notifications in the app's **Innstillinger** tab if wanted.
+Generated build files are kept outside synced Documents folders, under Gradle's user home. Find the debug APK with `find "${GRADLE_USER_HOME:-$HOME/.gradle}/loki-crm-build" -path '*/outputs/apk/debug/app-debug.apk' -print`, then install it on an Android test device with `adb install -r /path/to/app-debug.apk`. Log in through the CRM tab using the normal emailed code. Add the **Loki CRM** widget from Android's widget picker. Turn on background task notifications in the app's **Innstillinger** tab if wanted.
 
 The debug APK is for internal testing only. For wider distribution, create an Android release signing key and use Google Play internal testing (or another private enterprise distribution method). Do not commit signing keys, passwords, session cookies, or a Firebase service-account key.
 
