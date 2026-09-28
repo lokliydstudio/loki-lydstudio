@@ -2,10 +2,10 @@
 const fs = require("fs/promises");
 const os = require("os");
 const path = require("path");
+const { getBridgeSecret } = require("./keychain-secret");
 
 const ROOT = process.env.JOTTA_ROOT || path.join(os.homedir(), "Jottacloud", "Loki Lydstudio", "Dokumenter (Cloud)");
 const ENDPOINT = process.env.CRM_DOCUMENTS_ENDPOINT || "https://www.lokilyd.no/api/crm/documents";
-const SECRET = process.env.JOTTA_BRIDGE_SECRET;
 const DRY_RUN = process.argv.includes("--dry-run");
 const BLOCKED = new Set(["mikser (cloud)", "prosjekter (cloud)", "crm lydfiler", "passord", "password", "passwords", "innlogging", "innlogginger", "login", "logins"]);
 
@@ -44,10 +44,11 @@ async function main() {
     console.log(`Fant ${documents.length} dokumenter. Ingen data ble sendt.`);
     return;
   }
-  if (!SECRET || SECRET.length < 32) throw new Error("JOTTA_BRIDGE_SECRET mangler eller er for kort.");
+  const secret = getBridgeSecret();
+  if (secret.length < 32) throw new Error("JOTTA_FILE_BRIDGE_SECRET mangler eller er for kort.");
   const response = await fetch(ENDPOINT, {
     method: "POST",
-    headers: { authorization: `Bearer ${SECRET}`, "content-type": "application/json" },
+    headers: { authorization: `Bearer ${secret}`, "content-type": "application/json" },
     body: JSON.stringify({ documents }),
   });
   const result = await response.json();

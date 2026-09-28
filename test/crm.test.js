@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 
@@ -9,10 +10,12 @@ process.env.MAIL_USERNAME = "lokilyd1";
 process.env.MAIL_PASSWORD = "test-only-password";
 
 const auth = require("../lib/crm-auth");
+const { bridgeAuthorized, fileBridgeAuthorized } = require("../lib/crm-bridge");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-calendar");
-const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, sanitizeIndexedDocument, sanitizeUploadedDocument } = require("../lib/crm-documents");
+const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
+const { checkedJob, safeDestination, safeExistingFile } = require("../bridge/jottacloud-file-sync");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
@@ -49,6 +52,20 @@ test("only active owners can receive CRM tokens", () => {
   assert.equal(auth.verifyToken(token, "login").email, "leon@lokilyd.no");
   assert.equal(auth.createToken("charles@lokilyd.no", "login", 60) !== null, true);
   assert.equal(auth.createToken("daniel@lokilyd.no", "login", 60), null);
+});
+
+test("the Jottacloud document bridge uses a separate scoped credential", () => {
+  const previous = process.env.JOTTA_FILE_BRIDGE_SECRET;
+  process.env.JOTTA_FILE_BRIDGE_SECRET = "file-bridge-test-secret-over-thirty-two-characters";
+  try {
+    const request = { headers: { authorization: `Bearer ${process.env.JOTTA_FILE_BRIDGE_SECRET}` } };
+    assert.equal(fileBridgeAuthorized(request), true);
+    assert.equal(bridgeAuthorized(request), false);
+    assert.equal(fileBridgeAuthorized({ headers: { authorization: "Bearer wrong" } }), false);
+  } finally {
+    if (previous === undefined) delete process.env.JOTTA_FILE_BRIDGE_SECRET;
+    else process.env.JOTTA_FILE_BRIDGE_SECRET = previous;
+  }
 });
 
 test("CRM shell includes an accessible persistent theme switcher", () => {
@@ -410,6 +427,51 @@ test("document uploads use private safe paths and reject active web content", ()
   assert.equal(documentPathname("short", "avtale.pdf"), "");
   assert.equal(sanitizeIndexedDocument({ path: "Passord /hemmelig.pdf" }), null);
   assert.equal(sanitizeIndexedDocument({ path: "Mikser (Cloud)/opptak.pdf" }), null);
+  assert.equal(safeRelativePath("AS/../Passord/test.pdf"), "");
+  assert.equal(safeRelativePath("/AS/test.pdf"), "");
+  assert.equal(safeRelativePath("AS\\test.pdf"), "");
+});
+
+test("CRM uploads queue a collision-safe Jottacloud copy", () => {
+  const id = "document-123e4567-e89b-12d3-a456-426614174000";
+  const name = "Ny avtale.pdf";
+  const path = uploadArchivePath(id, name);
+  const uploaded = sanitizeUploadedDocument(
+    { id, name, path },
+    { pathname: documentPathname(id, name), size: 80, contentType: "application/pdf" },
+    "leon@lokilyd.no",
+  );
+  assert.equal(uploaded.path, path);
+  assert.equal(publicDocument(uploaded).syncStatus, "pending");
+  assert.equal(publicDocument(uploaded).downloadable, true);
+  assert.equal(sanitizeUploadedDocument({ id, name, path: "AS/annet.pdf" }, { pathname: documentPathname(id, name), size: 80 }, "leon@lokilyd.no"), null);
+  assert.equal(checkedJob({ id, name, path, version: uploaded.uploadedAt }, "upload").path, path);
+  assert.throws(() => checkedJob({ id, name, path: "AS/annet.pdf", version: uploaded.uploadedAt }, "upload"));
+});
+
+test("Jottacloud bridge refuses symlinks that escape the synced root", async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "loki-jotta-test-"));
+  try {
+    const outside = os.tmpdir();
+    fs.symlinkSync(outside, path.join(root, "link"));
+    await assert.rejects(() => safeDestination(root, "link/avtale.pdf"));
+    await assert.rejects(() => safeExistingFile(root, "link/not-a-file.pdf"));
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("Jottacloud reindex preserves an uploaded row and its sync state", () => {
+  const id = "document-123e4567-e89b-12d3-a456-426614174000";
+  const name = "Avtale.pdf";
+  const path = uploadArchivePath(id, name);
+  const uploaded = sanitizeUploadedDocument({ id, name, path }, { pathname: documentPathname(id, name), size: 90 }, "charles@lokilyd.no");
+  uploaded.jottaState = "synced";
+  const refreshed = mergeDocumentIndex([{ path, name, size: 90, modifiedAt: "2026-09-28" }], [uploaded]);
+  assert.equal(refreshed.length, 1);
+  assert.equal(refreshed[0].id, id);
+  assert.equal(refreshed[0].jottaState, "synced");
+  assert.equal(publicDocument(refreshed[0]).jottacloudUrl.includes("CRM%20opplastinger"), true);
 });
 
 test("indexed documents get authenticated Jottacloud deep links", () => {
@@ -445,6 +507,20 @@ test("document reindexing preserves private uploads without exposing storage met
   assert.equal(visible.available, true);
   assert.equal("pathname" in visible, false);
   assert.equal("uploadedBy" in visible, false);
+});
+
+test("a changed Jottacloud document queues refresh while its old CRM copy stays readable", () => {
+  const [indexed] = mergeDocumentIndex([{ path: "AS/Avtale.pdf", name: "Avtale.pdf", size: 100, modifiedAt: "2026-09-01" }], []);
+  const linked = sanitizeUploadedDocument(
+    { id: indexed.id, name: indexed.name, path: indexed.path },
+    { pathname: documentPathname(indexed.id, indexed.name), size: 100 },
+    "leon@lokilyd.no", indexed,
+  );
+  const [changed] = mergeDocumentIndex([{ path: indexed.path, name: indexed.name, size: 120, modifiedAt: "2026-09-28" }], [linked]);
+  assert.equal(changed.pathname, linked.pathname);
+  assert.ok(changed.jottaImportRequestedAt);
+  assert.equal(publicDocument(changed).importPending, true);
+  assert.equal(publicDocument(changed).downloadable, true);
 });
 
 test("project exports include only selected project files and no private blob details", () => {

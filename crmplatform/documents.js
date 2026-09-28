@@ -83,20 +83,21 @@
   }
 
   function updateConnectionStatus() {
-    const available = documents.filter((item) => item.available).length;
+    const available = documents.filter((item) => item.downloadable).length;
+    const waiting = documents.filter((item) => item.importPending || item.syncStatus === "pending").length;
     const jottaDot = document.getElementById("jotta-dot");
     const jottaStatus = document.getElementById("jotta-status");
-    if (jottaDot) jottaDot.className = "dot green";
+    if (jottaDot) jottaDot.className = waiting ? "dot amber" : "dot green";
     if (jottaStatus) jottaStatus.textContent = documents.length
-      ? `${documents.length} indeksert · ${available} kan åpnes`
-      : "Bro klar · venter på første indeks";
+      ? `${available} kan lastes ned i CRM${waiting ? ` · ${waiting} venter på bro` : ""}`
+      : "Ingen dokumenter indeksert ennå";
   }
 
   function render() {
     const list = document.getElementById("document-list");
     const needle = String(document.getElementById("document-search")?.value || "").trim().toLowerCase();
     const visible = documents.filter((item) => `${item.name} ${item.path} ${item.type}`.toLowerCase().includes(needle));
-    document.getElementById("document-count").textContent = `${documents.filter((item) => item.available).length} av ${documents.length} kan åpnes`;
+    document.getElementById("document-count").textContent = `${documents.filter((item) => item.downloadable).length} av ${documents.length} kan lastes ned direkte`;
     if (!visible.length) {
       list.innerHTML = `<div class="empty">${documents.length ? "Ingen dokumenter matcher søket." : "Ingen dokumenter er indeksert ennå."}</div>`;
       updateConnectionStatus();
@@ -106,17 +107,39 @@
       const actionUrl = `/api/crm/documents?action=download&id=${encodeURIComponent(item.id)}`;
       let actions = `<div class="document-actions"><button class="tiny-button" data-connect-document="${esc(item.id)}">Koble fil</button></div>`;
       if (item.downloadable) {
-        actions = `<div class="document-actions"><a class="tiny-button" href="${actionUrl}" target="_blank" rel="noreferrer">Åpne</a><a class="tiny-button" href="${actionUrl}&amp;download=1">Last ned</a></div>`;
+        actions = `<div class="document-actions"><a class="tiny-button" href="${actionUrl}" target="_blank" rel="noreferrer">Åpne</a><a class="tiny-button" href="${actionUrl}&amp;download=1">Last ned</a>${item.syncStatus === "error" ? `<button class="tiny-button" data-retry-document="${esc(item.id)}">Prøv synk på nytt</button>` : ""}${item.importable ? `<button class="tiny-button" data-import-document="${esc(item.id)}" ${item.importPending ? "disabled" : ""}>${item.importPending ? "Oppdateres …" : "Oppdater fra Jottacloud"}</button>` : ""}</div>`;
       } else if (item.jottacloudUrl) {
-        actions = `<div class="document-actions"><a class="tiny-button" href="${esc(item.jottacloudUrl)}" target="_blank" rel="noreferrer" referrerpolicy="no-referrer">Åpne i Jottacloud ↗</a><button class="tiny-button" data-connect-document="${esc(item.id)}" title="Lagre en privat kopi i CRM">Koble kopi</button></div>`;
+        actions = `<div class="document-actions">${item.importable || item.importPending ? `<button class="tiny-button" data-import-document="${esc(item.id)}" ${item.importPending ? "disabled" : ""}>${item.importPending ? "Hentes …" : item.importError ? "Prøv henting på nytt" : "Hent til CRM"}</button>` : ""}<a class="tiny-button" href="${esc(item.jottacloudUrl)}" target="_blank" rel="noreferrer" referrerpolicy="no-referrer">Jottacloud ↗</a></div>`;
       }
-      const stateLabel = item.downloadable ? "I CRM" : item.jottacloudUrl ? "Jottacloud" : "Kun indeks";
+      const stateLabel = item.downloadable ? item.syncStatus === "pending" ? "CRM · synk venter" : item.syncStatus === "error" ? "CRM · synk feilet" : item.importPending ? "CRM · oppdateres" : "CRM + Jottacloud" : item.importPending ? "Hentes til CRM" : item.jottacloudUrl ? "Jottacloud" : "Kun indeks";
       return `<article class="doc-row"><div class="document-name"><span class="doc-icon">▱</span><span><strong>${esc(item.name)}</strong><small title="${esc(item.path)}">${esc(item.path)} · ${formatBytes(item.size)}</small></span></div><span>${esc(item.type)}</span><span><em class="state ${item.available ? "green" : "neutral"}">${stateLabel}</em></span><p>${esc(item.note)}</p>${actions}</article>`;
     }).join("");
     document.querySelectorAll("[data-connect-document]").forEach((button) => {
       button.onclick = () => chooseFiles(button.dataset.connectDocument);
     });
+    document.querySelectorAll("[data-import-document]").forEach((button) => {
+      button.onclick = () => changeDocument("import", button.dataset.importDocument);
+    });
+    document.querySelectorAll("[data-retry-document]").forEach((button) => {
+      button.onclick = () => changeDocument("retry-sync", button.dataset.retryDocument);
+    });
     updateConnectionStatus();
+  }
+
+  async function changeDocument(operation, id) {
+    try {
+      const data = await request("/api/crm/documents", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ operation, id }),
+      });
+      const index = documents.findIndex((item) => item.id === id);
+      if (index >= 0) documents[index] = data.document;
+      render();
+      toast(operation === "import" ? "Filen hentes til CRM når Jottacloud-broen kjører." : "Synkronisering prøves på nytt.");
+    } catch (error) {
+      toast(error.message || "Dokumenthandlingen feilet.");
+    }
   }
 
   function chooseFiles(targetId = null) {
@@ -129,7 +152,7 @@
 
   function matchingIndexedDocument(file) {
     const name = String(file.name || "").toLowerCase();
-    const matches = documents.filter((item) => !item.available && item.name.toLowerCase() === name);
+    const matches = documents.filter((item) => !item.downloadable && item.name.toLowerCase() === name);
     return matches.length === 1 ? matches[0] : null;
   }
 
@@ -147,7 +170,7 @@
     const payload = {
       id: documentId,
       name: file.name,
-      path: target?.path || file.name,
+      path: target?.path || `CRM opplastinger/${documentId}/${filename}`,
       type: target?.type || typeLabel(file.name),
       size: file.size,
       modifiedAt: new Date(file.lastModified || Date.now()).toISOString(),
@@ -215,6 +238,10 @@
     document.getElementById("document-upload-button").onclick = () => chooseFiles();
     document.getElementById("document-upload-input").onchange = uploadSelected;
     document.getElementById("document-search").oninput = render;
+    document.getElementById("document-refresh-button").onclick = () => load().catch((error) => toast(error.message || "Kunne ikke oppdatere dokumentene."));
+    window.setInterval(() => {
+      if (document.getElementById("documents")?.classList.contains("active")) load().catch(() => {});
+    }, 30000);
     try {
       await load();
     } catch (error) {
