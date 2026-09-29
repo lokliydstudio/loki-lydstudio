@@ -53,4 +53,8 @@ test("CRM serves the authenticated collaborative editor and status UI", () => {
   assert.match(html, /note-yjs\.js/);
   assert.match(script, /setInterval\(\(\) => poll\(current\), 2000\)/);
   assert.match(script, /"presence", \{ typing:/);
+  assert.match(script, /\/api\/studio\?action=note-live/);
+  const apiFiles = fs.readdirSync(path.join(root, "api")).filter((name) => name.endsWith(".js"));
+  const crmFiles = fs.readdirSync(path.join(root, "api/crm")).filter((name) => name.endsWith(".js"));
+  assert.ok(apiFiles.length + crmFiles.length <= 12, "Vercel Hobby permits at most 12 serverless functions");
 });

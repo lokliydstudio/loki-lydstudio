@@ -79,7 +79,6 @@
     "api/crm/auth-request.js": { "maxDuration": 30 },
     "api/crm/draft.js": { "maxDuration": 30 },
     "api/crm/leads.js": { "maxDuration": 30 },
-    "api/crm/note-live.js": { "maxDuration": 30 },
     "api/studio.js": { "maxDuration": 60 },
     "api/crm/documents.js": { "maxDuration": 30 },
     "api/crm/funding-sync.js": { "maxDuration": 30 }

@@ -13,7 +13,7 @@
   };
   const base64ToBytes = (value) => Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
   async function request(id, operation, extra = {}) {
-    const url = `/api/crm/note-live?id=${encodeURIComponent(id)}`;
+    const url = `/api/studio?action=note-live&id=${encodeURIComponent(id)}`;
     const response = await fetch(url, {
       credentials: "same-origin",
       ...(operation === "get" ? {} : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id, operation, ...extra }) }),

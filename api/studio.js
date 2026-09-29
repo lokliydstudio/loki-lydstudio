@@ -30,6 +30,7 @@ const { isConfigured, readCollection, writeCollection } = require("../lib/crm-st
 const tenantBookingHandler = require("../lib/tenant-booking-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { noteCollection, notesWithLiveContent } = require("../lib/crm-live-notes");
+const noteLiveHandler = require("../lib/crm-note-live-handler");
 
 function publicBaseUrl(req) {
   const configured = String(process.env.CRM_BASE_URL || "").replace(/\/$/, "");
@@ -899,6 +900,7 @@ module.exports = async function handler(req, res) {
     if (action === "jotta-sync") return await jottaSyncHandler(req, res);
     if (action === "jotta-download") return await jottaDownloadHandler(req, res);
     if (action === "workspace") return await workspaceHandler(req, res);
+    if (action === "note-live") return await noteLiveHandler(req, res);
     if (action === "rentals") return await rentalsHandler(req, res);
     if (action === "activities") return await activitiesHandler(req, res);
     if (action === "bookings") return await bookingsHandler(req, res);
