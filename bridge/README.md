@@ -12,7 +12,7 @@ Etter at hemmeligheten er konfigurert på begge steder:
 node bridge/install-jottacloud-bridge.js
 ```
 
-Dette oppretter to bruker-tjenester i macOS: filkø hvert 15. minutt og indeksoppdatering hver sjette time. Manuell kontroll: `node bridge/jottacloud-file-sync.js --dry-run` og `node bridge/jottacloud-index.js --dry-run`. Maksimal filstørrelse for CRM-kopi er 500 MB; større filer beholdes i Jottacloud og kan åpnes der. Mapper med passord/innlogging og de tidligere utelatte mappene ignoreres fortsatt.
+Dette kopierer broens kjørbare filer til `~/Library/Application Support/LokiCRM/bridge-runtime` og oppretter to bruker-tjenester i macOS: filkø hvert 15. minutt og indeksoppdatering hver sjette time. Den stabile kjøremappen er nødvendig fordi macOS-tjenester kan stoppe ved oppstart fra synkroniserte mapper. Kjør installasjonsskriptet på nytt etter endringer i brokoden. Manuell kontroll: `node bridge/jottacloud-file-sync.js --dry-run` og `node bridge/jottacloud-index.js --dry-run`. Maksimal filstørrelse for CRM-kopi er 500 MB; større filer beholdes i Jottacloud og kan åpnes der. Mapper med passord/innlogging og de tidligere utelatte mappene ignoreres fortsatt.
 
 Dokumentindeksen leser bare filmetadata fra Jottacloud-mappen på studio-Macen. Den laster ikke opp dokumentinnhold, endrer ikke filer og hopper alltid over `Mikser (Cloud)`, `Prosjekter (Cloud)`, `CRM lydfiler` og mapper med passord eller innlogginger.
 
