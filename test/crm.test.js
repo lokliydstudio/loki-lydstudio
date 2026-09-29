@@ -25,6 +25,7 @@ const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { ONLINE_WINDOW_MS, presenceCollection, presenceHeartbeat, presenceLogin, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
 const { actorName, notificationPayload, publicKey: pushPublicKey, publicSubscriptionStatus, sanitizeSubscription, taskNotification } = require("../lib/crm-push");
+const { isMissingBlobError } = require("../lib/crm-store");
 const { apnsBearerToken, sanitizeNativeDevice } = require("../lib/crm-native-push");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences, sanitizeTimeEntries } = require("../lib/crm-projects");
@@ -517,6 +518,11 @@ test("document list sorts opened files first and tracks both CRM and Jottacloud 
   assert.match(script, /data-track-document=/);
   assert.match(script, /action=opened/);
   assert.match(script, /Sist åpnet/);
+});
+
+test("new recent-open collections treat missing Blob metadata as an empty collection", () => {
+  assert.equal(isMissingBlobError(new Error("Vercel Blob: The requested blob does not exist")), true);
+  assert.equal(isMissingBlobError(new Error("Vercel Blob: Permission denied")), false);
 });
 
 test("document reindexing preserves private uploads without exposing storage metadata", () => {
