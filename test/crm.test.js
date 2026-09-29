@@ -14,7 +14,7 @@ const { bridgeAuthorized, fileBridgeAuthorized } = require("../lib/crm-bridge");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-calendar");
-const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
+const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, publicDocumentsWithOpens, recordDocumentOpen, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
 const { checkedJob, safeDestination, safeExistingFile } = require("../bridge/jottacloud-file-sync");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
@@ -488,6 +488,35 @@ test("indexed documents get authenticated Jottacloud deep links", () => {
   const legacyVisible = publicDocument({ ...indexed, source: undefined, note: "Gammel indeksrad" });
   assert.equal(legacyVisible.available, true);
   assert.equal(legacyVisible.jottacloudUrl, visible.jottacloudUrl);
+});
+
+test("recent document opens are private, deduplicated and survive index refresh", () => {
+  const first = sanitizeIndexedDocument({ path: "Avtaler/Studio.pdf", size: 100, modifiedAt: "2026-09-01" });
+  const second = sanitizeIndexedDocument({ path: "Markedsføring/Plan.pdf", size: 200, modifiedAt: "2026-09-02" });
+  const firstTime = "2026-09-29T08:00:00.000Z";
+  const secondTime = "2026-09-29T09:00:00.000Z";
+  let opens = recordDocumentOpen([], first.id, "Leon@lokilyd.no", firstTime);
+  opens = recordDocumentOpen(opens, second.id, "charles@lokilyd.no", secondTime);
+  opens = recordDocumentOpen(opens, first.id, "leon@lokilyd.no", secondTime);
+  assert.equal(opens.length, 2);
+  assert.equal(opens[0].openedBy, "leon@lokilyd.no");
+  const refreshed = mergeDocumentIndex([
+    { path: first.path, size: 100, modifiedAt: "2026-09-03" },
+    { path: second.path, size: 200, modifiedAt: "2026-09-03" },
+  ], [first, second]);
+  const visible = publicDocumentsWithOpens(refreshed, opens);
+  assert.equal(visible[0].lastOpenedAt, secondTime);
+  assert.equal(visible[1].lastOpenedAt, secondTime);
+  assert.equal("openedBy" in visible[0], false);
+  assert.equal(recordDocumentOpen(opens, "not-valid", "leon@lokilyd.no").length, 2);
+});
+
+test("document list sorts opened files first and tracks both CRM and Jottacloud links", () => {
+  const script = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "documents.js"), "utf8");
+  assert.match(script, /dateValue\(right\.lastOpenedAt\) - dateValue\(left\.lastOpenedAt\)/);
+  assert.match(script, /data-track-document=/);
+  assert.match(script, /action=opened/);
+  assert.match(script, /Sist åpnet/);
 });
 
 test("document reindexing preserves private uploads without exposing storage metadata", () => {

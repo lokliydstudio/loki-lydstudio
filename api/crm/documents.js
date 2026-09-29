@@ -9,6 +9,8 @@ const {
   documentPathname,
   mergeDocumentIndex,
   publicDocument,
+  publicDocumentsWithOpens,
+  recordDocumentOpen,
   safeRelativePath,
   sanitizeUploadedDocument,
   uploadArchivePath,
@@ -88,10 +90,38 @@ async function downloadHandler(req, res, user) {
   const id = validDocumentId(req.query?.id);
   const document = documents.find((item) => item.id === id);
   if (!document?.pathname) return res.status(404).json({ error: "Dokumentfilen er ikke lastet opp ennå." });
+  const download = String(req.query?.download || "") === "1";
   return streamPrivateBlob(req, res, document.pathname, document.name, {
-    download: String(req.query?.download || "") === "1",
+    download,
     notFoundMessage: "Dokumentfilen ble ikke funnet.",
+    onReady: !download && !req.headers.range ? async () => {
+      try { await saveDocumentOpen(id, user.email); }
+      catch (error) { console.error("Document open tracking failed", error?.message); }
+    } : undefined,
   });
+}
+
+async function saveDocumentOpen(id, email) {
+  const recent = await readCollection("document-opens");
+  const previous = recent.find((item) => item.id === id && item.openedBy === email);
+  if (previous && Date.now() - Date.parse(previous.openedAt) < 30_000) return previous.openedAt;
+  const openedAt = new Date().toISOString();
+  await mutateCollection("document-opens", (opens) => ({
+    items: recordDocumentOpen(opens, id, email, openedAt),
+    result: openedAt,
+  }));
+  return openedAt;
+}
+
+async function markExternalOpen(req, res, user) {
+  if (!user) return res.status(403).json({ error: "Brukerinnlogging kreves." });
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  const id = validDocumentId(req.body?.id);
+  const documents = await readCollection("documents");
+  const document = documents.find((item) => item.id === id);
+  if (!document?.path) return res.status(404).json({ error: "Dokumentet ble ikke funnet." });
+  const openedAt = await saveDocumentOpen(id, user.email);
+  return res.status(200).json({ id, lastOpenedAt: openedAt });
 }
 
 async function bridgeDownloadHandler(req, res) {
@@ -224,6 +254,7 @@ module.exports = async function handler(req, res) {
   try {
     if (action === "upload") return await uploadHandler(req, res, user, fileBridge);
     if (action === "download") return await downloadHandler(req, res, user);
+    if (action === "opened") return await markExternalOpen(req, res, user);
     if (action === "bridge-download") {
       if (!fileBridge) return res.status(403).json({ error: "Ugyldig brotilgang." });
       return await bridgeDownloadHandler(req, res);
@@ -236,8 +267,8 @@ module.exports = async function handler(req, res) {
 
     if (req.method === "GET") {
       if (!user) return res.status(403).json({ error: "Brukerinnlogging kreves." });
-      const documents = await readCollection("documents");
-      return res.status(200).json({ documents: documents.map(publicDocument) });
+      const [documents, opens] = await Promise.all([readCollection("documents"), readCollection("document-opens")]);
+      return res.status(200).json({ documents: publicDocumentsWithOpens(documents, opens) });
     }
 
     if (req.method === "POST" && req.body?.operation === "register") {
