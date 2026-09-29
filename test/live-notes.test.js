@@ -51,6 +51,8 @@ test("CRM serves the authenticated collaborative editor and status UI", () => {
   assert.match(html, /note-live-status/);
   assert.match(html, /note-live-editors/);
   assert.match(html, /note-yjs\.js/);
+  assert.match(html, /CRM startup failed after valid login/);
+  assert.doesNotMatch(html, /catch\{location\.replace\("\/crm-login\.html"\)\}/);
   assert.match(script, /setInterval\(\(\) => poll\(current\), 2000\)/);
   assert.match(script, /"presence", \{ typing:/);
   assert.match(script, /\/api\/studio\?action=note-live/);
