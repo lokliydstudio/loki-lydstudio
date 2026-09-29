@@ -9,7 +9,8 @@
   "scripts": {
     "build:blob": "esbuild build/blob-upload-entry.js --bundle --minify --format=iife --global-name=LokiBlob --platform=browser --outfile=crmplatform/blob-upload.js",
     "build:zip": "esbuild build/zip-export-entry.js --bundle --minify --format=iife --global-name=LokiZip --platform=browser --target=es2020 --outfile=crmplatform/zip-export.js",
-    "build:crm": "npm run build:blob && npm run build:zip",
+    "build:note-yjs": "esbuild build/note-yjs-entry.js --bundle --minify --format=iife --global-name=LokiY --platform=browser --target=es2020 --outfile=crmplatform/note-yjs.js",
+    "build:crm": "npm run build:blob && npm run build:zip && npm run build:note-yjs",
     "test": "node --test"
   },
   "dependencies": {
@@ -21,7 +22,8 @@
     "next": "latest",
     "nodemailer": "^10.0.6",
     "stripe": "^18.0.0",
-    "web-push": "^3.6.7"
+    "web-push": "^3.6.7",
+    "yjs": "^13.6.33"
   },
   "devDependencies": {
     "esbuild": "^0.28.2"

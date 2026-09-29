@@ -29,6 +29,7 @@ const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, spli
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
 const tenantBookingHandler = require("../lib/tenant-booking-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const { noteCollection, notesWithLiveContent } = require("../lib/crm-live-notes");
 
 function publicBaseUrl(req) {
   const configured = String(process.env.CRM_BASE_URL || "").replace(/\/$/, "");
@@ -391,9 +392,10 @@ async function workspaceHandler(req, res) {
   const items = await readCollection("workspace");
 
   if (req.method === "GET") {
+    const withLiveContent = await notesWithLiveContent(items, readCollection);
     return res.status(200).json({
       tasks: items.filter((item) => item.kind === "task"),
-      notes: items.filter((item) => item.kind === "note"),
+      notes: withLiveContent.filter((item) => item.kind === "note"),
       goals: items.filter((item) => item.kind === "goal"),
     });
   }
@@ -434,10 +436,15 @@ async function workspaceHandler(req, res) {
     const index = items.findIndex((item) => item.id === id);
     if (index < 0) return res.status(404).json({ error: "Elementet ble ikke funnet." });
     const current = items[index];
+    const changes = req.body?.changes;
+    if (current.kind === "note" && Object.hasOwn(changes || {}, "content") && /^note-[a-zA-Z0-9-]{8,115}$/.test(id)) {
+      const live = (await readCollection(noteCollection(id)))[0];
+      if (live?.state) return res.status(409).json({ error: "Notatet redigeres nå i felles skriveflate. Oppdater siden før du lagrer." });
+    }
     const updated = current.kind === "task"
       ? sanitizeTask(req.body?.changes, current, user.email)
       : current.kind === "note"
-        ? sanitizeNote(req.body?.changes, current, user.email)
+        ? sanitizeNote(changes, current, user.email)
         : current.kind === "goal" ? sanitizeGoal(req.body?.changes, current, user.email) : null;
     if (!updated) return res.status(400).json({ error: "Fyll ut de obligatoriske feltene." });
     items[index] = { ...updated, kind: current.kind };
@@ -453,15 +460,19 @@ async function workspaceHandler(req, res) {
         url: "/crmplatform/#workspace-tools",
       });
     }
-    return res.status(200).json({ item: items[index] });
+    const responseItem = current.kind === "note" ? (await notesWithLiveContent([items[index]], readCollection))[0] : items[index];
+    return res.status(200).json({ item: responseItem });
   }
 
   if (req.method === "DELETE") {
     const id = cleanText(req.query?.id || req.body?.id, 120);
     const index = items.findIndex((item) => item.id === id);
     if (index < 0) return res.status(404).json({ error: "Elementet ble ikke funnet." });
-    items.splice(index, 1);
+    const deleted = items.splice(index, 1)[0];
     await writeCollection("workspace", items);
+    if (deleted.kind === "note" && /^note-[a-zA-Z0-9-]{8,115}$/.test(id)) {
+      await Promise.all([writeCollection(noteCollection(id), []), writeCollection(noteCollection(id, "note-editors"), [])]);
+    }
     return res.status(200).json({ ok: true });
   }
 
@@ -815,7 +826,7 @@ async function backupHandler(req, res) {
     studio: "Loki Lydstudio",
     containsPersonalData: true,
     leads,
-    workspace,
+    workspace: await notesWithLiveContent(workspace, readCollection),
     rentals,
     projects: projectExport.projects,
     audioFiles: projectExport.files,

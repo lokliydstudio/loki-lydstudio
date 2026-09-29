@@ -1,0 +1,6 @@
+.note-form textarea[readonly] { opacity: .7; cursor: wait; }
+.note-live-info { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px; margin-top: -4px; color: #536a2e; font-size: 9px; font-weight: 700; text-transform: none; letter-spacing: 0; }
+.note-live-info #note-live-editors { color: #6253af; }
+.note-live-info #note-live-editors:not(:empty)::before { content: "● "; color: #6ed28b; }
+html[data-theme="dark"] .note-live-info { color: #d9ff64; }
+html[data-theme="dark"] .note-live-info #note-live-editors { color: #c8bfff; }

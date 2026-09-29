@@ -97,6 +97,7 @@
     if (!confirm(`Vil du slette ${label}?`)) return;
     try {
       await api(`/api/studio?action=workspace&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (window.LokiNoteLive?.active(id)) resetNoteForm();
       tasks = tasks.filter((task) => task.id !== id);
       notes = notes.filter((note) => note.id !== id);
       goals = goals.filter((goal) => goal.id !== id);
@@ -107,19 +108,25 @@
     } catch (error) { toast(error.message); }
   }
 
-  function editNote(id) {
+  async function editNote(id) {
     const note = notes.find((item) => item.id === id);
     if (!note) return;
+    if (editingNoteId && editingNoteId !== id && window.LokiNoteLive?.active(editingNoteId)) {
+      try { await window.LokiNoteLive.flush(); }
+      catch (error) { toast(`Notatet er ikke lagret: ${error.message}`); return; }
+    }
     editingNoteId = id;
     const form = document.getElementById("note-form");
     Object.entries(note).forEach(([key, value]) => { if (form.elements[key]) form.elements[key].value = value || ""; });
-    document.getElementById("note-submit").textContent = "Lagre endringer";
+    document.getElementById("note-submit").textContent = "Lagre detaljer";
     document.getElementById("note-cancel").hidden = false;
     updateMeetingFields();
+    window.LokiNoteLive?.open(id);
     form.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function resetNoteForm() {
+    window.LokiNoteLive?.close();
     editingNoteId = null;
     const form = document.getElementById("note-form");
     form.reset();
@@ -221,7 +228,13 @@
       const item = Object.fromEntries(new FormData(form));
       const button = document.getElementById("note-submit");
       button.disabled = true;
+      if (editingNoteId) form.elements.content.readOnly = true;
       try {
+        if (editingNoteId) {
+          if (!window.LokiNoteLive?.active(editingNoteId)) throw new Error("Felles redigering er ikke tilkoblet. Åpne notatet på nytt.");
+          await window.LokiNoteLive.flush();
+          delete item.content;
+        }
         const options = editingNoteId
           ? { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: editingNoteId, changes: item }) }
           : { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ kind: "note", item }) };
@@ -232,10 +245,18 @@
         renderNotes();
         toast("Notatet er lagret.");
       } catch (error) { toast(error.message); }
-      finally { button.disabled = false; }
+      finally {
+        button.disabled = false;
+        if (window.LokiNoteLive?.active(editingNoteId)) form.elements.content.readOnly = false;
+      }
     };
     document.getElementById("note-type").onchange = updateMeetingFields;
-    document.getElementById("note-cancel").onclick = resetNoteForm;
+    document.getElementById("note-cancel").onclick = async () => {
+      try {
+        if (editingNoteId && window.LokiNoteLive?.active(editingNoteId)) await window.LokiNoteLive.flush();
+        resetNoteForm();
+      } catch (error) { toast(`Notatet er ikke lagret: ${error.message}`); }
+    };
     document.getElementById("goal-form").onsubmit = async (event) => {
       event.preventDefault();
       const form = event.currentTarget;
@@ -260,6 +281,12 @@
   }
 
   async function init() {
+    window.addEventListener("loki-note-content", (event) => {
+      const { id, content } = event.detail || {};
+      if (!id) return;
+      notes = notes.map((note) => note.id === id ? { ...note, content } : note);
+      renderNotes();
+    });
     bindForms();
     resetNoteForm();
     resetGoalForm();
