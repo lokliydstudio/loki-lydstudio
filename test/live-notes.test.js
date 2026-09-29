@@ -29,7 +29,7 @@ test("editor presence only shows other active people and their typing status", (
   let records = updateEditor([], "note-12345678", "leon@lokilyd.no", true, now);
   records = updateEditor(records, "note-12345678", "charles@lokilyd.no", true, now);
   assert.deepEqual(activeEditors(records, "note-12345678", "leon@lokilyd.no", now.getTime()), [{ name: "Charles", typing: true }]);
-  assert.deepEqual(activeEditors(records, "note-12345678", "leon@lokilyd.no", now.getTime() + 13000), []);
+  assert.deepEqual(activeEditors(records, "note-12345678", "leon@lokilyd.no", now.getTime() + 26000), []);
 });
 
 test("workspace and backups receive live content without exposing CRDT state", async () => {

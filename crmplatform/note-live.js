@@ -93,7 +93,7 @@
     if (Date.now() - current.lastPresence > 2000) presence(current);
   }
   async function presence(current) {
-    if (session !== current) return;
+    if (session !== current || document.hidden) return;
     current.lastPresence = Date.now();
     try {
       const data = await request(current.id, "presence", { typing: Date.now() - current.lastInput < 3500 });
@@ -101,7 +101,7 @@
     } catch { /* Polling retries presence. */ }
   }
   async function poll(current) {
-    if (session !== current || current.polling) return;
+    if (session !== current || current.polling || document.hidden) return;
     current.polling = true;
     try {
       const data = await request(current.id, "get");
@@ -135,7 +135,7 @@
       showEditors(data.editors);
       presence(current);
       current.pollTimer = setInterval(() => poll(current), 2000);
-      current.presenceTimer = setInterval(() => presence(current), 4000);
+      current.presenceTimer = setInterval(() => presence(current), 8000);
     } catch (error) {
       if (token !== generation) return;
       textarea().readOnly = true;
@@ -158,6 +158,7 @@
   }
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden" && session?.dirty) flush(session).catch(() => {});
+    if (document.visibilityState === "visible" && session) { poll(session); presence(session); }
   });
   window.addEventListener("beforeunload", (event) => {
     if (!session?.dirty && !session?.saving) return;
