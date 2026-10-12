@@ -60,7 +60,7 @@
       button.classList.toggle("active", active);
       button.setAttribute("aria-pressed", String(active));
     });
-    const visible = tasks.filter((task) => filter === "all" || (filter === "open" && !task.completed) || (filter === "mine" && !task.completed && (task.assignee === userName || task.assignee === "Begge")));
+    const visible = tasks.filter((task) => (filter === "completed" && task.completed) || (filter === "open" && !task.completed) || (filter === "mine" && !task.completed && (task.assignee === userName || task.assignee === "Begge")));
     visible.sort((left, right) => Number(left.completed) - Number(right.completed) || String(left.dueDate || "9999").localeCompare(String(right.dueDate || "9999")));
     list.replaceChildren(...visible.map(taskNode));
     if (!visible.length) {

@@ -5,7 +5,12 @@
   let editingNoteId = null;
   let editingGoalId = null;
   let taskAssigneeFilter = "Alle";
+  let taskStatusFilter = "open";
   const taskAssigneeFilters = ["Alle", "Leon", "Charles", "Begge"];
+  const taskStatusFilters = [
+    { id: "open", label: "Åpne" },
+    { id: "completed", label: "Fullført" },
+  ];
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
   const api = async (url, options = {}) => {
@@ -29,26 +34,40 @@
     const list = document.getElementById("task-list");
     const open = tasks.filter((task) => !task.completed).length;
     document.getElementById("task-count").textContent = String(open);
-    const visible = taskAssigneeFilter === "Alle" ? tasks : tasks.filter((task) => task.assignee === taskAssigneeFilter);
-    const visibleOpen = visible.filter((task) => !task.completed).length;
+    const statusTasks = tasks.filter((task) => taskStatusFilter === "completed" ? task.completed : !task.completed);
+    const visible = taskAssigneeFilter === "Alle" ? statusTasks : statusTasks.filter((task) => task.assignee === taskAssigneeFilter);
+    const statusLabel = taskStatusFilter === "completed"
+      ? (visible.length === 1 ? "fullført oppgave" : "fullførte oppgaver")
+      : (visible.length === 1 ? "åpen oppgave" : "åpne oppgaver");
     document.getElementById("task-summary").textContent = taskAssigneeFilter === "Alle"
-      ? `${open} åpne · ${tasks.length - open} fullført`
-      : `${visibleOpen} åpne for ${taskAssigneeFilter} · ${visible.length - visibleOpen} fullført`;
+      ? `${visible.length} ${statusLabel}`
+      : `${visible.length} ${statusLabel} for ${taskAssigneeFilter}`;
+    const statusFilters = document.getElementById("task-status-filter");
+    statusFilters.innerHTML = taskStatusFilters.map((filter) => {
+      const count = filter.id === "completed" ? tasks.length - open : open;
+      const active = filter.id === taskStatusFilter;
+      return `<button class="task-status-tab ${active ? "active" : ""}" type="button" role="tab" data-task-status="${filter.id}" aria-selected="${active}"><span>${filter.label}</span><strong>${count}</strong></button>`;
+    }).join("");
+    statusFilters.querySelectorAll("[data-task-status]").forEach((button) => {
+      button.onclick = () => { taskStatusFilter = button.dataset.taskStatus; renderTasks(); };
+    });
     const filters = document.getElementById("task-assignee-filter");
     filters.innerHTML = taskAssigneeFilters.map((assignee) => {
-      const count = assignee === "Alle" ? tasks.length : tasks.filter((task) => task.assignee === assignee).length;
+      const count = assignee === "Alle" ? statusTasks.length : statusTasks.filter((task) => task.assignee === assignee).length;
       return `<button class="task-filter-button ${assignee === taskAssigneeFilter ? "active" : ""}" type="button" data-task-filter="${assignee}" aria-pressed="${assignee === taskAssigneeFilter}"><span>${assignee}</span><strong>${count}</strong></button>`;
     }).join("");
     filters.querySelectorAll("[data-task-filter]").forEach((button) => {
       button.onclick = () => { taskAssigneeFilter = button.dataset.taskFilter; renderTasks(); };
     });
-    const sorted = [...visible].sort((left, right) => Number(left.completed) - Number(right.completed) || String(left.dueDate || "9999").localeCompare(String(right.dueDate || "9999")));
+    const sorted = [...visible].sort((left, right) => taskStatusFilter === "completed"
+      ? String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""))
+      : String(left.dueDate || "9999").localeCompare(String(right.dueDate || "9999")));
     list.innerHTML = sorted.length ? sorted.map((task) => `
       <article class="task-row ${task.completed ? "completed" : ""}">
         <input class="task-check" type="checkbox" data-task-toggle="${esc(task.id)}" ${task.completed ? "checked" : ""} aria-label="Marker oppgave som ${task.completed ? "åpen" : "fullført"}">
         <div class="task-copy"><strong>${esc(task.title)}</strong>${task.details ? `<span>${esc(task.details)}</span>` : ""}<div class="task-meta"><em>${esc(task.assignee)}</em><em>${esc(formatDate(task.dueDate))}</em><em class="${task.priority === "Høy" ? "high" : ""}">${esc(task.priority)} prioritet</em></div></div>
         <button class="icon-button" data-task-delete="${esc(task.id)}" aria-label="Slett oppgave">×</button>
-      </article>`).join("") : `<div class="empty">${taskAssigneeFilter === "Alle" ? "Ingen oppgaver ennå." : `Ingen oppgaver med ansvarlig «${esc(taskAssigneeFilter)}».`}</div>`;
+      </article>`).join("") : `<div class="empty">${taskAssigneeFilter === "Alle" ? `Ingen ${taskStatusFilter === "completed" ? "fullførte" : "åpne"} oppgaver.` : `Ingen ${taskStatusFilter === "completed" ? "fullførte" : "åpne"} oppgaver for «${esc(taskAssigneeFilter)}».`}</div>`;
     document.querySelectorAll("[data-task-toggle]").forEach((input) => {
       input.onchange = () => updateTask(input.dataset.taskToggle, { completed: input.checked });
     });

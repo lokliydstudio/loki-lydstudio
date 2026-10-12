@@ -865,6 +865,21 @@ test("shared task list can filter by exact assignee", () => {
   assert.match(workspace, /data-task-filter/);
 });
 
+test("completed tasks stay behind a dedicated task tab", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
+  const mobileHtml = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.html"), "utf8");
+  const mobileClient = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.js"), "utf8");
+  assert.match(html, /id="task-status-filter"/);
+  assert.match(html, /Vis åpne eller fullførte oppgaver/);
+  assert.match(workspace, /let taskStatusFilter = "open"/);
+  assert.match(workspace, /taskStatusFilter === "completed" \? task\.completed : !task\.completed/);
+  assert.match(workspace, /data-task-status/);
+  assert.match(mobileHtml, /data-filter="completed"[^>]*>Fullført/);
+  assert.match(mobileClient, /filter === "completed" && task\.completed/);
+  assert.doesNotMatch(mobileHtml, /data-filter="all"/);
+});
+
 test("CRM push subscriptions are private, owner-scoped and safely normalized", () => {
   const subscription = sanitizeSubscription({
     endpoint: "https://push.example.test/send/device-1",
