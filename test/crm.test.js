@@ -36,10 +36,12 @@ const { publicSummary } = require("../lib/crm-prospect-handler");
 const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const {
   bookingConflict: tenantBookingConflict,
+  bookingOwnedByAccount: tenantBookingOwnedByAccount,
   SESSION_MAX_AGE_SECONDS,
   createLoginChallenge: createTenantLoginChallenge,
   createSessionToken: createTenantSessionToken,
   publicAccount: publicTenantAccount,
+  publicBooking: publicTenantBooking,
   sanitizeAccount: sanitizeTenantAccount,
   sanitizeBooking: sanitizeTenantBooking,
   sessionCookie: tenantSessionCookie,
@@ -1247,6 +1249,23 @@ test("tenant bookings collide only inside their own studio", () => {
   assert.equal(sanitizeTenantBooking({ title: "Baklengs", date: "2026-10-10", startTime: "14:00", endTime: "13:00" }, accountC), null);
 });
 
+test("tenant booking ownership enables edits only for the creator in the same studio", () => {
+  const owner = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
+  const studioMate = sanitizeTenantAccount({ name: "Ola", email: "ola@example.com", studio: "Studio C", status: "approved" });
+  const otherStudio = sanitizeTenantAccount({ name: "Dina", email: "dina@example.com", studio: "Studio D", status: "approved" });
+  const original = sanitizeTenantBooking({ title: "Øving", date: "2026-10-20", startTime: "10:00", endTime: "12:00" }, owner);
+  const edited = sanitizeTenantBooking({ title: "Øving og opptak", startTime: "11:00", endTime: "13:00" }, owner, original);
+  assert.equal(edited.id, original.id);
+  assert.equal(edited.createdAt, original.createdAt);
+  assert.equal(edited.createdById, owner.id);
+  assert.equal(tenantBookingOwnedByAccount(original, owner), true);
+  assert.equal(tenantBookingOwnedByAccount(original, studioMate), false);
+  assert.equal(tenantBookingOwnedByAccount(original, otherStudio), false);
+  assert.equal(publicTenantBooking(original, owner).editable, true);
+  assert.equal(publicTenantBooking(original, studioMate).editable, false);
+  assert.equal(Object.hasOwn(publicTenantBooking(original, owner), "createdByEmail"), false);
+});
+
 test("external booking portal is isolated from CRM and exposes approval administration", () => {
   const portal = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
   const client = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
@@ -1256,12 +1275,16 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(portal, /Søk om tilgang/);
   assert.match(portal, /Studio C/);
   assert.match(portal, /Studio D/);
-  assert.match(portal, /kan ikke slettes eller endres/);
+  assert.match(portal, /Dine egne bookinger kan redigeres eller slettes/);
   assert.doesNotMatch(client, /crm-login|crmplatform/);
   assert.match(client, /action=tenant-/);
   assert.match(api, /requireUser\(req, res\)/);
   assert.match(api, /item\.studio === account\.studio/);
-  assert.match(api, /req\.method !== "POST"/);
+  assert.match(api, /req\.method === "PATCH"/);
+  assert.match(api, /req\.method === "DELETE"/);
+  assert.match(api, /bookingOwnedByAccount/);
+  assert.match(client, /data-edit-booking/);
+  assert.match(client, /data-delete-booking/);
   assert.match(api, /action === "admin-booking"/);
   assert.match(studioApi, /tenantBookingHandler/);
   assert.match(api, /to: address/);

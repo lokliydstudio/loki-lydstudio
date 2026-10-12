@@ -3,6 +3,7 @@
   let bookings = [];
   let cursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1, 12);
   let loginEmail = "";
+  let editingBookingId = "";
 
   const $ = (id) => document.getElementById(id);
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -91,8 +92,17 @@
     $("booking-total").textContent = `${visible.length} ${visible.length === 1 ? "booking" : "bookinger"}`;
     $("agenda").innerHTML = visible.length ? visible.map((booking) => {
       const date = shortDate(booking.date);
-      return `<article class="agenda-item"><div class="agenda-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></div><div class="agenda-copy"><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span>${booking.notes ? `<span>${esc(booking.notes)}</span>` : ""}</div><span>${esc(booking.studio)}</span></article>`;
+      return `<article class="agenda-item${booking.editable ? " own-booking" : ""}"><div class="agenda-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></div><div class="agenda-copy"><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span>${booking.notes ? `<span>${esc(booking.notes)}</span>` : ""}</div><div class="agenda-side"><span>${esc(booking.studio)}</span>${booking.editable ? `<div class="agenda-actions"><button class="secondary compact" type="button" data-edit-booking="${esc(booking.id)}">Rediger</button><button class="danger compact" type="button" data-delete-booking="${esc(booking.id)}">Slett</button></div>` : ""}</div></article>`;
     }).join("") : '<div class="empty">Ingen kommende bookinger i dette studioet.</div>';
+    document.querySelectorAll("[data-edit-booking]").forEach((button) => {
+      button.onclick = () => {
+        const booking = bookings.find((item) => item.id === button.dataset.editBooking && item.editable);
+        if (booking) openBooking(booking.date, booking);
+      };
+    });
+    document.querySelectorAll("[data-delete-booking]").forEach((button) => {
+      button.onclick = () => deleteBooking(button.dataset.deleteBooking);
+    });
   }
 
   function render() {
@@ -106,13 +116,19 @@
     render();
   }
 
-  function openBooking(date = localDate()) {
+  function openBooking(date = localDate(), booking = null) {
     const form = $("booking-form");
     form.reset();
-    form.elements.date.value = date < localDate() ? localDate() : date;
-    form.elements.startTime.value = "10:00";
-    form.elements.endTime.value = "12:00";
+    editingBookingId = booking?.editable ? booking.id : "";
+    form.elements.title.value = booking?.title || "";
+    form.elements.date.value = (booking?.date || date) < localDate() ? localDate() : (booking?.date || date);
+    form.elements.startTime.value = booking?.startTime || "10:00";
+    form.elements.endTime.value = booking?.endTime || "12:00";
+    form.elements.notes.value = booking?.notes || "";
     form.elements.date.min = localDate();
+    $("booking-title").textContent = editingBookingId ? "Rediger booking" : "Book tid";
+    $("booking-submit").textContent = editingBookingId ? "Lagre endringer" : "Bekreft booking";
+    $("delete-booking").hidden = !editingBookingId;
     setStatus("", false, "booking-status");
     $("booking-modal").hidden = false;
     form.elements.title.focus();
@@ -120,6 +136,25 @@
 
   function closeBooking() {
     $("booking-modal").hidden = true;
+    editingBookingId = "";
+  }
+
+  async function deleteBooking(id = editingBookingId) {
+    const booking = bookings.find((item) => item.id === id && item.editable);
+    if (!booking || !confirm(`Slett «${booking.title}» ${dateLabel(booking.date)} kl. ${booking.startTime}–${booking.endTime}?`)) return;
+    const button = $("delete-booking");
+    button.disabled = true;
+    try {
+      await api("calendar", { method: "DELETE", body: JSON.stringify({ id: booking.id }) });
+      closeBooking();
+      await loadCalendar();
+      toast("Bookingen er slettet.");
+    } catch (error) {
+      if (!$("booking-modal").hidden) setStatus(error.message, true, "booking-status");
+      else toast(error.message);
+    } finally {
+      button.disabled = false;
+    }
   }
 
   async function initialize() {
@@ -186,11 +221,15 @@
     button.disabled = true;
     setStatus("Lagrer og kontrollerer tidspunktet …", false, "booking-status");
     try {
-      const booking = Object.fromEntries(new FormData(form));
-      await api("calendar", { method: "POST", body: JSON.stringify({ booking }) });
+      const changes = Object.fromEntries(new FormData(form));
+      const isEditing = Boolean(editingBookingId);
+      await api("calendar", {
+        method: isEditing ? "PATCH" : "POST",
+        body: JSON.stringify(isEditing ? { id: editingBookingId, changes } : { booking: changes }),
+      });
       closeBooking();
       await loadCalendar();
-      toast("Bookingen er lagret. Bare Leon eller Charles kan slette den.");
+      toast(isEditing ? "Endringene er lagret." : "Bookingen er lagret. Du kan redigere eller slette den fra listen.");
     } catch (error) { setStatus(error.message, true, "booking-status"); }
     finally { button.disabled = false; }
   };
@@ -206,6 +245,7 @@
   $("new-booking").onclick = () => openBooking();
   $("close-modal").onclick = closeBooking;
   $("cancel-modal").onclick = closeBooking;
+  $("delete-booking").onclick = () => deleteBooking();
   $("booking-modal").onclick = (event) => { if (event.target === $("booking-modal")) closeBooking(); };
   $("month-prev").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1, 12); renderCalendar(); };
   $("month-next").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12); renderCalendar(); };
