@@ -33,7 +33,7 @@ const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanit
 const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { decodeXlsxBase64, fikenContactsFromRows } = require("../lib/fiken-contact-import");
 const { publicSummary } = require("../lib/crm-prospect-handler");
-const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const {
   bookingConflict: tenantBookingConflict,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
@@ -880,6 +880,33 @@ test("completed tasks stay behind a dedicated task tab", () => {
   assert.match(mobileHtml, /data-filter="completed"[^>]*>Fullført/);
   assert.match(mobileClient, /filter === "completed" && task\.completed/);
   assert.doesNotMatch(mobileHtml, /data-filter="all"/);
+});
+
+test("clearing completed tasks cannot delete open tasks, notes or goals", () => {
+  const items = [
+    { id: "task-open", kind: "task", completed: false },
+    { id: "task-done-1", kind: "task", completed: true },
+    { id: "task-done-2", kind: "task", completed: true },
+    { id: "note-keep", kind: "note", completed: true },
+    { id: "goal-keep", kind: "goal", completed: true },
+  ];
+  const result = removeCompletedTasks(items);
+  assert.equal(result.deletedCount, 2);
+  assert.deepEqual(result.deletedIds, ["task-done-1", "task-done-2"]);
+  assert.deepEqual(result.remaining.map((item) => item.id), ["task-open", "note-keep", "goal-keep"]);
+});
+
+test("workspace exposes bulk task cleanup and collapsed notes", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
+  const endpoint = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  assert.match(html, /id="task-clear-completed"[^>]*>Tøm fullførte/);
+  assert.match(workspace, /operation: "delete-completed-tasks"/);
+  assert.match(endpoint, /removeCompletedTasks\(items\)/);
+  assert.match(workspace, /const expandedNotes = new Set\(\)/);
+  assert.match(workspace, /data-note-toggle/);
+  assert.match(workspace, /aria-expanded=/);
+  assert.match(workspace, /note-content[^>]+hidden/);
 });
 
 test("CRM push subscriptions are private, owner-scoped and safely normalized", () => {

@@ -4,6 +4,7 @@
   let goals = [];
   let editingNoteId = null;
   let editingGoalId = null;
+  const expandedNotes = new Set();
   let taskAssigneeFilter = "Alle";
   let taskStatusFilter = "open";
   const taskAssigneeFilters = ["Alle", "Leon", "Charles", "Begge"];
@@ -46,6 +47,13 @@
       button.querySelector("strong").textContent = String(button.dataset.taskStatus === "completed" ? tasks.length - open : open);
       button.onclick = () => { taskStatusFilter = button.dataset.taskStatus; renderTasks(); };
     });
+    const completedCount = tasks.length - open;
+    const completedActions = document.getElementById("task-completed-actions");
+    completedActions.hidden = taskStatusFilter !== "completed";
+    document.getElementById("task-completed-count").textContent = completedCount === 1
+      ? "1 fullført oppgave"
+      : `${completedCount} fullførte oppgaver`;
+    document.getElementById("task-clear-completed").disabled = completedCount === 0;
     const filters = document.getElementById("task-assignee-filter");
     filters.innerHTML = taskAssigneeFilters.map((assignee) => {
       const count = assignee === "Alle" ? statusTasks.length : statusTasks.filter((task) => task.assignee === assignee).length;
@@ -73,11 +81,21 @@
 
   function renderNotes() {
     const list = document.getElementById("note-list");
-    list.innerHTML = notes.length ? notes.map((note) => `
-      <article class="note-card">
-        <div class="note-card-head"><div><span class="state ${note.type === "møte" ? "blue" : "violet"}">${note.type === "møte" ? "Møtereferat" : "Idé"}</span><h3>${esc(note.title)}</h3><small>${esc(formatDate(note.date))}${note.attendees ? ` · ${esc(note.attendees)}` : ""}</small></div><div class="note-actions"><button class="icon-button" data-note-edit="${esc(note.id)}" aria-label="Rediger notat">✎</button><button class="icon-button" data-note-delete="${esc(note.id)}" aria-label="Slett notat">×</button></div></div>
-        <p class="note-content">${esc(note.content)}</p>
-      </article>`).join("") : '<div class="empty">Ingen notater eller møtereferater ennå.</div>';
+    list.innerHTML = notes.length ? notes.map((note) => {
+      const expanded = expandedNotes.has(note.id);
+      return `<article class="note-card ${expanded ? "expanded" : "collapsed"}">
+        <div class="note-card-head"><button class="note-toggle" type="button" data-note-toggle="${esc(note.id)}" aria-expanded="${expanded}" aria-controls="note-content-${esc(note.id)}"><span><span class="state ${note.type === "møte" ? "blue" : "violet"}">${note.type === "møte" ? "Møtereferat" : "Idé"}</span><h3>${esc(note.title)}</h3><small>${esc(formatDate(note.date))}${note.attendees ? ` · ${esc(note.attendees)}` : ""}</small></span><i aria-hidden="true">⌄</i></button><div class="note-actions"><button class="icon-button" data-note-edit="${esc(note.id)}" aria-label="Rediger notat">✎</button><button class="icon-button" data-note-delete="${esc(note.id)}" aria-label="Slett notat">×</button></div></div>
+        <p class="note-content" id="note-content-${esc(note.id)}" ${expanded ? "" : "hidden"}>${esc(note.content)}</p>
+      </article>`;
+    }).join("") : '<div class="empty">Ingen notater eller møtereferater ennå.</div>';
+    document.querySelectorAll("[data-note-toggle]").forEach((button) => {
+      button.onclick = () => {
+        const id = button.dataset.noteToggle;
+        if (expandedNotes.has(id)) expandedNotes.delete(id);
+        else expandedNotes.add(id);
+        renderNotes();
+      };
+    });
     document.querySelectorAll("[data-note-edit]").forEach((button) => { button.onclick = () => editNote(button.dataset.noteEdit); });
     document.querySelectorAll("[data-note-delete]").forEach((button) => { button.onclick = () => deleteItem(button.dataset.noteDelete, "notatet"); });
   }
@@ -107,11 +125,31 @@
     } catch (error) { toast(error.message); renderTasks(); }
   }
 
+  async function clearCompletedTasks() {
+    const completedCount = tasks.filter((task) => task.completed).length;
+    if (!completedCount || !confirm(`Vil du slette ${completedCount === 1 ? "den fullførte oppgaven" : `alle ${completedCount} fullførte oppgaver`}? Dette kan ikke angres.`)) return;
+    const button = document.getElementById("task-clear-completed");
+    button.disabled = true;
+    try {
+      const data = await api("/api/studio?action=workspace", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ operation: "delete-completed-tasks" }),
+      });
+      const deletedIds = new Set(data.deletedIds || []);
+      tasks = tasks.filter((task) => !deletedIds.has(task.id));
+      renderTasks();
+      toast(`${data.deletedCount || 0} fullførte ${data.deletedCount === 1 ? "oppgave er" : "oppgaver er"} slettet.`);
+    } catch (error) { toast(error.message); }
+    finally { button.disabled = false; }
+  }
+
   async function deleteItem(id, label) {
     if (!confirm(`Vil du slette ${label}?`)) return;
     try {
       await api(`/api/studio?action=workspace&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (window.LokiNoteLive?.active(id)) resetNoteForm();
+      expandedNotes.delete(id);
       tasks = tasks.filter((task) => task.id !== id);
       notes = notes.filter((note) => note.id !== id);
       goals = goals.filter((goal) => goal.id !== id);
@@ -265,6 +303,7 @@
       }
     };
     document.getElementById("note-type").onchange = updateMeetingFields;
+    document.getElementById("task-clear-completed").onclick = clearCompletedTasks;
     document.getElementById("note-cancel").onclick = async () => {
       try {
         if (editingNoteId && window.LokiNoteLive?.active(editingNoteId)) await window.LokiNoteLive.flush();

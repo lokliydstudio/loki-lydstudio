@@ -28,7 +28,7 @@ const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-h
 const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
 const tenantBookingHandler = require("../lib/tenant-booking-handler");
-const { sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { noteCollection, notesWithLiveContent } = require("../lib/crm-live-notes");
 const noteLiveHandler = require("../lib/crm-note-live-handler");
 
@@ -466,6 +466,11 @@ async function workspaceHandler(req, res) {
   }
 
   if (req.method === "DELETE") {
+    if (req.body?.operation === "delete-completed-tasks") {
+      const deletion = removeCompletedTasks(items);
+      if (deletion.deletedCount) await writeCollection("workspace", deletion.remaining);
+      return res.status(200).json({ ok: true, deletedCount: deletion.deletedCount, deletedIds: deletion.deletedIds });
+    }
     const id = cleanText(req.query?.id || req.body?.id, 120);
     const index = items.findIndex((item) => item.id === id);
     if (index < 0) return res.status(404).json({ error: "Elementet ble ikke funnet." });
