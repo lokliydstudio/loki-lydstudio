@@ -22,6 +22,13 @@ const {
   taskNotification,
 } = require("../lib/crm-push");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
+const {
+  MAX_PROJECT_IMAGE_SIZE,
+  PROJECT_IMAGE_CONTENT_TYPES,
+  projectImagePathname,
+  publicProjectImage,
+  sanitizeProjectImage,
+} = require("../lib/crm-project-images");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
 const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
@@ -75,25 +82,28 @@ async function projectsHandler(req, res) {
 
   if (req.method === "DELETE") {
     const id = cleanText(req.query?.id || req.body?.id, 120);
-    const [projects, tracks, comments] = await Promise.all([
+    const [projects, tracks, comments, projectImages] = await Promise.all([
       readCollection("projects"),
       readCollection("audio"),
       readCollection("audio-comments"),
+      readCollection("project-images"),
     ]);
-    const deletion = planProjectDeletion(projects, tracks, id);
+    const deletion = planProjectDeletion(projects, tracks, id, projectImages);
     if (!deletion) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
 
-    const pathnames = deletion.attachedTracks.map((track) => track.pathname).filter(Boolean);
+    const pathnames = [...deletion.attachedTracks, ...deletion.attachedImages].map((item) => item.pathname).filter(Boolean);
     const deletedTrackIds = new Set(deletion.attachedTracks.map((track) => track.id));
     if (pathnames.length) await del(pathnames);
     await writeCollection("audio", deletion.remainingTracks);
     await writeCollection("audio-comments", comments.filter((comment) => !deletedTrackIds.has(comment.trackId)));
+    await writeCollection("project-images", deletion.remainingImages);
     await writeCollection("projects", deletion.remainingProjects);
 
     return res.status(200).json({
       ok: true,
       deletedProjectId: id,
       deletedTrackCount: deletion.attachedTracks.length,
+      deletedImageCount: deletion.attachedImages.length,
     });
   }
 
@@ -103,13 +113,14 @@ async function projectsHandler(req, res) {
 async function projectExportHandler(req, res) {
   if (!requireUser(req, res)) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [projects, tracks, comments] = await Promise.all([
+  const [projects, tracks, comments, projectImages] = await Promise.all([
     readCollection("projects"),
     readCollection("audio"),
     readCollection("audio-comments"),
+    readCollection("project-images"),
   ]);
   const requestedId = cleanText(req.query?.id, 120);
-  const manifest = createProjectExport(projects, tracks, requestedId, comments);
+  const manifest = createProjectExport(projects, tracks, requestedId, comments, projectImages);
   if (!manifest) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
   return res.status(200).json(manifest);
 }
@@ -154,6 +165,106 @@ async function uploadHandler(req, res) {
     console.error("Audio upload signing failed", error?.message);
     return res.status(400).json({ error: error?.message || "Kunne ikke starte lydopplastingen." });
   }
+}
+
+async function projectImageUploadHandler(req, res) {
+  if (!requireUser(req, res)) return;
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  try {
+    const result = await handleUploadPresigned({
+      body: req.body,
+      request: req,
+      getSignedToken: async (pathname, clientPayload) => {
+        let payload;
+        try { payload = JSON.parse(clientPayload || "{}"); } catch { throw new Error("Ugyldig opplastingsdata."); }
+        if (projectImagePathname(payload.imageId, payload.filename) !== pathname) throw new Error("Ugyldig filsti.");
+        const projects = await readCollection("projects");
+        if (!projects.some((project) => project.id === payload.projectId)) throw new Error("Prosjektet finnes ikke.");
+
+        const validUntil = Date.now() + 15 * 60 * 1000;
+        const token = await issueSignedToken({
+          pathname,
+          operations: ["put"],
+          allowedContentTypes: PROJECT_IMAGE_CONTENT_TYPES,
+          maximumSizeInBytes: MAX_PROJECT_IMAGE_SIZE,
+          validUntil,
+        });
+        return {
+          token,
+          urlOptions: {
+            allowedContentTypes: PROJECT_IMAGE_CONTENT_TYPES,
+            maximumSizeInBytes: MAX_PROJECT_IMAGE_SIZE,
+            validUntil,
+            addRandomSuffix: false,
+            allowOverwrite: false,
+            cacheControlMaxAge: 60,
+          },
+        };
+      },
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Project image upload signing failed", error?.message);
+    return res.status(400).json({ error: error?.message || "Kunne ikke starte bildeopplastingen." });
+  }
+}
+
+async function projectImagesHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const images = await readCollection("project-images");
+
+  if (req.method === "GET") {
+    const projectId = cleanText(req.query?.projectId, 120);
+    return res.status(200).json({
+      images: images.filter((image) => !projectId || image.projectId === projectId).map(publicProjectImage),
+    });
+  }
+
+  if (req.method === "POST" && req.body?.operation === "register") {
+    const projects = await readCollection("projects");
+    if (!projects.some((project) => project.id === req.body?.image?.projectId)) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
+    if (images.some((image) => image.id === req.body?.image?.id)) return res.status(409).json({ error: "Bildet er allerede registrert." });
+    const pathname = cleanText(req.body?.image?.pathname, 500);
+    const actualBlob = await head(pathname, { access: "private" });
+    const image = sanitizeProjectImage(req.body?.image, actualBlob, user.email);
+    if (!image) return res.status(400).json({ error: "Bildet kunne ikke verifiseres. Bruk JPEG, PNG, WebP eller HEIC på maks 20 MB." });
+    images.unshift(image);
+    await writeCollection("project-images", images);
+    return res.status(201).json({ image: publicProjectImage(image) });
+  }
+
+  if (req.method === "PATCH") {
+    const id = cleanText(req.body?.id, 90);
+    const index = images.findIndex((image) => image.id === id);
+    if (index < 0) return res.status(404).json({ error: "Bildet ble ikke funnet." });
+    const updated = sanitizeProjectImage(req.body?.changes || {}, null, user.email, images[index]);
+    if (!updated) return res.status(400).json({ error: "Bildedataene kunne ikke lagres." });
+    images[index] = updated;
+    await writeCollection("project-images", images);
+    return res.status(200).json({ image: publicProjectImage(updated) });
+  }
+
+  if (req.method === "DELETE") {
+    const id = cleanText(req.query?.id || req.body?.id, 90);
+    const index = images.findIndex((image) => image.id === id);
+    if (index < 0) return res.status(404).json({ error: "Bildet ble ikke funnet." });
+    const [image] = images.splice(index, 1);
+    await del(image.pathname);
+    await writeCollection("project-images", images);
+    return res.status(200).json({ ok: true });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function projectImageStreamHandler(req, res) {
+  if (!requireUser(req, res)) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const images = await readCollection("project-images");
+  const image = images.find((item) => item.id === cleanText(req.query?.id, 90));
+  if (!image) return res.status(404).json({ error: "Bildet ble ikke funnet." });
+  return streamPrivateBlob(req, res, image.pathname, image.filename, { download: String(req.query?.download || "") === "1" });
 }
 
 async function audioHandler(req, res) {
@@ -804,13 +915,14 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, rentals, projects, audio, audioComments, documents, receipts, activities, bookings, quotes, mailSort, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, audioComments, projectImages, documents, receipts, activities, bookings, quotes, mailSort, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("rentals"),
     readCollection("projects"),
     readCollection("audio"),
     readCollection("audio-comments"),
+    readCollection("project-images"),
     readCollection("documents"),
     readCollection("receipts"),
     readCollection("activities"),
@@ -822,7 +934,7 @@ async function backupHandler(req, res) {
     readCollection("tenant-booking-users"),
     readCollection("tenant-bookings"),
   ]);
-  const projectExport = createProjectExport(projects, audio, "", audioComments);
+  const projectExport = createProjectExport(projects, audio, "", audioComments, projectImages);
   const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
   const safeReceipts = receipts.map(({ pathname, uploadedBy, ...receipt }) => receipt);
   return res.status(200).json({
@@ -836,6 +948,7 @@ async function backupHandler(req, res) {
     rentals,
     projects: projectExport.projects,
     audioFiles: projectExport.files,
+    projectImages: projectExport.imageFiles,
     audioComments: audioComments.map(publicAudioComment),
     documents: safeDocuments,
     receipts: safeReceipts,
@@ -859,6 +972,9 @@ module.exports = async function handler(req, res) {
     if (action === "projects") return await projectsHandler(req, res);
     if (action === "project-export") return await projectExportHandler(req, res);
     if (action === "upload") return await uploadHandler(req, res);
+    if (action === "project-image-upload") return await projectImageUploadHandler(req, res);
+    if (action === "project-images") return await projectImagesHandler(req, res);
+    if (action === "project-image-stream") return await projectImageStreamHandler(req, res);
     if (action === "audio") return await audioHandler(req, res);
     if (action === "audio-comments") return await audioCommentsHandler(req, res);
     if (action === "internal-stream") return await internalStreamHandler(req, res);

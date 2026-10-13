@@ -12,10 +12,19 @@
     weba: "audio/webm",
     webm: "audio/webm",
   };
+  const projectImageTypes = {
+    heic: "image/heic",
+    heif: "image/heif",
+    jpeg: "image/jpeg",
+    jpg: "image/jpeg",
+    png: "image/png",
+    webp: "image/webp",
+  };
   let initialized = false;
   let projects = [];
   let tracks = [];
   let audioComments = [];
+  let projectImages = [];
   let selectedProjectId = null;
   let activeOwner = "Leon";
   let getContacts = () => [];
@@ -166,6 +175,10 @@
 
   function projectTracks() {
     return tracks.filter((track) => track.projectId === selectedProjectId);
+  }
+
+  function currentProjectImages() {
+    return projectImages.filter((image) => image.projectId === selectedProjectId);
   }
 
   function formatTimestamp(value) {
@@ -361,6 +374,25 @@
       </article>`).join("");
   }
 
+  function projectImageCards() {
+    const visible = currentProjectImages();
+    if (!visible.length) return '<div class="project-image-empty">Ingen tekniske bilder i prosjektet ennå. Ta bilde av frontpanelet før dere endrer innstillingene.</div>';
+    return visible.map((image) => `
+      <article class="project-image-card" data-project-image-card="${esc(image.id)}">
+        <a class="project-image-preview" href="/api/studio?action=project-image-stream&amp;id=${encodeURIComponent(image.id)}" target="_blank" rel="noreferrer" title="Åpne bildet i full størrelse">
+          <img src="/api/studio?action=project-image-stream&amp;id=${encodeURIComponent(image.id)}" alt="${esc(image.gear || "Teknisk bilde fra prosjektet")}" loading="lazy">
+          <span>Åpne full størrelse ↗</span>
+        </a>
+        <div class="project-image-fields">
+          <label>Utstyr / enhet<input data-image-field="gear" maxlength="160" value="${esc(image.gear)}" placeholder="F.eks. SSL Bus Compressor"></label>
+          <label>Plass i chain<input data-image-field="chainPosition" maxlength="160" value="${esc(image.chainPosition)}" placeholder="F.eks. Mixbus – steg 2"></label>
+          <label class="project-image-wide">Innstillinger<textarea data-image-field="settings" maxlength="1000" rows="2" placeholder="Threshold, ratio, attack, release, gain …">${esc(image.settings)}</textarea></label>
+          <label class="project-image-wide">Notat<textarea data-image-field="notes" maxlength="1000" rows="2" placeholder="Hva ble brukt, hvorfor og på hvilken miks?">${esc(image.notes)}</textarea></label>
+        </div>
+        <footer><span>${esc(image.filename)} · ${formatBytes(image.size)}</span><div class="button-row"><a class="tiny-button" href="/api/studio?action=project-image-stream&amp;id=${encodeURIComponent(image.id)}&amp;download=1">Last ned</a><button class="tiny-button" type="button" data-save-project-image="${esc(image.id)}">Lagre info</button><button class="tiny-button danger" type="button" data-delete-project-image="${esc(image.id)}">Slett</button></div></footer>
+      </article>`).join("");
+  }
+
   function editorMarkup(project) {
     return `
       <div class="project-toolbar">
@@ -404,6 +436,27 @@
         <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>Patcheliste</h3><p>Bruk bare kanalene økten trenger. Fysisk input → mikrofon / DI → preamp → lydkortets input.</p></div><div class="button-row patch-actions"><button class="secondary" id="remove-empty-patch" type="button">Fjern tomme</button><button class="secondary" id="add-patch-channel" type="button">+ Legg til kanal</button><button class="secondary" id="print-patch" type="button">⎙ Skriv ut</button><span class="state green" id="patch-channel-count">${project.patch.length} / 32</span></div></div>
         <div class="patch-wrap"><table class="patch-table"><thead><tr><th>CH</th><th>KILDE</th><th>FYSISK INPUT</th><th>MIK / DI</th><th>PREAMP</th><th>ROUTING</th><th>+48V</th><th>NOTAT</th><th>FJERN</th></tr></thead><tbody id="patch-body">${patchRows(project)}</tbody></table></div>
         <p class="patch-help">Maks 32 kanaler. Fjernede kanaler blir borte når prosjektet lagres.</p>
+      </section>
+      <section class="studio-section project-image-section">
+        <div class="studio-section-head"><div><span class="kicker">TEKNISK DOKUMENTASJON</span><h3>Outboard og chain-bilder</h3><p>Ta vare på kompressor-, EQ- og rackinnstillinger slik at miksen kan gjenskapes senere.</p></div><span class="state green">Privat · ${currentProjectImages().length} bilder</span></div>
+        <div class="project-image-uploader">
+          <div class="project-image-upload-fields">
+            <label>Utstyr / enhet<input id="project-image-gear" maxlength="160" placeholder="F.eks. 1176, LA-2A eller SSL G-Bus"></label>
+            <label>Plass i chain<input id="project-image-position" maxlength="160" placeholder="F.eks. Vokal insert – steg 3"></label>
+            <label>Innstillinger<textarea id="project-image-settings" maxlength="1000" rows="2" placeholder="Ratio 4:1, attack 3, release 6, gain …"></textarea></label>
+            <label>Notat<textarea id="project-image-notes" maxlength="1000" rows="2" placeholder="Låt, spor, miksversjon og hva innstillingen gjør"></textarea></label>
+          </div>
+          <div class="project-image-upload-actions">
+            <input class="project-image-native-input" id="project-image-camera" type="file" accept="image/*" capture="environment">
+            <label class="primary project-image-picker" for="project-image-camera" role="button">⌁ Ta bilde</label>
+            <input class="project-image-native-input" id="project-image-files" type="file" accept=".jpg,.jpeg,.png,.webp,.heic,.heif,image/jpeg,image/png,image/webp,image/heic,image/heif" multiple>
+            <label class="secondary project-image-picker" for="project-image-files" role="button">Velg bilder</label>
+            <span>Maks 20 MB per bilde · JPEG, PNG, WebP eller HEIC</span>
+          </div>
+          <div class="project-image-progress" id="project-image-progress" hidden><i></i><span>Laster opp …</span></div>
+        </div>
+        <div class="project-image-gallery" id="project-image-gallery">${projectImageCards()}</div>
+        <p class="storage-note"><span>●</span><span>Bildene lagres privat, er bare tilgjengelige for innloggede brukere og følger med i prosjektets ZIP-backup.</span></p>
       </section>
       <section class="studio-section">
         <div class="studio-section-head"><div><span class="kicker">LYDLEVERANSER</span><h3>Mikser og demoer</h3><p>Last opp privat, lytt her og kopier en tidsbegrenset kundelenke.</p></div><span class="state violet">Privat lagring</span></div>
@@ -455,6 +508,10 @@
     bindContactEmailLookup(document.getElementById("project-email"), document.getElementById("project-client"));
     const upload = document.getElementById("audio-upload-form");
     if (upload) upload.onsubmit = uploadAudio;
+    const projectImageCamera = document.getElementById("project-image-camera");
+    if (projectImageCamera) projectImageCamera.onchange = (event) => uploadProjectImages(event.target.files);
+    const projectImageFiles = document.getElementById("project-image-files");
+    if (projectImageFiles) projectImageFiles.onchange = (event) => uploadProjectImages(event.target.files);
     const spotifyForm = document.getElementById("spotify-reference-form");
     if (spotifyForm) spotifyForm.onsubmit = addSpotifyReference;
     const timeForm = document.getElementById("time-entry-form");
@@ -479,6 +536,7 @@
       form.onsubmit = (event) => saveAudioComment(event, form.dataset.commentForm);
     });
     bindCommentActions();
+    bindProjectImageActions();
     bindPatchRowActions();
     bindTimeEntryActions();
     document.querySelectorAll("#project-workspace .project-fields input, #project-workspace .project-fields textarea, #project-workspace .project-fields select, #patch-body input").forEach((input) => {
@@ -907,8 +965,9 @@
       `Omfang: ${manifest.scope === "project" ? "Ett prosjekt" : "Alle prosjekter"}`,
       `Antall prosjekter: ${manifest.projects.length}`,
       `Antall lydfiler: ${manifest.files.length}`,
+      `Antall tekniske bilder: ${(manifest.imageFiles || []).length}`,
       "",
-      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser, patcheliste.csv, timelogg.csv og mappen Lydfiler.",
+      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser og teknisk bildedata, patcheliste.csv, timelogg.csv og mappene Lydfiler og Tekniske-bilder.",
       "Arkivet inneholder kundeopplysninger og kan inneholde upublisert lyd. Oppbevar det sikkert og kryptert.",
       "Lydfilene lagres uten ekstra ZIP-komprimering for effektiv eksport og tapsfri bevaring.",
       "",
@@ -925,8 +984,18 @@
       const projectFiles = manifest.files.filter((file) => file.projectId === project.id);
       projectFiles.forEach((file, index) => {
         entries.push({
-          kind: "audio",
+          kind: "private-file",
           name: `${root}/Lydfiler/${String(index + 1).padStart(2, "0")}-${archiveSegment(file.version, "versjon")}-${archiveSegment(file.filename, "lydfil")}`,
+          size: Number(file.size) || 0,
+          url: file.downloadUrl,
+        });
+      });
+      const imageFiles = (manifest.imageFiles || []).filter((file) => file.projectId === project.id);
+      imageFiles.forEach((file, index) => {
+        const gear = archiveSegment(file.gear, "utstyr");
+        entries.push({
+          kind: "private-file",
+          name: `${root}/Tekniske-bilder/${String(index + 1).padStart(2, "0")}-${gear}-${archiveSegment(file.filename, "bilde")}`,
           size: Number(file.size) || 0,
           url: file.downloadUrl,
         });
@@ -940,7 +1009,7 @@
     for (let index = 0; index < entries.length; index += 1) {
       const entry = entries[index];
       if (statusNode) statusNode.textContent = `Pakker ${index + 1} av ${entries.length}: ${entry.name.split("/").pop()}`;
-      if (entry.kind !== "audio") {
+      if (entry.kind !== "private-file") {
         yield { name: entry.name, input: entry.input, size: entry.size, lastModified: new Date() };
         continue;
       }
@@ -990,8 +1059,10 @@
       const manifest = await request(`/api/studio?action=project-export${query}`);
       const entries = exportEntries(manifest);
       const totalAudioSize = manifest.files.reduce((sum, file) => sum + (Number(file.size) || 0), 0);
+      const totalImageSize = (manifest.imageFiles || []).reduce((sum, file) => sum + (Number(file.size) || 0), 0);
+      const totalArchiveMediaSize = totalAudioSize + totalImageSize;
 
-      if (!fileHandle && totalAudioSize > 750 * 1024 * 1024 && !confirm(`Denne backupen inneholder ${formatBytes(totalAudioSize)} lyd. Nettleseren må holde hele ZIP-filen i minnet før nedlasting. Fortsett?`)) return;
+      if (!fileHandle && totalArchiveMediaSize > 750 * 1024 * 1024 && !confirm(`Denne backupen inneholder ${formatBytes(totalArchiveMediaSize)} lyd og bilder. Nettleseren må holde hele ZIP-filen i minnet før nedlasting. Fortsett?`)) return;
 
       button.textContent = "Eksporterer …";
       const metadata = entries.map(({ name, size }) => ({ name, size }));
@@ -1022,10 +1093,14 @@
     const project = projects.find((item) => item.id === selectedProjectId);
     if (!project) return;
     const attachedCount = projectTracks().length;
+    const attachedImageCount = currentProjectImages().length;
     const audioWarning = attachedCount
       ? ` og ${attachedCount} ${attachedCount === 1 ? "tilknyttet lydfil" : "tilknyttede lydfiler"}`
       : "";
-    if (!confirm(`Slett «${project.name}»${audioWarning} permanent?\n\nEksporter gjerne en ZIP-backup først. Handlingen kan ikke angres.`)) return;
+    const imageWarning = attachedImageCount
+      ? ` og ${attachedImageCount} ${attachedImageCount === 1 ? "teknisk bilde" : "tekniske bilder"}`
+      : "";
+    if (!confirm(`Slett «${project.name}»${audioWarning}${imageWarning} permanent?\n\nEksporter gjerne en ZIP-backup først. Handlingen kan ikke angres.`)) return;
 
     const button = document.getElementById("delete-project");
     button.disabled = true;
@@ -1035,15 +1110,135 @@
       const deletedTrackIds = new Set(tracks.filter((track) => track.projectId === project.id).map((track) => track.id));
       projects = projects.filter((item) => item.id !== project.id);
       tracks = tracks.filter((track) => track.projectId !== project.id);
+      projectImages = projectImages.filter((image) => image.projectId !== project.id);
       audioComments = audioComments.filter((comment) => !deletedTrackIds.has(comment.trackId));
       selectedProjectId = projects[0]?.id || null;
       render();
       const trackText = result.deletedTrackCount ? ` og ${result.deletedTrackCount} lydfil${result.deletedTrackCount === 1 ? "" : "er"}` : "";
-      toast(`Prosjektet${trackText} er slettet permanent.`);
+      const imageText = result.deletedImageCount ? ` og ${result.deletedImageCount} bilde${result.deletedImageCount === 1 ? "" : "r"}` : "";
+      toast(`Prosjektet${trackText}${imageText} er slettet permanent.`);
     } catch (error) {
       button.disabled = false;
       button.textContent = "Slett prosjekt";
       toast(error.message || "Prosjektet kunne ikke slettes.");
+    }
+  }
+
+  function bindProjectImageActions() {
+    document.querySelectorAll("[data-save-project-image]").forEach((button) => {
+      button.onclick = () => saveProjectImage(button.dataset.saveProjectImage, button);
+    });
+    document.querySelectorAll("[data-delete-project-image]").forEach((button) => {
+      button.onclick = () => deleteProjectImage(button.dataset.deleteProjectImage);
+    });
+  }
+
+  async function uploadProjectImages(fileList) {
+    const files = [...(fileList || [])];
+    if (!files.length) return;
+    if (!window.LokiBlob?.uploadPresigned) return toast("Opplastingsmodulen kunne ikke lastes.");
+    const invalid = files.find((file) => !projectImageTypes[String(file.name || "").split(".").pop().toLowerCase()]);
+    if (invalid) return toast("Bruk JPEG, PNG, WebP eller HEIC for tekniske bilder.");
+    if (files.some((file) => file.size > 20 * 1024 * 1024)) return toast("Hvert bilde kan være maksimalt 20 MB.");
+
+    const progress = document.getElementById("project-image-progress");
+    const bar = progress?.querySelector("i");
+    const status = progress?.querySelector("span");
+    const metadata = {
+      gear: document.getElementById("project-image-gear")?.value || "",
+      chainPosition: document.getElementById("project-image-position")?.value || "",
+      settings: document.getElementById("project-image-settings")?.value || "",
+      notes: document.getElementById("project-image-notes")?.value || "",
+    };
+    if (progress) progress.hidden = false;
+    try {
+      for (let index = 0; index < files.length; index += 1) {
+        const file = files[index];
+        const extension = String(file.name || "").split(".").pop().toLowerCase();
+        const filename = safeFilename(file.name);
+        const imageId = `project-image-${crypto.randomUUID()}`;
+        const pathname = `loki-crm/project-images/${imageId}/${filename}`;
+        if (status) status.textContent = `Laster opp ${index + 1} av ${files.length}: ${file.name}`;
+        const blob = await window.LokiBlob.uploadPresigned(pathname, file, {
+          access: "private",
+          contentType: projectImageTypes[extension],
+          handleUploadUrl: "/api/studio?action=project-image-upload",
+          clientPayload: JSON.stringify({ projectId: selectedProjectId, imageId, filename }),
+          multipart: file.size > 4 * 1024 * 1024,
+          onUploadProgress: ({ percentage }) => {
+            if (bar) bar.style.width = `${Math.max(2, ((index + percentage / 100) / files.length) * 100)}%`;
+          },
+        });
+        const data = await request("/api/studio?action=project-images", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            operation: "register",
+            image: { id: imageId, projectId: selectedProjectId, pathname: blob.pathname, filename, ...metadata },
+          }),
+        });
+        projectImages.unshift(data.image);
+      }
+      ["project-image-gear", "project-image-position", "project-image-settings", "project-image-notes"].forEach((id) => {
+        const input = document.getElementById(id);
+        if (input) input.value = "";
+      });
+      render();
+      toast(`${files.length} ${files.length === 1 ? "teknisk bilde er" : "tekniske bilder er"} lagret privat.`);
+    } catch (error) {
+      if (progress) progress.hidden = true;
+      toast(error.message || "Bildet kunne ikke lastes opp.");
+    } finally {
+      const camera = document.getElementById("project-image-camera");
+      const chooser = document.getElementById("project-image-files");
+      if (camera) camera.value = "";
+      if (chooser) chooser.value = "";
+    }
+  }
+
+  async function saveProjectImage(id, button) {
+    const card = document.querySelector(`[data-project-image-card="${CSS.escape(id)}"]`);
+    if (!card) return;
+    const value = (field) => card.querySelector(`[data-image-field="${field}"]`)?.value || "";
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = "Lagrer …";
+    try {
+      const data = await request("/api/studio?action=project-images", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          id,
+          changes: {
+            gear: value("gear"),
+            chainPosition: value("chainPosition"),
+            settings: value("settings"),
+            notes: value("notes"),
+          },
+        }),
+      });
+      projectImages = projectImages.map((image) => image.id === id ? data.image : image);
+      button.textContent = "Lagret ✓";
+      setTimeout(() => { if (button.isConnected) button.textContent = original; }, 1_500);
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = original;
+      toast(error.message || "Bildeinformasjonen kunne ikke lagres.");
+      return;
+    }
+    button.disabled = false;
+  }
+
+  async function deleteProjectImage(id) {
+    const image = projectImages.find((item) => item.id === id);
+    if (!image || !confirm(`Slett bildet av «${image.gear || image.filename}» permanent?`)) return;
+    try {
+      await request(`/api/studio?action=project-images&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      projectImages = projectImages.filter((item) => item.id !== id);
+      render();
+      toast("Det tekniske bildet er slettet.");
+    } catch (error) {
+      toast(error.message || "Bildet kunne ikke slettes.");
     }
   }
 
@@ -1175,14 +1370,16 @@
     getContacts = typeof options.getContacts === "function" ? options.getContacts : () => [];
     setupModal();
     try {
-      const [projectData, audioData, contactData] = await Promise.all([
+      const [projectData, audioData, projectImageData, contactData] = await Promise.all([
         request("/api/studio?action=projects"),
         request("/api/studio?action=audio"),
+        request("/api/studio?action=project-images"),
         request("/api/crm/leads").catch(() => ({ leads: [] })),
       ]);
       projects = projectData.projects || [];
       tracks = audioData.tracks || [];
       audioComments = audioData.comments || [];
+      projectImages = projectImageData.images || [];
       contactDirectory = contactData.leads || [];
       selectedProjectId = projects[0]?.id || null;
       render();

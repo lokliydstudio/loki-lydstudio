@@ -28,6 +28,7 @@ const { actorName, notificationPayload, publicKey: pushPublicKey, publicSubscrip
 const { isMissingBlobError } = require("../lib/crm-store");
 const { apnsBearerToken, sanitizeNativeDevice } = require("../lib/crm-native-push");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
+const { projectImagePathname, publicProjectImage, sanitizeProjectImage } = require("../lib/crm-project-images");
 const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences, sanitizeTimeEntries } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
@@ -254,6 +255,20 @@ test("project workspace exposes per-project time logging and backup", () => {
   assert.match(studio, /data-delete-time/);
   assert.match(studio, /timelogg\.csv/);
   assert.match(studio, /timeTotals\(project\)\.total/);
+});
+
+test("project workspace stores private outboard photos with mobile camera capture", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "project-images.css"), "utf8");
+  assert.match(html, /project-images\.css/);
+  assert.match(studio, /Outboard og chain-bilder/);
+  assert.match(studio, /id="project-image-camera"[^>]*accept="image\/\*"[^>]*capture="environment"/);
+  assert.match(studio, /action=project-image-upload/);
+  assert.match(studio, /action=project-image-stream/);
+  assert.match(studio, /data-save-project-image/);
+  assert.match(studio, /data-delete-project-image/);
+  assert.match(css, /@media\(max-width:620px\)/);
 });
 
 test("projects keep only canonical Spotify reference tracks and playlists", () => {
@@ -645,7 +660,11 @@ test("project exports include only selected project files and no private blob de
     authorType: "customer",
     createdAt: "2026-09-14T07:00:00.000Z",
   }];
-  const manifest = createProjectExport(projects, tracks, "project-1", comments);
+  const projectImages = [
+    { id: "project-image-123e4567-e89b-12d3-a456-426614174000", projectId: "project-1", filename: "ssl-bus.jpg", gear: "SSL Bus Compressor", chainPosition: "Mixbus", settings: "Ratio 4:1", notes: "V1", size: 1200, contentType: "image/jpeg", pathname: "loki-crm/project-images/private.jpg", uploadedBy: "leon@lokilyd.no" },
+    { id: "project-image-223e4567-e89b-12d3-a456-426614174000", projectId: "project-2", filename: "1176.jpg", gear: "1176", size: 900, contentType: "image/jpeg", pathname: "loki-crm/project-images/other.jpg", uploadedBy: "charles@lokilyd.no" },
+  ];
+  const manifest = createProjectExport(projects, tracks, "project-1", comments, projectImages);
   assert.equal(manifest.scope, "project");
   assert.deepEqual(manifest.projects.map((project) => project.id), ["project-1"]);
   assert.deepEqual(manifest.files.map((file) => file.trackId), ["track-1"]);
@@ -655,20 +674,49 @@ test("project exports include only selected project files and no private blob de
   assert.equal(JSON.stringify(manifest).includes("loki-crm/private"), false);
   assert.equal(manifest.projects[0].tracks[0].comments[0].timestampSeconds, 34);
   assert.equal(manifest.projects[0].spotifyReferences[0].title, "Miksereferanser");
+  assert.deepEqual(manifest.imageFiles.map((file) => file.id), ["project-image-123e4567-e89b-12d3-a456-426614174000"]);
+  assert.equal(manifest.projects[0].technicalImages[0].gear, "SSL Bus Compressor");
+  assert.equal(manifest.imageFiles[0].downloadUrl.includes("project-image-stream"), true);
+  assert.equal("pathname" in manifest.imageFiles[0], false);
+  assert.equal("uploadedBy" in manifest.imageFiles[0], false);
 });
 
-test("project deletion cascades to its audio metadata only", () => {
+test("project deletion cascades to its audio and technical image metadata only", () => {
   const projects = [{ id: "project-1" }, { id: "project-2" }];
   const tracks = [
     { id: "track-1", projectId: "project-1" },
     { id: "track-2", projectId: "project-1" },
     { id: "track-3", projectId: "project-2" },
   ];
-  const deletion = planProjectDeletion(projects, tracks, "project-1");
+  const images = [{ id: "image-1", projectId: "project-1" }, { id: "image-2", projectId: "project-2" }];
+  const deletion = planProjectDeletion(projects, tracks, "project-1", images);
   assert.deepEqual(deletion.attachedTracks.map((track) => track.id), ["track-1", "track-2"]);
   assert.deepEqual(deletion.remainingProjects.map((project) => project.id), ["project-2"]);
   assert.deepEqual(deletion.remainingTracks.map((track) => track.id), ["track-3"]);
+  assert.deepEqual(deletion.attachedImages.map((image) => image.id), ["image-1"]);
+  assert.deepEqual(deletion.remainingImages.map((image) => image.id), ["image-2"]);
   assert.equal(planProjectDeletion(projects, tracks, "missing"), null);
+});
+
+test("project technical images are private, typed and sanitized", () => {
+  const id = "project-image-123e4567-e89b-12d3-a456-426614174000";
+  const pathname = projectImagePathname(id, "SSL bus front.jpg");
+  assert.equal(pathname, `loki-crm/project-images/${id}/SSL-bus-front.jpg`);
+  const image = sanitizeProjectImage(
+    { id, projectId: "project-1", filename: "SSL bus front.jpg", gear: "SSL\u0000 G-Bus", chainPosition: "Mixbus", settings: "Ratio 4:1", notes: "Miks V2" },
+    { pathname, size: 2_500_000, contentType: "image/jpeg" },
+    "leon@lokilyd.no",
+  );
+  assert.equal(image.gear, "SSL G-Bus");
+  assert.equal(image.pathname, pathname);
+  assert.equal(image.uploadedBy, "leon@lokilyd.no");
+  assert.equal("pathname" in publicProjectImage(image), false);
+  assert.equal("uploadedBy" in publicProjectImage(image), false);
+  assert.equal(sanitizeProjectImage(
+    { id, projectId: "project-1", filename: "unsafe.svg" },
+    { pathname: `loki-crm/project-images/${id}/unsafe.svg`, size: 100, contentType: "image/svg+xml" },
+    "leon@lokilyd.no",
+  ), null);
 });
 
 test("client ZIP creates a valid archive response", async () => {

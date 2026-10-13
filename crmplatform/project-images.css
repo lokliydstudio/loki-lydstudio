@@ -1,0 +1,31 @@
+.project-image-section{background:linear-gradient(180deg,rgba(206,255,61,.05),transparent 46%)}
+.project-image-uploader{margin-bottom:18px;padding:16px;border:1px solid var(--line);border-radius:14px;background:#efebe3}
+.project-image-upload-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.project-image-upload-fields label,.project-image-fields label{display:grid;gap:6px;color:#6e6a62;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.project-image-upload-fields input,.project-image-upload-fields textarea,.project-image-fields input,.project-image-fields textarea{width:100%;padding:10px 11px;border:1px solid #d5d0c6;border-radius:9px;background:#fff;color:var(--ink);font:inherit;font-size:10px;line-height:1.45;resize:vertical;text-transform:none}
+.project-image-upload-actions{position:relative;display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:12px}
+.project-image-upload-actions>span{color:var(--muted);font-size:8px}
+.project-image-picker{display:inline-flex;align-items:center;justify-content:center;min-height:39px;margin:0;cursor:pointer;user-select:none}
+.project-image-native-input{position:absolute!important;width:1px!important;height:1px!important;margin:-1px!important;padding:0!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;border:0!important}
+.project-image-progress{position:relative;overflow:hidden;display:flex;align-items:center;min-height:34px;margin-top:12px;padding:0 10px;border-radius:8px;background:#ddd8ce;color:#3e3b35;font-size:8px;font-weight:800}
+.project-image-progress i{position:absolute;inset:0 auto 0 0;width:2%;background:rgba(206,255,61,.65);transition:width .2s ease}
+.project-image-progress span{position:relative;z-index:1}
+.project-image-gallery{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.project-image-card{overflow:hidden;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+.project-image-preview{position:relative;display:block;overflow:hidden;aspect-ratio:16/10;background:#23231f;color:#fff;text-decoration:none}
+.project-image-preview img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .25s ease}
+.project-image-preview:hover img{transform:scale(1.015)}
+.project-image-preview span{position:absolute;right:10px;bottom:10px;padding:6px 8px;border-radius:99px;background:rgba(20,20,17,.78);color:#fff;font-size:8px;font-weight:800;backdrop-filter:blur(8px)}
+.project-image-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px}
+.project-image-wide{grid-column:1/-1}
+.project-image-card footer{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:0 14px 14px}
+.project-image-card footer>span{min-width:0;overflow:hidden;color:var(--muted);font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+.project-image-card footer .button-row{flex-wrap:nowrap}
+.project-image-card footer a.tiny-button{text-decoration:none}
+.project-image-empty{grid-column:1/-1;padding:28px;border:1px dashed var(--line);border-radius:12px;color:var(--muted);font-size:9px;text-align:center}
+html[data-theme="dark"] .project-image-uploader{background:#292925}
+html[data-theme="dark"] .project-image-upload-fields label,html[data-theme="dark"] .project-image-fields label{color:#aaa69d}
+html[data-theme="dark"] .project-image-upload-fields input,html[data-theme="dark"] .project-image-upload-fields textarea,html[data-theme="dark"] .project-image-fields input,html[data-theme="dark"] .project-image-fields textarea{border-color:var(--line);background:#1f1f1c;color:var(--ink)}
+html[data-theme="dark"] .project-image-progress{background:#363630;color:#e5e1d8}
+@media(max-width:900px){.project-image-gallery{grid-template-columns:1fr}}
+@media(max-width:620px){.project-image-uploader{padding:12px}.project-image-upload-fields,.project-image-fields{grid-template-columns:1fr}.project-image-wide{grid-column:auto}.project-image-upload-actions{display:grid;grid-template-columns:1fr 1fr}.project-image-upload-actions>span{grid-column:1/-1}.project-image-picker{width:100%}.project-image-card footer{align-items:stretch;flex-direction:column}.project-image-card footer .button-row{display:grid;grid-template-columns:1fr 1fr 1fr}.project-image-card footer .tiny-button{display:flex;align-items:center;justify-content:center;min-height:38px}.project-image-preview{aspect-ratio:4/3}}
