@@ -33,7 +33,7 @@ const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanit
 const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { decodeXlsxBase64, fikenContactsFromRows } = require("../lib/fiken-contact-import");
 const { publicSummary } = require("../lib/crm-prospect-handler");
-const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
+const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeNoteAttachments, sanitizeTask } = require("../lib/crm-workspace");
 const {
   bookingConflict: tenantBookingConflict,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
@@ -853,6 +853,20 @@ test("shared tasks and meeting notes are normalized", () => {
   const note = sanitizeNote({ type: "møte", title: "Ukemøte", content: "Neste steg", attendees: "Leon, Charles" }, {}, "charles@lokilyd.no");
   assert.equal(note.type, "møte");
   assert.equal(note.attendees, "Leon, Charles");
+  const attachments = sanitizeNoteAttachments([
+    { id: "document-12345678", name: " Referat.pdf ", type: "PDF", size: 2048 },
+    { id: "document-12345678", name: "Duplikat.pdf", size: 42 },
+    { id: "../unsafe", name: "Ugyldig.pdf", size: 42 },
+  ]);
+  assert.deepEqual(attachments, [{ id: "document-12345678", name: "Referat.pdf", type: "PDF", size: 2048 }]);
+  const attachmentOnly = sanitizeNote({
+    type: "møte",
+    title: "Opplastet referat",
+    content: "",
+    attachments,
+  }, {}, "leon@lokilyd.no");
+  assert.equal(attachmentOnly.content, "");
+  assert.equal(attachmentOnly.attachments.length, 1);
 });
 
 test("shared task list can filter by exact assignee", () => {
@@ -906,7 +920,19 @@ test("workspace exposes bulk task cleanup and collapsed notes", () => {
   assert.match(workspace, /const expandedNotes = new Set\(\)/);
   assert.match(workspace, /data-note-toggle/);
   assert.match(workspace, /aria-expanded=/);
-  assert.match(workspace, /note-content[^>]+hidden/);
+  assert.match(workspace, /note-detail[^>]+hidden/);
+});
+
+test("workspace notes accept private document attachments", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
+  const documents = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "documents.js"), "utf8");
+  assert.match(html, /id="note-attachments"[^>]*type="file"[^>]*multiple/);
+  assert.match(html, /valgfritt når et dokument er vedlagt/);
+  assert.match(workspace, /LokiDocuments\.uploadFiles/);
+  assert.match(workspace, /data-note-attachment-remove/);
+  assert.match(workspace, /\/api\/crm\/documents\?action=download/);
+  assert.match(documents, /window\.LokiDocuments = \{ init, uploadFiles \}/);
 });
 
 test("workspace tasks stay compact until their details are opened", () => {

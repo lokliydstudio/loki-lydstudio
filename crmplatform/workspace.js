@@ -25,6 +25,11 @@
     window.workspaceToastTimer = setTimeout(() => node.classList.remove("show"), 3200);
   };
   const formatDate = (value) => value ? new Intl.DateTimeFormat("nb-NO", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(`${value}T12:00:00`)) : "Ingen frist";
+  const formatBytes = (value) => {
+    const bytes = Number(value) || 0;
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} kB`;
+    return `${(bytes / 1024 / 1024).toLocaleString("nb-NO", { maximumFractionDigits: 1 })} MB`;
+  };
   const moneyFromOre = (value) => new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 0 }).format((Number(value) || 0) / 100);
   const money = (value) => new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 0 }).format(Number(value) || 0);
 
@@ -96,9 +101,11 @@
     const list = document.getElementById("note-list");
     list.innerHTML = notes.length ? notes.map((note) => {
       const expanded = expandedNotes.has(note.id);
+      const attachments = Array.isArray(note.attachments) ? note.attachments : [];
+      const attachmentLabel = attachments.length === 1 ? "1 vedlegg" : `${attachments.length} vedlegg`;
       return `<article class="note-card ${expanded ? "expanded" : "collapsed"}">
-        <div class="note-card-head"><button class="note-toggle" type="button" data-note-toggle="${esc(note.id)}" aria-expanded="${expanded}" aria-controls="note-content-${esc(note.id)}"><span><span class="state ${note.type === "møte" ? "blue" : "violet"}">${note.type === "møte" ? "Møtereferat" : "Idé"}</span><h3>${esc(note.title)}</h3><small>${esc(formatDate(note.date))}${note.attendees ? ` · ${esc(note.attendees)}` : ""}</small></span><i aria-hidden="true">⌄</i></button><div class="note-actions"><button class="icon-button" data-note-edit="${esc(note.id)}" aria-label="Rediger notat">✎</button><button class="icon-button" data-note-delete="${esc(note.id)}" aria-label="Slett notat">×</button></div></div>
-        <p class="note-content" id="note-content-${esc(note.id)}" ${expanded ? "" : "hidden"}>${esc(note.content)}</p>
+        <div class="note-card-head"><button class="note-toggle" type="button" data-note-toggle="${esc(note.id)}" aria-expanded="${expanded}" aria-controls="note-detail-${esc(note.id)}"><span><span class="state ${note.type === "møte" ? "blue" : "violet"}">${note.type === "møte" ? "Møtereferat" : "Idé"}</span><h3>${esc(note.title)}</h3><small>${esc(formatDate(note.date))}${note.attendees ? ` · ${esc(note.attendees)}` : ""}${attachments.length ? ` · ${attachmentLabel}` : ""}</small></span><i aria-hidden="true">⌄</i></button><div class="note-actions"><button class="icon-button" data-note-edit="${esc(note.id)}" aria-label="Rediger notat">✎</button><button class="icon-button" data-note-delete="${esc(note.id)}" aria-label="Slett notat">×</button></div></div>
+        <div class="note-detail" id="note-detail-${esc(note.id)}" ${expanded ? "" : "hidden"}>${note.content ? `<p class="note-content">${esc(note.content)}</p>` : ""}${attachments.length ? `<div class="note-attachments"><strong>Dokumentvedlegg</strong>${attachments.map((attachment) => { const url = `/api/crm/documents?action=download&amp;id=${encodeURIComponent(attachment.id)}`; return `<div class="note-attachment"><span><b>${esc(attachment.name)}</b><small>${esc(attachment.type)} · ${esc(formatBytes(attachment.size))}</small></span><span class="note-attachment-actions"><a class="tiny-button" href="${url}" target="_blank" rel="noreferrer">Åpne</a><a class="tiny-button" href="${url}&amp;download=1">Last ned</a><button class="tiny-button" type="button" data-note-attachment-remove="${esc(attachment.id)}" data-note-id="${esc(note.id)}">Fjern</button></span></div>`; }).join("")}</div>` : ""}</div>
       </article>`;
     }).join("") : '<div class="empty">Ingen notater eller møtereferater ennå.</div>';
     document.querySelectorAll("[data-note-toggle]").forEach((button) => {
@@ -111,6 +118,9 @@
     });
     document.querySelectorAll("[data-note-edit]").forEach((button) => { button.onclick = () => editNote(button.dataset.noteEdit); });
     document.querySelectorAll("[data-note-delete]").forEach((button) => { button.onclick = () => deleteItem(button.dataset.noteDelete, "notatet"); });
+    document.querySelectorAll("[data-note-attachment-remove]").forEach((button) => {
+      button.onclick = () => removeNoteAttachment(button.dataset.noteId, button.dataset.noteAttachmentRemove);
+    });
   }
 
   function renderGoals() {
@@ -156,6 +166,45 @@
       toast(`${data.deletedCount || 0} fullførte ${data.deletedCount === 1 ? "oppgave er" : "oppgaver er"} slettet.`);
     } catch (error) { toast(error.message); }
     finally { button.disabled = false; }
+  }
+
+  async function removeNoteAttachment(noteId, attachmentId) {
+    const note = notes.find((item) => item.id === noteId);
+    const attachment = note?.attachments?.find((item) => item.id === attachmentId);
+    if (!note || !attachment || !confirm(`Fjern «${attachment.name}» fra notatet? Filen beholdes under Dokumenter.`)) return;
+    try {
+      const attachments = note.attachments.filter((item) => item.id !== attachmentId);
+      const data = await api("/api/studio?action=workspace", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: noteId, changes: { attachments } }),
+      });
+      notes = notes.map((item) => item.id === noteId ? data.item : item);
+      renderNotes();
+      toast("Vedlegget er fjernet fra notatet og beholdt under Dokumenter.");
+    } catch (error) { toast(error.message); }
+  }
+
+  async function uploadNoteAttachments(files) {
+    if (!files.length) return [];
+    if (!window.LokiDocuments?.uploadFiles) throw new Error("Dokumentopplastingen kunne ikke lastes.");
+    const progress = document.getElementById("note-upload-progress");
+    const bar = progress.querySelector("i");
+    const status = document.getElementById("note-upload-status");
+    progress.hidden = false;
+    bar.style.width = "2%";
+    try {
+      return await window.LokiDocuments.uploadFiles(files, {
+        onProgress: ({ file, index, total, percentage }) => {
+          bar.style.width = `${Math.max(2, percentage)}%`;
+          status.textContent = `${index + 1} av ${total}: ${file.name} · ${percentage} %`;
+        },
+      });
+    } finally {
+      progress.hidden = true;
+      bar.style.width = "0";
+      status.textContent = "";
+    }
   }
 
   async function deleteItem(id, label) {
@@ -293,10 +342,27 @@
       event.preventDefault();
       const form = event.currentTarget;
       const item = Object.fromEntries(new FormData(form));
+      const files = [...document.getElementById("note-attachments").files];
       const button = document.getElementById("note-submit");
       button.disabled = true;
       if (editingNoteId) form.elements.content.readOnly = true;
       try {
+        const existingAttachments = editingNoteId
+          ? notes.find((note) => note.id === editingNoteId)?.attachments || []
+          : [];
+        if (existingAttachments.length + files.length > 20) throw new Error("Et notat kan ha maksimalt 20 dokumentvedlegg.");
+        if (!String(item.content || "").trim() && !files.length && !existingAttachments.length) {
+          throw new Error("Skriv innhold eller legg ved minst ett dokument.");
+        }
+        if (files.length) {
+          const uploaded = await uploadNoteAttachments(files);
+          item.attachments = [...existingAttachments, ...uploaded.map((document) => ({
+            id: document.id,
+            name: document.name,
+            type: document.type,
+            size: document.size,
+          }))];
+        }
         if (editingNoteId) {
           if (!window.LokiNoteLive?.active(editingNoteId)) throw new Error("Felles redigering er ikke tilkoblet. Åpne notatet på nytt.");
           await window.LokiNoteLive.flush();
@@ -318,6 +384,11 @@
       }
     };
     document.getElementById("note-type").onchange = updateMeetingFields;
+    document.getElementById("note-attachments").onchange = (event) => {
+      const first = event.currentTarget.files[0];
+      const title = document.querySelector('#note-form input[name="title"]');
+      if (first && !title.value.trim()) title.value = first.name.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").trim();
+    };
     document.getElementById("task-clear-completed").onclick = clearCompletedTasks;
     document.getElementById("note-cancel").onclick = async () => {
       try {

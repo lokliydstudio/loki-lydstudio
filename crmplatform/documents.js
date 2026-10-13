@@ -186,7 +186,7 @@
     return matches.length === 1 ? matches[0] : null;
   }
 
-  async function uploadOne(file, target) {
+  async function uploadOne(file, target, options = {}) {
     const ext = extension(file.name);
     if (!safeExtensions.has(ext)) throw new Error(`Filtypen .${ext || "ukjent"} er ikke tillatt.`);
     if (file.size > maxSize) throw new Error(`${file.name} er større enn grensen på 500 MB.`);
@@ -205,11 +205,12 @@
       size: file.size,
       modifiedAt: new Date(file.lastModified || Date.now()).toISOString(),
     };
-    const progress = document.getElementById("document-upload-progress");
-    const bar = progress.querySelector("i");
-    const status = document.getElementById("document-upload-status");
-    status.textContent = `Laster opp ${file.name} · 0 %`;
-    bar.style.width = "2%";
+    const progress = options.showDocumentProgress === false ? null : document.getElementById("document-upload-progress");
+    const bar = progress?.querySelector("i");
+    const status = options.showDocumentProgress === false ? null : document.getElementById("document-upload-status");
+    if (status) status.textContent = `Laster opp ${file.name} · 0 %`;
+    if (bar) bar.style.width = "2%";
+    options.onProgress?.({ file, percentage: 0 });
 
     const blob = await window.LokiBlob.uploadPresigned(pathname, file, {
       access: "private",
@@ -219,8 +220,9 @@
       multipart: true,
       onUploadProgress: ({ percentage }) => {
         const rounded = Math.max(0, Math.min(100, Math.round(percentage)));
-        bar.style.width = `${Math.max(2, rounded)}%`;
-        status.textContent = `Laster opp ${file.name} · ${rounded} %`;
+        if (bar) bar.style.width = `${Math.max(2, rounded)}%`;
+        if (status) status.textContent = `Laster opp ${file.name} · ${rounded} %`;
+        options.onProgress?.({ file, percentage: rounded });
       },
     });
     const result = await request("/api/crm/documents", {
@@ -231,6 +233,27 @@
     const index = documents.findIndex((item) => item.id === result.document.id);
     if (index >= 0) documents[index] = { ...result.document, lastOpenedAt: documents[index].lastOpenedAt };
     else documents.unshift(result.document);
+    return result.document;
+  }
+
+  async function uploadFiles(files, options = {}) {
+    const selected = [...(files || [])];
+    if (!selected.length) return [];
+    if (!window.LokiBlob?.uploadPresigned) throw new Error("Opplastingsmodulen kunne ikke lastes.");
+    const uploaded = [];
+    try {
+      for (let index = 0; index < selected.length; index += 1) {
+        const file = selected[index];
+        const document = await uploadOne(file, null, {
+          showDocumentProgress: false,
+          onProgress: ({ percentage }) => options.onProgress?.({ file, index, total: selected.length, percentage }),
+        });
+        uploaded.push(document);
+      }
+    } finally {
+      if (initialized) render();
+    }
+    return uploaded;
   }
 
   async function uploadSelected(event) {
@@ -280,5 +303,5 @@
     }
   }
 
-  window.LokiDocuments = { init };
+  window.LokiDocuments = { init, uploadFiles };
 })();
