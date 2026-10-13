@@ -15,6 +15,7 @@ const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-calendar");
 const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, publicDocumentsWithOpens, recordDocumentOpen, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
+const { mergeScan, publicReceipt, receiptContentType, receiptPathname, sanitizeReceipt, sanitizeReceiptUpload } = require("../lib/crm-receipts");
 const { checkedJob, safeDestination, safeExistingFile } = require("../bridge/jottacloud-file-sync");
 const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
@@ -433,6 +434,60 @@ test("document uploads use private safe paths and reject active web content", ()
   assert.equal(safeRelativePath("AS/../Passord/test.pdf"), "");
   assert.equal(safeRelativePath("/AS/test.pdf"), "");
   assert.equal(safeRelativePath("AS\\test.pdf"), "");
+});
+
+test("receipt uploads use private image or PDF paths and hide blob metadata", () => {
+  const id = "receipt-123e4567-e89b-12d3-a456-426614174000";
+  assert.equal(receiptPathname(id, "Kvittering Bergen.pdf"), `loki-crm/receipts/${id}/Kvittering-Bergen.pdf`);
+  assert.equal(receiptContentType("kvittering.jpg"), "image/jpeg");
+  assert.equal(receiptPathname(id, "kvittering.svg"), "");
+  assert.equal(receiptPathname("receipt-short", "kvittering.pdf"), "");
+  const stored = sanitizeReceiptUpload(
+    { id, name: "Kvittering Bergen.pdf", size: 2048 },
+    { pathname: receiptPathname(id, "Kvittering Bergen.pdf"), size: 2048, contentType: "application/pdf" },
+    "leon@lokilyd.no",
+  );
+  assert.equal(stored.pathname, `loki-crm/receipts/${id}/Kvittering-Bergen.pdf`);
+  assert.equal(publicReceipt(stored).pathname, undefined);
+  assert.equal(publicReceipt(stored).uploadedBy, undefined);
+  assert.equal(publicReceipt(stored).downloadable, true);
+});
+
+test("receipt scans preserve manual values and require human approval", () => {
+  const id = "receipt-123e4567-e89b-12d3-a456-426614174000";
+  const original = sanitizeReceipt({ id, name: "kvittering.jpg", supplier: "Manuelt navn", totalOre: 0 }, { id, name: "kvittering.jpg", pathname: receiptPathname(id, "kvittering.jpg"), uploadedBy: "leon@lokilyd.no" }, "leon@lokilyd.no");
+  const scanned = mergeScan(original, {
+    supplier: "AI-navn", receiptDate: "2026-10-12", totalOre: 129900, vatOre: 25980,
+    currency: "NOK", category: "Utstyr", receiptNumber: "ABC-42", organizationNumber: "999888777",
+    paymentMethod: "Kort", confidence: 91, warnings: ["Kontroller MVA"],
+  });
+  assert.equal(scanned.supplier, "Manuelt navn");
+  assert.equal(scanned.totalOre, 129900);
+  assert.equal(scanned.receiptDate, "2026-10-12");
+  assert.equal(scanned.status, "Til kontroll");
+  assert.equal(scanned.scanConfidence, 91);
+  assert.deepEqual(scanned.scanWarnings, ["Kontroller MVA"]);
+});
+
+test("Bilag replaces the visible Fiken module with an iPhone camera flow", () => {
+  const root = path.join(__dirname, "..");
+  const html = fs.readFileSync(path.join(root, "crmplatform", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(root, "crmplatform", "receipts.js"), "utf8");
+  const styles = fs.readFileSync(path.join(root, "crmplatform", "receipts.css"), "utf8");
+  const workspace = fs.readFileSync(path.join(root, "crmplatform", "workspace.js"), "utf8");
+  const api = fs.readFileSync(path.join(root, "api", "crm", "receipts.js"), "utf8");
+  assert.match(html, /data-view-target="economy"><span class="nav-icon">▧<\/span>Bilag/);
+  assert.match(html, /id="receipt-camera-input"[^>]+capture="environment"/);
+  assert.match(html, /id="receipt-file-input"[^>]+application\/pdf/);
+  assert.match(client, /\/api\/crm\/receipts/);
+  assert.match(client, /uploadPresigned/);
+  assert.match(client, /operation: "scan"/);
+  assert.match(styles, /@media\(max-width:640px\)/);
+  assert.match(styles, /min-height:56px/);
+  assert.doesNotMatch(workspace, /loadFiken|refresh-fiken/);
+  assert.match(api, /currentUser\(req\)/);
+  assert.match(api, /access: "private"/);
+  assert.match(api, /store:false|scanReceipt/);
 });
 
 test("CRM uploads queue a collision-safe Jottacloud copy", () => {

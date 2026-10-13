@@ -289,39 +289,6 @@
     } catch (error) { toast(error.message); }
   }
 
-  function renderFiken(data) {
-    const root = document.getElementById("fiken-content");
-    const status = document.getElementById("fiken-status");
-    if (!data.connected) {
-      status.textContent = data.authorizationRequired ? "Klar for godkjenning" : "Klar for tilkobling";
-      status.className = "state amber";
-      if (data.authorizationRequired) {
-        root.innerHTML = `<section class="panel"><span class="kicker">SIKKER TILKOBLING</span><h2 style="margin:7px 0">Godkjenn Loki CRM i Fiken</h2><p class="notice">Fiken-appen er konfigurert. Fullfør én godkjenning for å gi CRM-et skrivebeskyttet tilgang til foretak, kontakter og fakturaer.</p><div class="button-row" style="margin-top:16px"><button class="primary" id="connect-fiken">Koble til Fiken</button></div><p class="privacy-note">Tilgangs- og fornyelsesnøkkelen lagres kryptert i den private CRM-lagringen og sendes aldri til nettleseren.</p></section>`;
-        document.getElementById("connect-fiken").onclick = () => { location.assign("/api/studio?action=fiken-connect"); };
-      } else {
-        root.innerHTML = `<section class="panel"><span class="kicker">ÉNGANGSOPPSETT</span><h2 style="margin:7px 0">Koble Loki CRM til Fiken</h2><p class="notice">Integrasjonen er ferdig bygget for OAuth 2.0, men Fiken-appens Client ID og Client Secret må først legges inn som hemmelige miljøvariabler i Vercel.</p><div class="setup-steps"><div><strong>1</strong><span>Opprett appen «Loki CRM» i Fiken.</span></div><div><strong>2</strong><span>Lagre klientopplysningene som <b>FIKEN_CLIENT_ID</b> og <b>FIKEN_CLIENT_SECRET</b> i Vercel.</span></div><div><strong>3</strong><span>Godkjenn skrivebeskyttet visning fra denne siden.</span></div></div><p class="privacy-note">CRM-et bruker bare GET-kall mot Fiken og kan ikke opprette eller endre regnskap.</p></section>`;
-      }
-      return;
-    }
-    status.textContent = "Tilkoblet · skrivebeskyttet";
-    status.className = "state green";
-    const metrics = data.metrics || {};
-    root.innerHTML = `<div class="fiken-metrics"><article class="fiken-metric"><span>UBETALTE FAKTURAER</span><strong>${metrics.unpaidCount || 0}</strong></article><article class="fiken-metric"><span>FORFALTE</span><strong>${metrics.overdueCount || 0}</strong></article><article class="fiken-metric"><span>UTESTÅENDE</span><strong>${esc(moneyFromOre(metrics.outstandingOre))}</strong></article><article class="fiken-metric"><span>KONTAKTER HENTET</span><strong>${metrics.contactCount || 0}</strong></article></div><section class="panel table-panel"><div class="invoice-row invoice-head"><span>Nr.</span><span>Kunde</span><span>Fakturadato</span><span>Forfall</span><span>Beløp</span></div>${(data.invoices || []).map((invoice) => `<article class="invoice-row"><strong>${esc(invoice.number)}</strong><span>${esc(invoice.customer)}</span><span>${esc(formatDate(invoice.issueDate))}</span><span><em class="state ${invoice.settled ? "green" : "amber"}">${invoice.settled ? "Betalt" : esc(formatDate(invoice.dueDate))}</em></span><strong>${esc(moneyFromOre(invoice.grossOre))}</strong></article>`).join("") || '<div class="empty">Ingen fakturaer funnet.</div>'}</section><p class="privacy-note">Sist hentet ${esc(new Intl.DateTimeFormat("nb-NO", { dateStyle: "medium", timeStyle: "short" }).format(new Date(data.fetchedAt)))}. Data vises direkte fra Fiken og lagres ikke i nettleseren.</p>`;
-    document.getElementById("fiken-company").textContent = `${data.company.name}${data.company.organizationNumber ? ` · ${data.company.organizationNumber}` : ""}`;
-  }
-
-  async function loadFiken() {
-    const button = document.getElementById("refresh-fiken");
-    button.disabled = true;
-    button.textContent = "Henter …";
-    try { renderFiken(await api("/api/studio?action=fiken")); }
-    catch (error) {
-      document.getElementById("fiken-status").textContent = "Tilkoblingsfeil";
-      document.getElementById("fiken-status").className = "state red";
-      document.getElementById("fiken-content").innerHTML = `<div class="panel empty">${esc(error.message)}</div>`;
-    } finally { button.disabled = false; button.textContent = "Oppdater fra Fiken"; }
-  }
-
   function bindForms() {
     document.getElementById("task-form").onsubmit = async (event) => {
       event.preventDefault();
@@ -416,7 +383,6 @@
       finally { button.disabled = false; }
     };
     document.getElementById("goal-cancel").onclick = resetGoalForm;
-    document.getElementById("refresh-fiken").onclick = loadFiken;
   }
 
   async function init() {
@@ -432,7 +398,7 @@
     renderTasks();
     renderNotes();
     renderGoals();
-    await Promise.all([loadWorkspace(), loadFiken()]);
+    await loadWorkspace();
   }
 
   window.LokiWorkspace = { init, reload: loadWorkspace };

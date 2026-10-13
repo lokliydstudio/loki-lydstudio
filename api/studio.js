@@ -6,7 +6,7 @@ const { MAX_COMMENTS_PER_TRACK, commentsForTrack, publicAudioComment, sanitizeAu
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadGoogleCalendar } = require("../lib/crm-calendar");
-const { authorizationUrl, exchangeAuthorizationCode, loadFikenSummary, oauthConfigured } = require("../lib/crm-fiken");
+const { SOURCES } = require("../lib/crm-funding");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { COLLECTION: NATIVE_PUSH_COLLECTION, MAX_DEVICES: MAX_NATIVE_PUSH_DEVICES, deviceId: nativeDeviceId, nativePushConfigured, sanitizeNativeDevice } = require("../lib/crm-native-push");
 const { presenceCollection, presenceHeartbeat, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
@@ -805,7 +805,7 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, rentals, projects, audio, audioComments, documents, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, audioComments, documents, receipts, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("rentals"),
@@ -813,6 +813,7 @@ async function backupHandler(req, res) {
     readCollection("audio"),
     readCollection("audio-comments"),
     readCollection("documents"),
+    readCollection("receipts"),
     readCollection("activities"),
     readCollection("bookings"),
     readCollection("quotes"),
@@ -825,6 +826,7 @@ async function backupHandler(req, res) {
   ]);
   const projectExport = createProjectExport(projects, audio, "", audioComments);
   const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
+  const safeReceipts = receipts.map(({ pathname, uploadedBy, ...receipt }) => receipt);
   return res.status(200).json({
     version: 1,
     exportedAt: new Date().toISOString(),
@@ -838,6 +840,7 @@ async function backupHandler(req, res) {
     audioFiles: projectExport.files,
     audioComments: audioComments.map(publicAudioComment),
     documents: safeDocuments,
+    receipts: safeReceipts,
     activities,
     bookings,
     quotes,
@@ -850,41 +853,12 @@ async function backupHandler(req, res) {
   });
 }
 
-async function fikenHandler(req, res) {
+async function fundingMonitorHandler(req, res) {
   if (!requireUser(req, res)) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  return res.status(200).json(await loadFikenSummary());
-}
-
-function fikenRedirectUri(req) {
-  return `${publicBaseUrl(req)}/api/studio?action=fiken-callback`;
-}
-
-async function fikenConnectHandler(req, res) {
-  const user = requireUser(req, res);
-  if (!user) return;
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  if (!oauthConfigured()) return res.status(503).json({ error: "Fiken OAuth-appen er ikke konfigurert ennå." });
-  const state = createToken(user.email, "fiken-oauth", 600);
-  return res.redirect(302, authorizationUrl(fikenRedirectUri(req), state));
-}
-
-async function fikenCallbackHandler(req, res) {
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const baseUrl = publicBaseUrl(req);
-  const state = String(req.query?.state || "");
-  const verified = verifyToken(state, "fiken-oauth");
-  const code = String(req.query?.code || "");
-  if (!verified || !code || req.query?.error) {
-    return res.redirect(302, `${baseUrl}/crmplatform/?fiken=cancelled#economy`);
-  }
-  try {
-    await exchangeAuthorizationCode(code, fikenRedirectUri(req), state);
-    return res.redirect(302, `${baseUrl}/crmplatform/?fiken=connected#economy`);
-  } catch (error) {
-    console.error("Fiken OAuth callback failed", error?.message);
-    return res.redirect(302, `${baseUrl}/crmplatform/?fiken=failed#economy`);
-  }
+  const sources = await readCollection("funding-monitor");
+  const lastCheckedAt = sources.map((source) => source.checkedAt).filter(Boolean).sort().at(-1) || null;
+  return res.status(200).json({ sources: sources.length ? sources : SOURCES, lastCheckedAt });
 }
 
 module.exports = async function handler(req, res) {
@@ -916,9 +890,7 @@ module.exports = async function handler(req, res) {
     if (action === "native-push") return await nativePushHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);
     if (action === "backup") return await backupHandler(req, res);
-    if (action === "fiken") return await fikenHandler(req, res);
-    if (action === "fiken-connect") return await fikenConnectHandler(req, res);
-    if (action === "fiken-callback") return await fikenCallbackHandler(req, res);
+    if (action === "funding-monitor") return await fundingMonitorHandler(req, res);
     if (action === "prospects") return await prospectsHandler(req, res);
     if (action === "prospect-sync") return await prospectSyncHandler(req, res);
     return res.status(404).json({ error: "Ukjent studiohandling." });

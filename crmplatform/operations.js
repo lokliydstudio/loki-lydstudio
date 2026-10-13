@@ -543,7 +543,7 @@
     try {
       const data = await api("/api/studio?action=backup");
       const json = JSON.stringify(data, null, 2);
-      const readme = "LOKI LYDSTUDIO – CRM-BACKUP\n\nDenne ZIP-filen inneholder personopplysninger og skal oppbevares kryptert.\nLydfiler følger ikke med; bruk prosjektbackup under Prosjekter for disse.\n";
+      const readme = "LOKI LYDSTUDIO – CRM-BACKUP\n\nDenne ZIP-filen inneholder personopplysninger og skal oppbevares kryptert.\nBilagsregisteret følger med, men selve bilagsfilene må lastes ned separat. Lydfiler følger ikke med; bruk prosjektbackup under Prosjekter for disse.\n";
       const zip = window.LokiZip.downloadZip([
         { name: "Loki-CRM-data.json", input: json, size: new TextEncoder().encode(json).byteLength },
         { name: "LES-MEG.txt", input: readme, size: new TextEncoder().encode(readme).byteLength },
