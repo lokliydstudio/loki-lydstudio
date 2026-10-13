@@ -909,6 +909,16 @@ test("workspace exposes bulk task cleanup and collapsed notes", () => {
   assert.match(workspace, /note-content[^>]+hidden/);
 });
 
+test("workspace tasks stay compact until their details are opened", () => {
+  const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.css"), "utf8");
+  assert.match(workspace, /const expandedTasks = new Set\(\)/);
+  assert.match(workspace, /data-task-expand/);
+  assert.match(workspace, /aria-controls="task-details-/);
+  assert.match(workspace, /task-details[^>]+hidden/);
+  assert.match(styles, /\.task-row\{align-items:center;padding:9px 11px\}/);
+});
+
 test("CRM push subscriptions are private, owner-scoped and safely normalized", () => {
   const subscription = sanitizeSubscription({
     endpoint: "https://push.example.test/send/device-1",

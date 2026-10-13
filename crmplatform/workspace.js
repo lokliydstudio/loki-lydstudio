@@ -4,6 +4,7 @@
   let goals = [];
   let editingNoteId = null;
   let editingGoalId = null;
+  const expandedTasks = new Set();
   const expandedNotes = new Set();
   let taskAssigneeFilter = "Alle";
   let taskStatusFilter = "open";
@@ -65,12 +66,24 @@
     const sorted = [...visible].sort((left, right) => taskStatusFilter === "completed"
       ? String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""))
       : String(left.dueDate || "9999").localeCompare(String(right.dueDate || "9999")));
-    list.innerHTML = sorted.length ? sorted.map((task) => `
-      <article class="task-row ${task.completed ? "completed" : ""}">
+    list.innerHTML = sorted.length ? sorted.map((task) => {
+      const hasDetails = Boolean(task.details);
+      const expanded = hasDetails && expandedTasks.has(task.id);
+      const summary = `<span class="task-title-line"><strong>${esc(task.title)}</strong>${hasDetails ? '<i aria-hidden="true">⌄</i>' : ""}</span><span class="task-meta"><em>${esc(task.assignee)}</em><em>${esc(formatDate(task.dueDate))}</em><em class="${task.priority === "Høy" ? "high" : ""}">${esc(task.priority)} prioritet</em></span>`;
+      return `<article class="task-row ${task.completed ? "completed" : ""} ${expanded ? "expanded" : "collapsed"}">
         <input class="task-check" type="checkbox" data-task-toggle="${esc(task.id)}" ${task.completed ? "checked" : ""} aria-label="Marker oppgave som ${task.completed ? "åpen" : "fullført"}">
-        <div class="task-copy"><strong>${esc(task.title)}</strong>${task.details ? `<span>${esc(task.details)}</span>` : ""}<div class="task-meta"><em>${esc(task.assignee)}</em><em>${esc(formatDate(task.dueDate))}</em><em class="${task.priority === "Høy" ? "high" : ""}">${esc(task.priority)} prioritet</em></div></div>
+        <div class="task-copy">${hasDetails ? `<button class="task-toggle" type="button" data-task-expand="${esc(task.id)}" aria-expanded="${expanded}" aria-controls="task-details-${esc(task.id)}">${summary}</button><span class="task-details" id="task-details-${esc(task.id)}" ${expanded ? "" : "hidden"}>${esc(task.details)}</span>` : `<div class="task-toggle static">${summary}</div>`}</div>
         <button class="icon-button" data-task-delete="${esc(task.id)}" aria-label="Slett oppgave">×</button>
-      </article>`).join("") : `<div class="empty">${taskAssigneeFilter === "Alle" ? `Ingen ${taskStatusFilter === "completed" ? "fullførte" : "åpne"} oppgaver.` : `Ingen ${taskStatusFilter === "completed" ? "fullførte" : "åpne"} oppgaver for «${esc(taskAssigneeFilter)}».`}</div>`;
+      </article>`;
+    }).join("") : `<div class="empty">${taskAssigneeFilter === "Alle" ? `Ingen ${taskStatusFilter === "completed" ? "fullførte" : "åpne"} oppgaver.` : `Ingen ${taskStatusFilter === "completed" ? "fullførte" : "åpne"} oppgaver for «${esc(taskAssigneeFilter)}».`}</div>`;
+    document.querySelectorAll("[data-task-expand]").forEach((button) => {
+      button.onclick = () => {
+        const id = button.dataset.taskExpand;
+        if (expandedTasks.has(id)) expandedTasks.delete(id);
+        else expandedTasks.add(id);
+        renderTasks();
+      };
+    });
     document.querySelectorAll("[data-task-toggle]").forEach((input) => {
       input.onchange = () => updateTask(input.dataset.taskToggle, { completed: input.checked });
     });
@@ -137,6 +150,7 @@
         body: JSON.stringify({ operation: "delete-completed-tasks" }),
       });
       const deletedIds = new Set(data.deletedIds || []);
+      deletedIds.forEach((id) => expandedTasks.delete(id));
       tasks = tasks.filter((task) => !deletedIds.has(task.id));
       renderTasks();
       toast(`${data.deletedCount || 0} fullførte ${data.deletedCount === 1 ? "oppgave er" : "oppgaver er"} slettet.`);
@@ -149,6 +163,7 @@
     try {
       await api(`/api/studio?action=workspace&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       if (window.LokiNoteLive?.active(id)) resetNoteForm();
+      expandedTasks.delete(id);
       expandedNotes.delete(id);
       tasks = tasks.filter((task) => task.id !== id);
       notes = notes.filter((note) => note.id !== id);
