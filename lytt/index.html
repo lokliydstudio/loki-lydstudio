@@ -10,6 +10,7 @@
     :root{--ink:#1c1c1a;--muted:#77736a;--paper:#f3f0e8;--panel:#fffefa;--lime:#d9ff53;--line:#ded9cf}*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif}main{width:min(680px,100%);overflow:hidden;border:1px solid var(--line);border-radius:20px;background:var(--panel);box-shadow:0 30px 90px rgba(31,29,23,.12)}header{display:flex;align-items:center;gap:14px;padding:25px 28px;border-bottom:1px solid var(--line);background:#20201e;color:white}.logo{position:relative;width:62px;height:49px;overflow:hidden}.logo img{position:absolute;width:143px;height:143px;left:-40px;top:-47px;filter:brightness(0) invert(1)}.wordmark{display:flex;flex-direction:column;line-height:1;letter-spacing:.13em}.wordmark strong{font-size:16px}.wordmark span{margin-top:6px;color:#aaa79f;font-size:8px;letter-spacing:.28em}.content{padding:38px}.kicker{color:#5a584f;font-size:8px;font-weight:800;letter-spacing:.18em}h1{margin:9px 0 8px;font:500 34px Georgia,serif}.project{color:var(--muted);font-size:12px}.version{display:inline-block;margin:18px 0 22px;padding:6px 9px;border-radius:99px;background:var(--lime);font-size:9px;font-weight:800}audio{width:100%;margin:4px 0 18px}.notes{min-height:48px;margin:0;padding:15px;border-left:3px solid var(--lime);background:#f0ede6;color:#5f5b53;font-size:11px;line-height:1.6}.feedback{margin-top:24px;padding-top:23px;border-top:1px solid var(--line)}.feedback-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:13px}.feedback-head h2{margin:5px 0 0;font:500 22px Georgia,serif}.feedback-count{padding:6px 9px;border-radius:99px;background:#efebe3;color:var(--muted);font-size:9px}.feedback-form{display:grid;grid-template-columns:74px 1fr;gap:9px}.feedback-form label{display:grid;gap:5px;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.feedback-form label:first-child{grid-column:1/-1}.feedback-form input,.feedback-form textarea{width:100%;padding:11px;border:1px solid #d5d0c6;border-radius:8px;background:white;color:var(--ink);font:inherit;font-size:11px}.feedback-form textarea{min-height:70px;resize:vertical}.feedback-time{display:grid;place-items:center;border-radius:8px;background:#23231f;color:var(--lime);font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace}.feedback-form button{border:0;border-radius:8px;background:var(--lime);color:#20201d;font-size:10px;font-weight:800;cursor:pointer}.feedback-form button:disabled{cursor:wait;opacity:.6}.feedback-status{min-height:16px;margin:7px 0 0;color:var(--muted);font-size:9px}.feedback-list{display:grid;gap:8px;margin-top:10px}.feedback-empty{padding:15px;border:1px dashed var(--line);border-radius:9px;color:var(--muted);font-size:10px;text-align:center}.comment{display:grid;grid-template-columns:58px 1fr;gap:11px;padding:11px;border:1px solid var(--line);border-radius:9px;background:#faf8f3}.comment button{align-self:start;padding:7px 4px;border:0;border-radius:6px;background:var(--lime);color:#20201d;font:800 10px ui-monospace,SFMono-Regular,Menlo,monospace;cursor:pointer}.comment strong{font-size:10px}.comment strong span{margin-left:5px;padding:2px 5px;border-radius:99px;background:#242420;color:var(--lime);font-size:6px;letter-spacing:.1em}.comment p{margin:5px 0;color:#3f3d38;font-size:11px;line-height:1.45;overflow-wrap:anywhere}.comment small{color:var(--muted);font-size:8px}.meta{display:flex;justify-content:space-between;gap:20px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}.error{display:none;padding:22px;border-radius:10px;background:#fff0ed;color:#963c2e;font-size:12px;line-height:1.55}.privacy{margin:20px 0 0;color:#8a867e;font-size:9px;line-height:1.5}@media(max-width:560px){.content{padding:28px 22px}h1{font-size:28px}.meta{flex-direction:column;gap:7px}.feedback-form{grid-template-columns:64px 1fr}}
     .feedback-form{grid-template-columns:74px minmax(0,1fr) 86px}
     @media(max-width:560px){.feedback-form{grid-template-columns:64px 1fr}.feedback-form button{grid-column:1/-1}}
+    .playlist-name{display:inline-flex;margin:10px 0 5px;padding:6px 9px;border-radius:99px;background:#ebe6ff;color:#5946b7;font-size:9px;font-weight:800}.playlist-list{display:grid;gap:7px;margin:5px 0 22px;padding:9px;border:1px solid var(--line);border-radius:12px;background:#f0ede6}.playlist-track{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;padding:9px;border:1px solid transparent;border-radius:9px;background:transparent;color:var(--ink);text-align:left;cursor:pointer}.playlist-track:hover{background:#fff}.playlist-track.active{border-color:#c8ed42;background:#fff}.playlist-number{display:grid;width:30px;height:30px;place-items:center;border-radius:50%;background:#252521;color:var(--lime);font-size:9px;font-weight:800}.playlist-track span:nth-child(2){display:grid;min-width:0;gap:3px}.playlist-track strong,.playlist-track small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.playlist-track strong{font-size:10px}.playlist-track small,.playlist-track>small{color:var(--muted);font-size:8px}.now-playing{margin:0 0 4px;color:var(--muted);font-size:8px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.playlist-list[hidden],.playlist-name[hidden],.now-playing[hidden]{display:none}@media(max-width:560px){.playlist-track{grid-template-columns:34px minmax(0,1fr)}.playlist-track>small{grid-column:2}}
   </style>
 </head>
 <body>
@@ -19,6 +20,9 @@
       <div id="loading"><span class="kicker">PRIVAT LYDLEVERANSE</span><h1>Åpner miksen …</h1><p class="project">Kontrollerer den sikre lenken.</p></div>
       <div id="player" hidden>
         <span class="kicker">PRIVAT LYDLEVERANSE</span>
+        <p class="playlist-name" id="playlist-name" hidden></p>
+        <div class="playlist-list" id="playlist-list" hidden></div>
+        <p class="now-playing" id="now-playing" hidden>Spiller nå</p>
         <h1 id="track-title"></h1>
         <p class="project" id="project-name"></p>
         <span class="version" id="track-version"></span>
@@ -42,11 +46,16 @@
     </section>
   </main>
   <script>
-    const token = new URLSearchParams(location.search).get("token") || "";
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token") || "";
+    const playlistToken = params.get("playlist") || "";
+    const isPlaylist = Boolean(playlistToken);
     const formatBytes = bytes => `${(Number(bytes || 0) / 1024 / 1024).toLocaleString("nb-NO", { maximumFractionDigits: 1 })} MB`;
     const formatTimestamp = value => { const total=Math.max(0,Math.floor(Number(value)||0));const hours=Math.floor(total/3600);const minutes=Math.floor((total%3600)/60);const seconds=total%60;return hours?`${hours}:${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`:`${String(minutes).padStart(2,"0")}:${String(seconds).padStart(2,"0")}`; };
     const audio = document.getElementById("audio");
     let comments = [];
+    let playlistTracks = [];
+    let activeTrackId = "";
 
     function renderComments() {
       const list = document.getElementById("feedback-list");
@@ -82,11 +91,60 @@
     }
 
     async function loadComments() {
-      const response = await fetch(`/api/studio?action=public-comments&token=${encodeURIComponent(token)}`, { credentials: "omit" });
+      const requestedTrackId = activeTrackId;
+      const endpoint = isPlaylist
+        ? `/api/studio?action=public-playlist-comments&token=${encodeURIComponent(playlistToken)}&trackId=${encodeURIComponent(activeTrackId)}`
+        : `/api/studio?action=public-comments&token=${encodeURIComponent(token)}`;
+      const response = await fetch(endpoint, { credentials: "omit" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.error || "Kommentarene kunne ikke hentes.");
+      if (isPlaylist && requestedTrackId !== activeTrackId) return;
       comments = data.comments || [];
       renderComments();
+    }
+
+    function selectPlaylistTrack(trackId, autoplay = false) {
+      const track = playlistTracks.find(item => item.id === trackId);
+      if (!track) return;
+      activeTrackId = track.id;
+      document.querySelectorAll(".playlist-track").forEach(button => button.classList.toggle("active", button.dataset.trackId === track.id));
+      document.getElementById("track-title").textContent = track.title;
+      document.getElementById("track-version").textContent = track.version;
+      document.getElementById("track-notes").textContent = track.notes || "Lytt gjennom leveransen og legg gjerne igjen tidsstemplet tilbakemelding.";
+      document.getElementById("file-meta").textContent = `${track.filename} · ${formatBytes(track.size)}`;
+      document.getElementById("feedback-title").textContent = `Kommentarer på ${track.title}`;
+      document.getElementById("feedback-time").textContent = "00:00";
+      document.getElementById("feedback-status").textContent = "Spill av eller pause ved stedet du vil kommentere.";
+      audio.src = `/api/studio?action=public-playlist-stream&token=${encodeURIComponent(playlistToken)}&trackId=${encodeURIComponent(track.id)}`;
+      loadComments().catch(error => { document.getElementById("feedback-status").textContent = error.message || "Kommentarene kunne ikke hentes."; });
+      if (autoplay) audio.play().catch(() => {});
+    }
+
+    function renderPlaylist() {
+      const list = document.getElementById("playlist-list");
+      list.replaceChildren();
+      playlistTracks.forEach((track, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "playlist-track";
+        button.dataset.trackId = track.id;
+        const number = document.createElement("span");
+        number.className = "playlist-number";
+        number.textContent = String(index + 1).padStart(2, "0");
+        const copy = document.createElement("span");
+        const title = document.createElement("strong");
+        title.textContent = track.title;
+        const filename = document.createElement("small");
+        filename.textContent = track.filename;
+        const version = document.createElement("small");
+        version.textContent = track.version;
+        copy.append(title, filename);
+        button.append(number, copy, version);
+        button.onclick = () => selectPlaylistTrack(track.id, true);
+        list.appendChild(button);
+      });
+      list.hidden = false;
+      document.getElementById("now-playing").hidden = false;
     }
 
     audio.addEventListener("timeupdate", () => { document.getElementById("feedback-time").textContent = formatTimestamp(audio.currentTime); });
@@ -103,11 +161,14 @@
       button.textContent = "Lagrer …";
       status.textContent = "Lagrer kommentaren sikkert …";
       try {
-        const response = await fetch(`/api/studio?action=public-comments&token=${encodeURIComponent(token)}`, {
+        const endpoint = isPlaylist
+          ? `/api/studio?action=public-playlist-comments&token=${encodeURIComponent(playlistToken)}&trackId=${encodeURIComponent(activeTrackId)}`
+          : `/api/studio?action=public-comments&token=${encodeURIComponent(token)}`;
+        const response = await fetch(endpoint, {
           method: "POST",
           credentials: "omit",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ authorName: name, body, timestampSeconds: audio.currentTime || 0 }),
+          body: JSON.stringify({ authorName: name, body, timestampSeconds: audio.currentTime || 0, trackId: activeTrackId }),
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Kommentaren kunne ikke lagres.");
@@ -122,24 +183,41 @@
         button.textContent = "Legg til";
       }
     });
+    audio.addEventListener("ended", () => {
+      if (!isPlaylist) return;
+      const index = playlistTracks.findIndex(track => track.id === activeTrackId);
+      if (index >= 0 && index < playlistTracks.length - 1) selectPlaylistTrack(playlistTracks[index + 1].id, true);
+    });
     (async () => {
       try {
-        if (!token) throw new Error("Denne lyttelenken mangler en sikker nøkkel.");
-        const response = await fetch(`/api/studio?action=public-share&token=${encodeURIComponent(token)}`, { credentials: "omit" });
+        if (!token && !playlistToken) throw new Error("Denne lyttelenken mangler en sikker nøkkel.");
+        const endpoint = isPlaylist
+          ? `/api/studio?action=public-playlist&token=${encodeURIComponent(playlistToken)}`
+          : `/api/studio?action=public-share&token=${encodeURIComponent(token)}`;
+        const response = await fetch(endpoint, { credentials: "omit" });
         const responseText = await response.text();
         let data = {};
         try { data = JSON.parse(responseText); } catch {}
         if (!response.ok) throw new Error(data.error || "Lydleveransen kunne ikke åpnes.");
-        document.getElementById("track-title").textContent = data.track.title;
-        document.getElementById("project-name").textContent = data.track.projectName;
-        document.getElementById("track-version").textContent = data.track.version;
-        document.getElementById("track-notes").textContent = data.track.notes || "Lytt gjennom leveransen og send tilbakemeldingen din til post@lokilyd.no.";
-        document.getElementById("file-meta").textContent = `${data.track.filename} · ${formatBytes(data.track.size)}`;
         document.getElementById("expires").textContent = `Gyldig til ${new Date(data.expiresAt).toLocaleDateString("nb-NO")}`;
-        audio.src = `/api/studio?action=public-stream&token=${encodeURIComponent(token)}`;
+        if (isPlaylist) {
+          playlistTracks = data.playlist.tracks || [];
+          document.getElementById("playlist-name").textContent = data.playlist.title;
+          document.getElementById("playlist-name").hidden = false;
+          document.getElementById("project-name").textContent = `${data.playlist.projectName} · ${playlistTracks.length} ${playlistTracks.length === 1 ? "låt" : "låter"}`;
+          renderPlaylist();
+          selectPlaylistTrack(playlistTracks[0]?.id);
+        } else {
+          document.getElementById("track-title").textContent = data.track.title;
+          document.getElementById("project-name").textContent = data.track.projectName;
+          document.getElementById("track-version").textContent = data.track.version;
+          document.getElementById("track-notes").textContent = data.track.notes || "Lytt gjennom leveransen og send tilbakemeldingen din til post@lokilyd.no.";
+          document.getElementById("file-meta").textContent = `${data.track.filename} · ${formatBytes(data.track.size)}`;
+          audio.src = `/api/studio?action=public-stream&token=${encodeURIComponent(token)}`;
+        }
         document.getElementById("loading").hidden = true;
         document.getElementById("player").hidden = false;
-        loadComments().catch(error => { document.getElementById("feedback-status").textContent = error.message || "Kommentarene kunne ikke hentes."; });
+        if (!isPlaylist) loadComments().catch(error => { document.getElementById("feedback-status").textContent = error.message || "Kommentarene kunne ikke hentes."; });
       } catch (error) {
         document.getElementById("loading").hidden = true;
         const node = document.getElementById("error");

@@ -13,6 +13,7 @@ const auth = require("../lib/crm-auth");
 const { bridgeAuthorized, fileBridgeAuthorized } = require("../lib/crm-bridge");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
+const { cleanTrackIds, playlistTracks, publicAudioPlaylist, sanitizeAudioPlaylist } = require("../lib/crm-audio-playlists");
 const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-calendar");
 const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, publicDocumentsWithOpens, recordDocumentOpen, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
 const { mergeScan, publicReceipt, receiptContentType, receiptPathname, sanitizeReceipt, sanitizeReceiptUpload } = require("../lib/crm-receipts");
@@ -189,6 +190,9 @@ test("customer listening tokens are scoped and expire independently of owner acc
   assert.equal(auth.verifyScopedToken(token, "audio-share").subject, "track-123");
   assert.equal(auth.verifyScopedToken(token, "session"), null);
   assert.equal(auth.verifyToken(token, "audio-share"), null);
+  const playlistToken = auth.createScopedToken("playlist-123", "audio-playlist-share", 60);
+  assert.equal(auth.verifyScopedToken(playlistToken, "audio-playlist-share").subject, "playlist-123");
+  assert.equal(auth.verifyScopedToken(playlistToken, "audio-share"), null);
 });
 
 test("project patches preserve chosen channels and enforce the 32-channel interface limit", () => {
@@ -664,7 +668,8 @@ test("project exports include only selected project files and no private blob de
     { id: "project-image-123e4567-e89b-12d3-a456-426614174000", projectId: "project-1", filename: "ssl-bus.jpg", gear: "SSL Bus Compressor", chainPosition: "Mixbus", settings: "Ratio 4:1", notes: "V1", size: 1200, contentType: "image/jpeg", pathname: "loki-crm/project-images/private.jpg", uploadedBy: "leon@lokilyd.no" },
     { id: "project-image-223e4567-e89b-12d3-a456-426614174000", projectId: "project-2", filename: "1176.jpg", gear: "1176", size: 900, contentType: "image/jpeg", pathname: "loki-crm/project-images/other.jpg", uploadedBy: "charles@lokilyd.no" },
   ];
-  const manifest = createProjectExport(projects, tracks, "project-1", comments, projectImages);
+  const audioPlaylists = [{ id: "playlist-123e4567-e89b-12d3-a456-426614174000", projectId: "project-1", title: "Album V3", trackIds: ["track-1"], createdAt: "2026-10-13T10:00:00.000Z", updatedAt: "2026-10-13T10:00:00.000Z", createdBy: "leon@lokilyd.no" }];
+  const manifest = createProjectExport(projects, tracks, "project-1", comments, projectImages, audioPlaylists);
   assert.equal(manifest.scope, "project");
   assert.deepEqual(manifest.projects.map((project) => project.id), ["project-1"]);
   assert.deepEqual(manifest.files.map((file) => file.trackId), ["track-1"]);
@@ -679,6 +684,9 @@ test("project exports include only selected project files and no private blob de
   assert.equal(manifest.imageFiles[0].downloadUrl.includes("project-image-stream"), true);
   assert.equal("pathname" in manifest.imageFiles[0], false);
   assert.equal("uploadedBy" in manifest.imageFiles[0], false);
+  assert.equal(manifest.projects[0].deliveryPlaylists[0].title, "Album V3");
+  assert.deepEqual(manifest.projects[0].deliveryPlaylists[0].trackIds, ["track-1"]);
+  assert.equal("createdBy" in manifest.projects[0].deliveryPlaylists[0], false);
 });
 
 test("project deletion cascades to its audio and technical image metadata only", () => {
@@ -767,6 +775,23 @@ test("audio feedback is timestamped, sanitized and scoped to one track", () => {
   assert.equal(sanitizeAudioComment({ trackId, authorName: "Kari", body: "" }, { type: "customer" }), null);
 });
 
+test("audio delivery playlists preserve order and expose no owner metadata", () => {
+  const first = "track-123e4567-e89b-12d3-a456-426614174000";
+  const second = "track-223e4567-e89b-12d3-a456-426614174000";
+  const playlist = sanitizeAudioPlaylist({
+    id: "playlist-123e4567-e89b-12d3-a456-426614174000",
+    projectId: "project-1",
+    title: "  Album   V3  ",
+    trackIds: [second, first, second, "unsafe"],
+  }, {}, "leon@lokilyd.no");
+  assert.equal(playlist.title, "Album V3");
+  assert.deepEqual(playlist.trackIds, [second, first]);
+  assert.deepEqual(cleanTrackIds([second, second, first]), [second, first]);
+  assert.deepEqual(playlistTracks(playlist, [{ id: first }, { id: second }]).map((track) => track.id), [second, first]);
+  assert.equal("createdBy" in publicAudioPlaylist(playlist), false);
+  assert.equal(sanitizeAudioPlaylist({ projectId: "project-1", trackIds: [] }), null);
+});
+
 test("mix feedback is available in both internal and customer players", () => {
   const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
   const internalScript = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
@@ -778,6 +803,12 @@ test("mix feedback is available in both internal and customer players", () => {
   assert.match(internalScript, /data-comment-capture/);
   assert.match(customerPlayer, /action=public-comments/);
   assert.match(customerPlayer, /TIDSSTEMPLET FEEDBACK/);
+  assert.match(studioApi, /action === "audio-playlists"/);
+  assert.match(studioApi, /action === "public-playlist-comments"/);
+  assert.match(internalScript, /Lag én lenke med flere låter/);
+  assert.match(internalScript, /Opprett og kopier lenke/);
+  assert.match(customerPlayer, /action=public-playlist-stream/);
+  assert.match(customerPlayer, /selectPlaylistTrack/);
 });
 
 test("mail defaults use TLS-compatible Domeneshop ports", () => {

@@ -24,6 +24,7 @@
   let projects = [];
   let tracks = [];
   let audioComments = [];
+  let audioPlaylists = [];
   let projectImages = [];
   let selectedProjectId = null;
   let activeOwner = "Leon";
@@ -179,6 +180,10 @@
 
   function currentProjectImages() {
     return projectImages.filter((image) => image.projectId === selectedProjectId);
+  }
+
+  function currentProjectPlaylists() {
+    return audioPlaylists.filter((playlist) => playlist.projectId === selectedProjectId);
   }
 
   function formatTimestamp(value) {
@@ -393,6 +398,30 @@
       </article>`).join("");
   }
 
+  function playlistBuilderTracks() {
+    const visible = projectTracks();
+    if (!visible.length) return '<p class="delivery-playlist-empty">Last opp minst én miks eller demo før du lager en spilleliste.</p>';
+    return visible.map((track) => `
+      <label class="delivery-track-choice">
+        <input type="checkbox" name="trackIds" value="${esc(track.id)}" checked>
+        <span><strong>${esc(track.title)}</strong><small>${esc(track.version)} · ${esc(track.filename)}</small></span>
+      </label>`).join("");
+  }
+
+  function deliveryPlaylistCards() {
+    const visible = currentProjectPlaylists();
+    if (!visible.length) return '<p class="delivery-playlist-empty">Ingen kundespillelister opprettet ennå.</p>';
+    const byId = new Map(projectTracks().map((track) => [track.id, track]));
+    return visible.map((playlist) => {
+      const playlistTracks = (playlist.trackIds || []).map((id) => byId.get(id)).filter(Boolean);
+      return `
+        <article class="delivery-playlist-card">
+          <div><span class="delivery-playlist-icon">▶</span><span><strong>${esc(playlist.title)}</strong><small>${playlistTracks.length} ${playlistTracks.length === 1 ? "låt" : "låter"} · ${esc(playlistTracks.map((track) => track.title).join(" · "))}</small></span></div>
+          <div class="button-row"><button class="tiny-button" type="button" data-share-playlist="${esc(playlist.id)}">Kopier ny lenke</button><button class="tiny-button danger" type="button" data-delete-playlist="${esc(playlist.id)}">Slett</button></div>
+        </article>`;
+    }).join("");
+  }
+
   function editorMarkup(project) {
     return `
       <div class="project-toolbar">
@@ -467,6 +496,15 @@
           <button class="primary" id="upload-audio" type="submit">Last opp</button>
           <div class="upload-progress" id="upload-progress"><i></i></div>
         </form>
+        <section class="delivery-playlist-builder">
+          <div class="delivery-playlist-head"><div><span class="kicker">KUNDELEVERANSE</span><h4>Lag én lenke med flere låter</h4><p>Velg mikser og demoer. Kunden kan spille dem fortløpende og kommentere på riktig tidspunkt i hver låt.</p></div><span class="state green">${currentProjectPlaylists().length} ${currentProjectPlaylists().length === 1 ? "spilleliste" : "spillelister"}</span></div>
+          <form id="delivery-playlist-form">
+            <div class="delivery-playlist-fields"><label>Navn på spillelisten<input id="delivery-playlist-title" maxlength="160" value="${esc(`${project.name} – mikser og demoer`)}" required></label><label>Lenken varer<select id="delivery-playlist-days"><option value="7">7 dager</option><option value="14" selected>14 dager</option><option value="30">30 dager</option><option value="60">60 dager</option><option value="90">90 dager</option></select></label></div>
+            <div class="delivery-track-choices">${playlistBuilderTracks()}</div>
+            <div class="delivery-playlist-create"><span>En slettet spilleliste trekker tilbake alle lenkene til den.</span><button class="primary" type="submit" ${projectTracks().length ? "" : "disabled"}>Opprett og kopier lenke</button></div>
+          </form>
+          <div class="delivery-playlist-list">${deliveryPlaylistCards()}</div>
+        </section>
         <div class="audio-list" id="audio-list">${trackCards()}</div>
         <p class="storage-note"><span>●</span><span><b>Sikker levering:</b> Avspillingen går gjennom Loki-plattformen fra privat Blob-lagring. Kundelenker er signert og varer i 14 dager. Jottacloud-broen speiler filene til studioets eget arkiv når den kjører på Mac-en.</span></p>
       </section>`;
@@ -508,6 +546,8 @@
     bindContactEmailLookup(document.getElementById("project-email"), document.getElementById("project-client"));
     const upload = document.getElementById("audio-upload-form");
     if (upload) upload.onsubmit = uploadAudio;
+    const playlistForm = document.getElementById("delivery-playlist-form");
+    if (playlistForm) playlistForm.onsubmit = createAudioPlaylist;
     const projectImageCamera = document.getElementById("project-image-camera");
     if (projectImageCamera) projectImageCamera.onchange = (event) => uploadProjectImages(event.target.files);
     const projectImageFiles = document.getElementById("project-image-files");
@@ -536,6 +576,7 @@
       form.onsubmit = (event) => saveAudioComment(event, form.dataset.commentForm);
     });
     bindCommentActions();
+    bindAudioPlaylistActions();
     bindProjectImageActions();
     bindPatchRowActions();
     bindTimeEntryActions();
@@ -967,7 +1008,7 @@
       `Antall lydfiler: ${manifest.files.length}`,
       `Antall tekniske bilder: ${(manifest.imageFiles || []).length}`,
       "",
-      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser og teknisk bildedata, patcheliste.csv, timelogg.csv og mappene Lydfiler og Tekniske-bilder.",
+      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser, kundespillelister og teknisk bildedata, patcheliste.csv, timelogg.csv og mappene Lydfiler og Tekniske-bilder.",
       "Arkivet inneholder kundeopplysninger og kan inneholde upublisert lyd. Oppbevar det sikkert og kryptert.",
       "Lydfilene lagres uten ekstra ZIP-komprimering for effektiv eksport og tapsfri bevaring.",
       "",
@@ -1110,6 +1151,7 @@
       const deletedTrackIds = new Set(tracks.filter((track) => track.projectId === project.id).map((track) => track.id));
       projects = projects.filter((item) => item.id !== project.id);
       tracks = tracks.filter((track) => track.projectId !== project.id);
+      audioPlaylists = audioPlaylists.filter((playlist) => playlist.projectId !== project.id);
       projectImages = projectImages.filter((image) => image.projectId !== project.id);
       audioComments = audioComments.filter((comment) => !deletedTrackIds.has(comment.trackId));
       selectedProjectId = projects[0]?.id || null;
@@ -1313,12 +1355,101 @@
     }
   }
 
+  async function copyCustomerLink(url, message) {
+    if (navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(url);
+        toast(message);
+        return;
+      } catch {}
+    }
+    window.prompt("Kopier kundelenken:", url);
+    toast("Spillelisten er klar. Kopier lenken fra feltet.");
+  }
+
+  function bindAudioPlaylistActions() {
+    document.querySelectorAll("[data-share-playlist]").forEach((button) => {
+      button.onclick = () => shareAudioPlaylist(button.dataset.sharePlaylist, button);
+    });
+    document.querySelectorAll("[data-delete-playlist]").forEach((button) => {
+      button.onclick = () => deleteAudioPlaylist(button.dataset.deletePlaylist);
+    });
+  }
+
+  async function createAudioPlaylist(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const trackIds = [...form.querySelectorAll('input[name="trackIds"]:checked')].map((input) => input.value);
+    if (!trackIds.length) return toast("Velg minst én låt til spillelisten.");
+    const button = form.querySelector('button[type="submit"]');
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = "Oppretter …";
+    try {
+      const data = await request("/api/studio?action=audio-playlists", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          operation: "create",
+          days: Number(document.getElementById("delivery-playlist-days")?.value) || 14,
+          playlist: {
+            projectId: selectedProjectId,
+            title: document.getElementById("delivery-playlist-title")?.value || "Lydleveranse",
+            trackIds,
+          },
+        }),
+      });
+      audioPlaylists.unshift(data.playlist);
+      await copyCustomerLink(data.url, `Spillelisten er opprettet og lenken er kopiert. Den varer til ${new Date(data.expiresAt).toLocaleDateString("nb-NO")}.`);
+      render();
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = original;
+      toast(error.message || "Spillelisten kunne ikke opprettes.");
+    }
+  }
+
+  async function shareAudioPlaylist(id, button) {
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = "Lager lenke …";
+    try {
+      const data = await request("/api/studio?action=audio-playlists", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ operation: "share", id, days: Number(document.getElementById("delivery-playlist-days")?.value) || 14 }),
+      });
+      await copyCustomerLink(data.url, `Ny spillelistelenke er kopiert og varer til ${new Date(data.expiresAt).toLocaleDateString("nb-NO")}.`);
+    } catch (error) {
+      toast(error.message || "Lenken kunne ikke opprettes.");
+    } finally {
+      button.disabled = false;
+      button.textContent = original;
+    }
+  }
+
+  async function deleteAudioPlaylist(id) {
+    const playlist = audioPlaylists.find((item) => item.id === id);
+    if (!playlist || !confirm(`Slett spillelisten «${playlist.title}»? Alle eksisterende lenker til listen slutter å virke.`)) return;
+    try {
+      await request(`/api/studio?action=audio-playlists&id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      audioPlaylists = audioPlaylists.filter((item) => item.id !== id);
+      render();
+      toast("Spillelisten er slettet og lenkene er trukket tilbake.");
+    } catch (error) {
+      toast(error.message || "Spillelisten kunne ikke slettes.");
+    }
+  }
+
   async function deleteTrack(id) {
     const track = tracks.find((item) => item.id === id);
     if (!track || !confirm(`Slett «${track.title} · ${track.version}» permanent fra lydlageret?`)) return;
     try {
       await request(`/api/studio?action=audio&id=${encodeURIComponent(id)}`, { method: "DELETE" });
       tracks = tracks.filter((item) => item.id !== id);
+      audioPlaylists = audioPlaylists
+        .map((playlist) => ({ ...playlist, trackIds: (playlist.trackIds || []).filter((trackId) => trackId !== id) }))
+        .filter((playlist) => playlist.trackIds.length);
       audioComments = audioComments.filter((comment) => comment.trackId !== id);
       render();
       toast("Lydfilen er slettet fra plattformen.");
@@ -1370,15 +1501,17 @@
     getContacts = typeof options.getContacts === "function" ? options.getContacts : () => [];
     setupModal();
     try {
-      const [projectData, audioData, projectImageData, contactData] = await Promise.all([
+      const [projectData, audioData, playlistData, projectImageData, contactData] = await Promise.all([
         request("/api/studio?action=projects"),
         request("/api/studio?action=audio"),
+        request("/api/studio?action=audio-playlists"),
         request("/api/studio?action=project-images"),
         request("/api/crm/leads").catch(() => ({ leads: [] })),
       ]);
       projects = projectData.projects || [];
       tracks = audioData.tracks || [];
       audioComments = audioData.comments || [];
+      audioPlaylists = playlistData.playlists || [];
       projectImages = projectImageData.images || [];
       contactDirectory = contactData.leads || [];
       selectedProjectId = projects[0]?.id || null;
