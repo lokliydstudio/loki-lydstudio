@@ -17,7 +17,6 @@ const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-
 const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, publicDocumentsWithOpens, recordDocumentOpen, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
 const { mergeScan, publicReceipt, receiptContentType, receiptPathname, sanitizeReceipt, sanitizeReceiptUpload } = require("../lib/crm-receipts");
 const { checkedJob, safeDestination, safeExistingFile } = require("../bridge/jottacloud-file-sync");
-const { dateMentions, plainText } = require("../lib/crm-funding");
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
 const { isOpenLead, leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../lib/crm-leads");
@@ -490,6 +489,17 @@ test("Bilag replaces the visible Fiken module with an iPhone camera flow", () =>
   assert.match(api, /store:false|scanReceipt/);
 });
 
+test("support scheme radar is removed from UI and background jobs", () => {
+  const root = path.join(__dirname, "..");
+  const html = fs.readFileSync(path.join(root, "crmplatform", "index.html"), "utf8");
+  const studioApi = fs.readFileSync(path.join(root, "api", "studio.js"), "utf8");
+  const vercel = fs.readFileSync(path.join(root, "vercel.json"), "utf8");
+  assert.doesNotMatch(html, /Støtteordninger|STØTTERADAR|overview-funding|id="funding-grid"|funding\.js/);
+  assert.doesNotMatch(studioApi, /funding-monitor|fundingMonitorHandler/);
+  assert.doesNotMatch(vercel, /funding-sync/);
+  assert.equal(fs.existsSync(path.join(root, "api", "crm", "funding-sync.js")), false);
+});
+
 test("CRM uploads queue a collision-safe Jottacloud copy", () => {
   const id = "document-123e4567-e89b-12d3-a456-426614174000";
   const name = "Ny avtale.pdf";
@@ -755,11 +765,6 @@ test("transactional email uses Resend when its secret is configured", async () =
     global.fetch = originalFetch;
     delete process.env.RESEND_API_KEY;
   }
-});
-
-test("funding monitor extracts Norwegian deadline mentions", () => {
-  assert.deepEqual(dateMentions("Frist 15. september 2026 og 01.10.26"), ["15. september 2026", "01.10.26"]);
-  assert.equal(plainText("<style>x</style><p>Søknadsfrist&nbsp;snart</p>"), "Søknadsfrist snart");
 });
 
 test("Formspree submissions are prioritized and use the customer's reply-to address", () => {

@@ -6,7 +6,6 @@ const { MAX_COMMENTS_PER_TRACK, commentsForTrack, publicAudioComment, sanitizeAu
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadGoogleCalendar } = require("../lib/crm-calendar");
-const { SOURCES } = require("../lib/crm-funding");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { COLLECTION: NATIVE_PUSH_COLLECTION, MAX_DEVICES: MAX_NATIVE_PUSH_DEVICES, deviceId: nativeDeviceId, nativePushConfigured, sanitizeNativeDevice } = require("../lib/crm-native-push");
 const { presenceCollection, presenceHeartbeat, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
@@ -805,7 +804,7 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, rentals, projects, audio, audioComments, documents, receipts, activities, bookings, quotes, mailSort, funding, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, audioComments, documents, receipts, activities, bookings, quotes, mailSort, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("rentals"),
@@ -818,7 +817,6 @@ async function backupHandler(req, res) {
     readCollection("bookings"),
     readCollection("quotes"),
     readCollection("mail-sort"),
-    readCollection("funding-monitor"),
     readCollection("cold-call-pool"),
     readCollection("cold-call-runs"),
     readCollection("tenant-booking-users"),
@@ -845,20 +843,11 @@ async function backupHandler(req, res) {
     bookings,
     quotes,
     mailPreferences: mailSort,
-    fundingMonitor: funding,
     coldCallPool: prospects,
     coldCallRuns: prospectRuns,
     tenantBookingUsers,
     tenantBookings,
   });
-}
-
-async function fundingMonitorHandler(req, res) {
-  if (!requireUser(req, res)) return;
-  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const sources = await readCollection("funding-monitor");
-  const lastCheckedAt = sources.map((source) => source.checkedAt).filter(Boolean).sort().at(-1) || null;
-  return res.status(200).json({ sources: sources.length ? sources : SOURCES, lastCheckedAt });
 }
 
 module.exports = async function handler(req, res) {
@@ -890,7 +879,6 @@ module.exports = async function handler(req, res) {
     if (action === "native-push") return await nativePushHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);
     if (action === "backup") return await backupHandler(req, res);
-    if (action === "funding-monitor") return await fundingMonitorHandler(req, res);
     if (action === "prospects") return await prospectsHandler(req, res);
     if (action === "prospect-sync") return await prospectSyncHandler(req, res);
     return res.status(404).json({ error: "Ukjent studiohandling." });

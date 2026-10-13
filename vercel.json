@@ -81,11 +81,9 @@
     "api/crm/leads.js": { "maxDuration": 30 },
     "api/studio.js": { "maxDuration": 60 },
     "api/crm/documents.js": { "maxDuration": 30 },
-    "api/crm/receipts.js": { "maxDuration": 60 },
-    "api/crm/funding-sync.js": { "maxDuration": 30 }
+    "api/crm/receipts.js": { "maxDuration": 60 }
   },
   "crons": [
-    { "path": "/api/crm/funding-sync", "schedule": "17 5 * * *" },
     { "path": "/api/studio?action=prospect-sync", "schedule": "37 6 * * *" }
   ]
 }

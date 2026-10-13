@@ -163,7 +163,6 @@
   .workspace-grid,
   .ops-layout,
   .studio-layout,
-  .funding-grid,
   .project-grid { grid-template-columns: minmax(0, 1fr); }
   .automation { margin-top: 14px; }
 
