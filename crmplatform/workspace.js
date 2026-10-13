@@ -7,10 +7,6 @@
   let taskAssigneeFilter = "Alle";
   let taskStatusFilter = "open";
   const taskAssigneeFilters = ["Alle", "Leon", "Charles", "Begge"];
-  const taskStatusFilters = [
-    { id: "open", label: "Åpne" },
-    { id: "completed", label: "Fullført" },
-  ];
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
   const api = async (url, options = {}) => {
@@ -43,12 +39,11 @@
       ? `${visible.length} ${statusLabel}`
       : `${visible.length} ${statusLabel} for ${taskAssigneeFilter}`;
     const statusFilters = document.getElementById("task-status-filter");
-    statusFilters.innerHTML = taskStatusFilters.map((filter) => {
-      const count = filter.id === "completed" ? tasks.length - open : open;
-      const active = filter.id === taskStatusFilter;
-      return `<button class="task-status-tab ${active ? "active" : ""}" type="button" role="tab" data-task-status="${filter.id}" aria-selected="${active}"><span>${filter.label}</span><strong>${count}</strong></button>`;
-    }).join("");
     statusFilters.querySelectorAll("[data-task-status]").forEach((button) => {
+      const active = button.dataset.taskStatus === taskStatusFilter;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+      button.querySelector("strong").textContent = String(button.dataset.taskStatus === "completed" ? tasks.length - open : open);
       button.onclick = () => { taskStatusFilter = button.dataset.taskStatus; renderTasks(); };
     });
     const filters = document.getElementById("task-assignee-filter");

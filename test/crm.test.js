@@ -872,6 +872,8 @@ test("completed tasks stay behind a dedicated task tab", () => {
   const mobileClient = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.js"), "utf8");
   assert.match(html, /id="task-status-filter"/);
   assert.match(html, /Vis åpne eller fullførte oppgaver/);
+  assert.match(html, /data-task-status="open"[^>]*aria-selected="true"/);
+  assert.match(html, /data-task-status="completed"[^>]*aria-selected="false"/);
   assert.match(workspace, /let taskStatusFilter = "open"/);
   assert.match(workspace, /taskStatusFilter === "completed" \? task\.completed : !task\.completed/);
   assert.match(workspace, /data-task-status/);
