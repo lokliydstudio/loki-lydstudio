@@ -36,6 +36,19 @@
       .replace(/^\.+/, "").replace(/\s+/g, "-").replace(/-+/g, "-").slice(0, 180);
   }
 
+  function receiptId() {
+    if (typeof crypto.randomUUID === "function") return `receipt-${crypto.randomUUID()}`;
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return `receipt-${[...bytes].map((byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  function setUploadDisabled(disabled) {
+    document.querySelectorAll(".receipt-upload-button").forEach((button) => button.setAttribute("aria-disabled", String(disabled)));
+    document.getElementById("receipt-camera-input").disabled = disabled;
+    document.getElementById("receipt-file-input").disabled = disabled;
+  }
+
   function extension(filename) {
     return String(filename || "").toLowerCase().split(".").pop();
   }
@@ -201,7 +214,7 @@
     if (!type) throw new Error("Bare JPG, PNG, WebP og PDF kan lastes opp.");
     if (!file.size || file.size > maxSize) throw new Error("Bilaget kan være maksimalt 15 MB.");
     if (!window.LokiBlob?.uploadPresigned) throw new Error("Opplastingsmodulen kunne ikke lastes.");
-    const id = `receipt-${crypto.randomUUID()}`;
+    const id = receiptId();
     const filename = safeFilename(file.name || `kvittering-${Date.now()}.jpg`);
     const pathname = `loki-crm/receipts/${id}/${filename}`;
     const payload = { id, name: filename, size: file.size, contentType: type };
@@ -227,7 +240,7 @@
     const files = [...(event.currentTarget.files || [])];
     event.currentTarget.value = "";
     if (!files.length) return;
-    document.querySelectorAll(".receipt-upload-button").forEach((button) => { button.disabled = true; });
+    setUploadDisabled(true);
     try {
       for (let index = 0; index < files.length; index += 1) {
         setProgress(`Klargjør ${files[index].name} (${index + 1} av ${files.length}) …`, 3);
@@ -238,7 +251,7 @@
     } catch (error) {
       toast(error.message || "Bilaget kunne ikke lastes opp.");
     } finally {
-      document.querySelectorAll(".receipt-upload-button").forEach((button) => { button.disabled = false; });
+      setUploadDisabled(false);
       setTimeout(() => setProgress("", 0, false), 900);
     }
   }
@@ -290,8 +303,6 @@
   async function init() {
     if (initialized) return;
     initialized = true;
-    document.getElementById("receipt-camera-button").onclick = () => document.getElementById("receipt-camera-input").click();
-    document.getElementById("receipt-file-button").onclick = () => document.getElementById("receipt-file-input").click();
     document.getElementById("receipt-camera-input").onchange = uploadSelected;
     document.getElementById("receipt-file-input").onchange = uploadSelected;
     document.getElementById("receipt-search").oninput = renderList;

@@ -476,11 +476,13 @@ test("Bilag replaces the visible Fiken module with an iPhone camera flow", () =>
   const workspace = fs.readFileSync(path.join(root, "crmplatform", "workspace.js"), "utf8");
   const api = fs.readFileSync(path.join(root, "api", "crm", "receipts.js"), "utf8");
   assert.match(html, /data-view-target="economy"><span class="nav-icon">▧<\/span>Bilag/);
-  assert.match(html, /id="receipt-camera-input"[^>]+capture="environment"/);
+  assert.match(html, /id="receipt-camera-button"[^>]+for="receipt-camera-input"/);
+  assert.match(html, /id="receipt-camera-input"[^>]+accept="image\/\*"[^>]+capture="environment"/);
   assert.match(html, /id="receipt-file-input"[^>]+application\/pdf/);
   assert.match(client, /\/api\/crm\/receipts/);
   assert.match(client, /uploadPresigned/);
   assert.match(client, /operation: "scan"/);
+  assert.doesNotMatch(client, /receipt-camera-input"\)\.click\(\)/);
   assert.match(styles, /@media\(max-width:640px\)/);
   assert.match(styles, /min-height:56px/);
   assert.doesNotMatch(workspace, /loadFiken|refresh-fiken/);
