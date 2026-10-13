@@ -382,6 +382,22 @@ async function audioPlaylistsHandler(req, res) {
     });
   }
 
+  if (req.method === "POST" && req.body?.operation === "update") {
+    const id = cleanText(req.body?.id || req.body?.playlist?.id, 90);
+    const index = playlists.findIndex((item) => item.id === id);
+    if (index < 0) return res.status(404).json({ error: "Spillelisten ble ikke funnet." });
+    const existing = playlists[index];
+    const tracks = await readCollection("audio");
+    const playlist = sanitizeAudioPlaylist(req.body?.playlist, existing, user.email);
+    if (!playlist) return res.status(400).json({ error: "Spillelisten må inneholde minst én lydfil." });
+    if (playlist.trackIds.some((trackId) => !tracks.some((track) => track.id === trackId && track.projectId === existing.projectId))) {
+      return res.status(400).json({ error: "Spillelisten inneholder en lydfil som ikke tilhører prosjektet." });
+    }
+    playlists[index] = playlist;
+    await writeCollection("audio-playlists", playlists);
+    return res.status(200).json({ playlist: publicAudioPlaylist(playlist) });
+  }
+
   if (req.method === "POST" && req.body?.operation === "share") {
     const playlist = playlists.find((item) => item.id === cleanText(req.body?.id, 90));
     if (!playlist) return res.status(404).json({ error: "Spillelisten ble ikke funnet." });

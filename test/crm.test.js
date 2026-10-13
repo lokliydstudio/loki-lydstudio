@@ -790,6 +790,13 @@ test("audio delivery playlists preserve order and expose no owner metadata", () 
   assert.deepEqual(playlistTracks(playlist, [{ id: first }, { id: second }]).map((track) => track.id), [second, first]);
   assert.equal("createdBy" in publicAudioPlaylist(playlist), false);
   assert.equal(sanitizeAudioPlaylist({ projectId: "project-1", trackIds: [] }), null);
+  const updated = sanitizeAudioPlaylist({ title: "Album V4", trackIds: [first] }, playlist, "charles@lokilyd.no");
+  assert.equal(updated.id, playlist.id);
+  assert.equal(updated.projectId, playlist.projectId);
+  assert.equal(updated.createdAt, playlist.createdAt);
+  assert.equal(updated.createdBy, "leon@lokilyd.no");
+  assert.equal(updated.title, "Album V4");
+  assert.deepEqual(updated.trackIds, [first]);
 });
 
 test("mix feedback is available in both internal and customer players", () => {
@@ -807,6 +814,8 @@ test("mix feedback is available in both internal and customer players", () => {
   assert.match(studioApi, /action === "public-playlist-comments"/);
   assert.match(internalScript, /Lag én lenke med flere låter/);
   assert.match(internalScript, /Opprett og kopier lenke/);
+  assert.match(internalScript, /operation: "update"/);
+  assert.match(internalScript, /Den eksisterende kundelenken viser nå de nye låtene/);
   assert.match(customerPlayer, /action=public-playlist-stream/);
   assert.match(customerPlayer, /selectPlaylistTrack/);
 });

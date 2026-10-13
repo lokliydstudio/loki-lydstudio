@@ -408,6 +408,28 @@
       </label>`).join("");
   }
 
+  function playlistEditorTracks(playlist) {
+    const byId = new Map(projectTracks().map((track) => [track.id, track]));
+    const selectedIds = (playlist.trackIds || []).filter((id) => byId.has(id));
+    const selected = new Set(selectedIds);
+    const ordered = [
+      ...selectedIds.map((id) => byId.get(id)),
+      ...projectTracks().filter((track) => !selected.has(track.id)),
+    ];
+    if (!ordered.length) return '<p class="delivery-playlist-empty">Last opp en miks eller demo før du redigerer spillelisten.</p>';
+    return ordered.map((track, index) => `
+      <div class="delivery-playlist-edit-track" data-playlist-track-row>
+        <label>
+          <input type="checkbox" name="trackIds" value="${esc(track.id)}" ${selected.has(track.id) ? "checked" : ""}>
+          <span><strong>${esc(track.title)}</strong><small>${esc(track.version)} · ${esc(track.filename)}</small></span>
+        </label>
+        <span class="delivery-track-order">
+          <button type="button" class="tiny-button" data-playlist-move="up" aria-label="Flytt ${esc(track.title)} opp" ${index === 0 ? "disabled" : ""}>↑</button>
+          <button type="button" class="tiny-button" data-playlist-move="down" aria-label="Flytt ${esc(track.title)} ned" ${index === ordered.length - 1 ? "disabled" : ""}>↓</button>
+        </span>
+      </div>`).join("");
+  }
+
   function deliveryPlaylistCards() {
     const visible = currentProjectPlaylists();
     if (!visible.length) return '<p class="delivery-playlist-empty">Ingen kundespillelister opprettet ennå.</p>';
@@ -416,8 +438,15 @@
       const playlistTracks = (playlist.trackIds || []).map((id) => byId.get(id)).filter(Boolean);
       return `
         <article class="delivery-playlist-card">
-          <div><span class="delivery-playlist-icon">▶</span><span><strong>${esc(playlist.title)}</strong><small>${playlistTracks.length} ${playlistTracks.length === 1 ? "låt" : "låter"} · ${esc(playlistTracks.map((track) => track.title).join(" · "))}</small></span></div>
-          <div class="button-row"><button class="tiny-button" type="button" data-share-playlist="${esc(playlist.id)}">Kopier ny lenke</button><button class="tiny-button danger" type="button" data-delete-playlist="${esc(playlist.id)}">Slett</button></div>
+          <div class="delivery-playlist-card-head">
+            <div><span class="delivery-playlist-icon">▶</span><span><strong>${esc(playlist.title)}</strong><small>${playlistTracks.length} ${playlistTracks.length === 1 ? "låt" : "låter"} · ${esc(playlistTracks.map((track) => `${track.title} ${track.version}`).join(" · "))}</small></span></div>
+            <div class="button-row"><button class="tiny-button" type="button" data-edit-playlist-toggle="${esc(playlist.id)}">Rediger låter</button><button class="tiny-button" type="button" data-share-playlist="${esc(playlist.id)}">Kopier ny lenke</button><button class="tiny-button danger" type="button" data-delete-playlist="${esc(playlist.id)}">Slett</button></div>
+          </div>
+          <form class="delivery-playlist-editor" data-edit-playlist="${esc(playlist.id)}" hidden>
+            <label class="delivery-playlist-edit-title">Navn på spillelisten<input name="title" maxlength="160" value="${esc(playlist.title)}" required></label>
+            <div class="delivery-playlist-edit-tracks">${playlistEditorTracks(playlist)}</div>
+            <div class="delivery-playlist-edit-actions"><span>Velg nye versjoner, fjern gamle og bruk pilene for å endre rekkefølgen. Den eksisterende kundelenken oppdateres automatisk.</span><button class="primary" type="submit">Lagre endringer</button></div>
+          </form>
         </article>`;
     }).join("");
   }
@@ -1368,12 +1397,48 @@
   }
 
   function bindAudioPlaylistActions() {
+    document.querySelectorAll("[data-edit-playlist-toggle]").forEach((button) => {
+      button.onclick = () => {
+        const form = document.querySelector(`[data-edit-playlist="${CSS.escape(button.dataset.editPlaylistToggle)}"]`);
+        if (!form) return;
+        form.hidden = !form.hidden;
+        button.textContent = form.hidden ? "Rediger låter" : "Lukk redigering";
+      };
+    });
+    document.querySelectorAll("[data-edit-playlist]").forEach((form) => {
+      form.onsubmit = (event) => updateAudioPlaylist(event, form.dataset.editPlaylist);
+    });
+    document.querySelectorAll("[data-playlist-move]").forEach((button) => {
+      button.onclick = () => movePlaylistTrack(button);
+    });
     document.querySelectorAll("[data-share-playlist]").forEach((button) => {
       button.onclick = () => shareAudioPlaylist(button.dataset.sharePlaylist, button);
     });
     document.querySelectorAll("[data-delete-playlist]").forEach((button) => {
       button.onclick = () => deleteAudioPlaylist(button.dataset.deletePlaylist);
     });
+  }
+
+  function refreshPlaylistOrderButtons(container) {
+    const rows = [...container.querySelectorAll("[data-playlist-track-row]")];
+    rows.forEach((row, index) => {
+      const up = row.querySelector('[data-playlist-move="up"]');
+      const down = row.querySelector('[data-playlist-move="down"]');
+      if (up) up.disabled = index === 0;
+      if (down) down.disabled = index === rows.length - 1;
+    });
+  }
+
+  function movePlaylistTrack(button) {
+    const row = button.closest("[data-playlist-track-row]");
+    const container = row?.parentElement;
+    if (!row || !container) return;
+    if (button.dataset.playlistMove === "up" && row.previousElementSibling) {
+      container.insertBefore(row, row.previousElementSibling);
+    } else if (button.dataset.playlistMove === "down" && row.nextElementSibling) {
+      container.insertBefore(row.nextElementSibling, row);
+    }
+    refreshPlaylistOrderButtons(container);
   }
 
   async function createAudioPlaylist(event) {
@@ -1406,6 +1471,38 @@
       button.disabled = false;
       button.textContent = original;
       toast(error.message || "Spillelisten kunne ikke opprettes.");
+    }
+  }
+
+  async function updateAudioPlaylist(event, id) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const trackIds = [...form.querySelectorAll('input[name="trackIds"]:checked')].map((input) => input.value);
+    if (!trackIds.length) return toast("Spillelisten må inneholde minst én låt.");
+    const button = form.querySelector('button[type="submit"]');
+    const original = button.textContent;
+    button.disabled = true;
+    button.textContent = "Lagrer …";
+    try {
+      const data = await request("/api/studio?action=audio-playlists", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          operation: "update",
+          id,
+          playlist: {
+            title: form.elements.title.value || "Lydleveranse",
+            trackIds,
+          },
+        }),
+      });
+      audioPlaylists = audioPlaylists.map((playlist) => playlist.id === id ? data.playlist : playlist);
+      render();
+      toast("Spillelisten er oppdatert. Den eksisterende kundelenken viser nå de nye låtene.");
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = original;
+      toast(error.message || "Spillelisten kunne ikke oppdateres.");
     }
   }
 
