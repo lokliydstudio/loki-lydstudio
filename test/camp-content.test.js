@@ -21,7 +21,8 @@ test("public homepages promote Loki New Voices in their selected language", () =
   assert.match(norwegian, /<html lang="no">/);
   assert.match(norwegian, /Søknaden er åpen: Loki New Voices/);
   assert.match(norwegian, /4\.–6\. desember 2026/);
-  assert.match(norwegian, /Søknaden til Loki New Voices er nå åpen/);
+  assert.match(norwegian, /Søknaden til Loki New Voices er nå åpen – vår neste låtskrivercamp for låtskrivere, artister og produsenter\./);
+  assert.doesNotMatch(norwegian, /tredagers låtskrivercamp|for unge og fremadstormende/i);
   assert.match(norwegian, /SØK TIL LOKI NEW VOICES/);
   assert.match(norwegian, /href="\/loki-songs-camp\.html"/);
   assert.doesNotMatch(norwegian, /Applications are now open for Loki New Voices/);
@@ -30,7 +31,8 @@ test("public homepages promote Loki New Voices in their selected language", () =
   assert.match(english, /<html lang="en">/);
   assert.match(english, /Applications open: Loki New Voices/);
   assert.match(english, /4–6 December 2026/);
-  assert.match(english, /Applications are now open for Loki New Voices/);
+  assert.match(english, /Applications are now open for Loki New Voices – our next songwriting camp for songwriters, artists and producers\./);
+  assert.doesNotMatch(english, /three-day songwriting camp|for emerging songwriters/i);
   assert.match(english, /APPLY TO LOKI NEW VOICES/);
   assert.match(english, /href="\/en\/loki-songs-camp_en\.html"/);
   assert.doesNotMatch(english, /Søknaden til Loki New Voices er nå åpen/);
@@ -53,6 +55,7 @@ test("dedicated camp pages contain localized Loki New Voices information", () =>
   assert.match(norwegian, /Utvikle deg/);
   assert.match(norwegian, /Bygg nettverk/);
   assert.match(norwegian, /SØK NÅ/);
+  assert.doesNotMatch(norwegian, /tredagers|\bunge\b/i);
   assert.doesNotMatch(norwegian, /SONGWRITING CAMPS FOR EMERGING CREATIVES/);
 
   const english = read("en/loki-songs-camp_en.html");
@@ -63,6 +66,7 @@ test("dedicated camp pages contain localized Loki New Voices information", () =>
   assert.match(english, /Develop your craft/);
   assert.match(english, /Build connections/);
   assert.match(english, /APPLY NOW/);
+  assert.doesNotMatch(english, /three-day|\bemerging\b/i);
   assert.doesNotMatch(english, /LÅTSKRIVERCAMPER FOR NYE TALENTER/);
 });
 
