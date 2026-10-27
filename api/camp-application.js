@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
     await sendMail({
       from: `Loki Lydstudio <${address}>`,
       replyTo: application.email,
-      to: address,
+      to: "camps@lokilyd.no",
       subject: `Ny søknad til Loki Songs camp – ${application.name}`,
       text: notificationText(application),
     });
