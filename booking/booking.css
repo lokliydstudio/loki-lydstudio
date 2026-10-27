@@ -7,3 +7,37 @@
 .day-booking-time,.day-booking-title{font-size:10px}.day-booking-owner{display:block;overflow:hidden;max-width:100%;color:inherit;font-size:9px;font-weight:400;text-overflow:ellipsis;white-space:nowrap;opacity:.82}.calendar-legend{display:flex;flex-wrap:wrap;align-items:center;gap:12px 20px;padding:12px 17px;border-top:1px solid var(--line);color:var(--muted);font-size:10px;line-height:1.4}.calendar-legend span{display:inline-flex;align-items:center;gap:6px}.calendar-legend i{display:inline-block;width:9px;height:9px;border-radius:2px}.legend-own{background:#769d23}.legend-other{background:var(--violet)}
 @media(max-width:780px){.day-events{max-height:130px}.agenda-side{text-align:left}.modal-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .day-booking.staff,.day-booking.staff.own{border-left-color:#d8731d;background:#ffead3;color:#793b0a}.day-booking.staff:hover,.day-booking.staff:focus-visible{background:#ffddb7}.agenda-item.staff{box-shadow:inset 4px 0 #d8731d;background:#fff6eb}.agenda-item.staff:hover,.agenda-item.staff:focus-visible{background:#ffead3}.agenda-item.staff .agenda-date{background:#b85a12}.legend-staff{background:#d8731d}
+
+html[data-theme="light"]{color-scheme:light}
+html[data-theme="dark"]{color-scheme:dark;--ink:#f2f0e9;--muted:#b9b3a8;--line:#514d45;--paper:#1b1b19;--panel:#292824;--violet:#b6a6ff;--danger:#ff9d90}
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:39px;padding:8px 12px;border:1px solid #d0cabf;border-radius:10px;background:#ece8df;color:#26241f;font-size:12px;font-weight:800;white-space:nowrap}
+.theme-toggle [data-theme-icon]{font-size:17px;line-height:1}
+.auth-actions{display:flex;justify-content:flex-end;margin:-16px -14px 16px 0}
+.portal-header .theme-toggle{border-color:#5d5a52;background:#35342f;color:#f2f0e9}
+.theme-toggle:hover{border-color:#a69c86}
+html[data-theme="dark"] .auth-card label,html[data-theme="dark"] .modal label{color:#c9c2b7}
+html[data-theme="dark"] .auth-card input,html[data-theme="dark"] .auth-card select,html[data-theme="dark"] .modal input,html[data-theme="dark"] .modal textarea{border-color:#625d53;background:#36352f;color:var(--ink)}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#a8a093}
+html[data-theme="dark"] .auth-card .theme-toggle,html[data-theme="dark"] .secondary,html[data-theme="dark"] .round-button{border-color:#625d53;background:#36352f;color:var(--ink)}
+html[data-theme="dark"] .text-button{color:#c6b8ff}
+html[data-theme="dark"] .form-status{color:#c8e79b}
+html[data-theme="dark"] .form-status.error{color:var(--danger)}
+html[data-theme="dark"] .calendar-nav{background:#34332e}
+html[data-theme="dark"] .day.outside{background:#22221f;color:#8f897e}
+html[data-theme="dark"] .day.available:hover{background:#35342e}
+html[data-theme="dark"] .day-add,html[data-theme="dark"] .agenda-side{color:#c6b8ff}
+html[data-theme="dark"] .day-booking{background:#3a3150;color:#e2d9ff}
+html[data-theme="dark"] .day-booking:hover,html[data-theme="dark"] .day-booking:focus-visible{background:#51426c}
+html[data-theme="dark"] .day-booking.own{background:#304026;color:#d9f4b4}
+html[data-theme="dark"] .day-booking.own:hover,html[data-theme="dark"] .day-booking.own:focus-visible{background:#3e5530}
+html[data-theme="dark"] .day-booking.staff,html[data-theme="dark"] .day-booking.staff.own{border-left-color:#ee923e;background:#50351f;color:#ffdbb5}
+html[data-theme="dark"] .day-booking.staff:hover,html[data-theme="dark"] .day-booking.staff:focus-visible{background:#674427}
+html[data-theme="dark"] .agenda-item:hover,html[data-theme="dark"] .agenda-item:focus-visible{background:#34332e}
+html[data-theme="dark"] .agenda-item.staff{background:#38291f}
+html[data-theme="dark"] .agenda-item.staff:hover,html[data-theme="dark"] .agenda-item.staff:focus-visible{background:#50351f}
+html[data-theme="dark"] .agenda-item>span,html[data-theme="dark"] .agenda-side>span{color:#c6b8ff}
+html[data-theme="dark"] .close{background:#3e3b34;color:var(--ink)}
+html[data-theme="dark"] .rules{background:#252520}
+html[data-theme="dark"] .danger{border-color:#8d4b42;background:#442821;color:#ffb2a7}
+html[data-theme="dark"] .privacy-note{color:#b9b3a8}
+@media(max-width:780px){.portal-header .theme-toggle{width:40px;padding:8px}.portal-header .theme-toggle [data-theme-label]{display:none}}

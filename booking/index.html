@@ -7,7 +7,8 @@
   <meta name="theme-color" content="#20201d">
   <title>Loki Studio · Booking</title>
   <link rel="icon" href="/assets/brand/loki-icon-192.png">
-  <link rel="stylesheet" href="/booking/booking.css?v=20261027-staff-orange">
+  <script src="/booking/theme-init.js?v=20261027-theme"></script>
+  <link rel="stylesheet" href="/booking/booking.css?v=20261027-theme">
 </head>
 <body>
   <main class="auth-shell" id="auth-shell">
@@ -17,6 +18,7 @@
       <p>Privat bookingkalender for leietakere i Studio C og Studio D.</p>
     </section>
     <section class="auth-card">
+      <div class="auth-actions"><button class="theme-toggle" type="button" data-theme-toggle aria-label="Bytt til mørkt tema" aria-pressed="false"><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Mørkt tema</span></button></div>
       <div id="login-view">
         <span class="kicker">LEIETAKERPORTAL</span>
         <h1>Logg inn</h1>
@@ -53,7 +55,7 @@
   <main class="portal" id="portal" hidden>
     <header class="portal-header">
       <a class="portal-brand" href="/booking/" aria-label="Loki Studio booking"><img src="/assets/brand/loki-symbol.png" alt=""><span><strong>LOKI</strong><small>STUDIO BOOKING</small></span></a>
-      <div class="user-box"><div><strong id="user-name"></strong><span id="user-studio"></span></div><button class="secondary" id="logout" type="button">Logg ut</button></div>
+      <div class="user-box"><div><strong id="user-name"></strong><span id="user-studio"></span></div><button class="theme-toggle" type="button" data-theme-toggle aria-label="Bytt til mørkt tema" aria-pressed="false"><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Mørkt tema</span></button><button class="secondary" id="logout" type="button">Logg ut</button></div>
     </header>
     <section class="portal-content">
       <div class="portal-intro"><div><span class="kicker">LEIETAKERKALENDER</span><h1 id="calendar-heading">Booking</h1><p>Trykk på en booking for detaljer eller endring. Bruk + ved datoen for å booke ny tid.</p></div><button class="primary" id="new-booking" type="button">+ Book tid</button></div>
@@ -84,6 +86,6 @@
     </section>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="/booking/booking.js?v=20261027-staff-orange"></script>
+  <script src="/booking/booking.js?v=20261027-theme"></script>
 </body>
 </html>

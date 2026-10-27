@@ -9,6 +9,19 @@
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
   const localDate = (date = new Date()) => new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
 
+  function applyTheme(theme, persist = false) {
+    const dark = theme === "dark";
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+      button.setAttribute("aria-pressed", String(dark));
+      button.setAttribute("aria-label", dark ? "Bytt til lyst tema" : "Bytt til mørkt tema");
+      button.querySelector("[data-theme-icon]").textContent = dark ? "☀" : "☾";
+      button.querySelector("[data-theme-label]").textContent = dark ? "Lyst tema" : "Mørkt tema";
+    });
+    document.querySelector('meta[name="theme-color"]').content = dark ? "#171715" : "#20201d";
+    if (persist) try { localStorage.setItem("loki_booking_theme", dark ? "dark" : "light"); } catch {}
+  }
+
   async function api(action, options = {}) {
     const response = await fetch(`/api/studio?action=tenant-${encodeURIComponent(action)}`, {
       credentials: "same-origin",
@@ -238,6 +251,11 @@
   $("month-prev").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1, 12); renderCalendar(); };
   $("month-next").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12); renderCalendar(); };
   $("month-today").onclick = () => { const now = new Date(); cursor = new Date(now.getFullYear(), now.getMonth(), 1, 12); renderCalendar(); };
+
+  document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+    button.onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark", true);
+  });
+  applyTheme(document.documentElement.dataset.theme);
 
   initialize();
 })();
