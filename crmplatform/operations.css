@@ -15,3 +15,5 @@
 @media screen{html[data-theme="dark"] .tenant-admin-grid>section,html[data-theme="dark"] .tenant-studio-tabs button{background:#292925}html[data-theme="dark"] .tenant-studio-tabs button.active{background:#3a3934}}
 @media(max-width:900px){.tenant-admin-grid{grid-template-columns:1fr}.tenant-booking-head{align-items:stretch;flex-direction:column}}
 @media(max-width:600px){.tenant-booking-head .button-row{align-items:stretch;flex-direction:column}.tenant-portal-link{justify-content:center}.tenant-studio-tabs{grid-template-columns:1fr 1fr}.tenant-user-row{grid-template-columns:36px minmax(0,1fr)}.tenant-user-row>em{grid-column:1}.tenant-row-actions{grid-column:2}.tenant-booking-row{grid-template-columns:44px minmax(0,1fr)}.tenant-booking-row>button{grid-column:2;justify-self:end}}
+.tenant-booking-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}.tenant-edit-status{min-height:18px;color:var(--danger);font-size:10px}.modal-head #tenant-booking-owner{margin-top:8px;color:var(--muted);font-size:10px;line-height:1.5}
+@media(max-width:600px){.tenant-booking-actions{grid-column:2;justify-content:flex-start}}

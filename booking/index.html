@@ -7,7 +7,7 @@
   <meta name="theme-color" content="#20201d">
   <title>Loki Studio · Booking</title>
   <link rel="icon" href="/assets/brand/loki-icon-192.png">
-  <link rel="stylesheet" href="/booking/booking.css?v=20261012-booking-edit">
+  <link rel="stylesheet" href="/booking/booking.css?v=20261027-calendar-edit">
 </head>
 <body>
   <main class="auth-shell" id="auth-shell">
@@ -56,32 +56,34 @@
       <div class="user-box"><div><strong id="user-name"></strong><span id="user-studio"></span></div><button class="secondary" id="logout" type="button">Logg ut</button></div>
     </header>
     <section class="portal-content">
-      <div class="portal-intro"><div><span class="kicker">LEIETAKERKALENDER</span><h1 id="calendar-heading">Booking</h1><p>Se ledige tider og opprett bookinger for studioet du tilhører.</p></div><button class="primary" id="new-booking" type="button">+ Book tid</button></div>
+      <div class="portal-intro"><div><span class="kicker">LEIETAKERKALENDER</span><h1 id="calendar-heading">Booking</h1><p>Trykk på en booking for detaljer eller endring. Bruk + ved datoen for å booke ny tid.</p></div><button class="primary" id="new-booking" type="button">+ Book tid</button></div>
       <section class="calendar-card">
         <nav class="calendar-nav"><button class="round-button" id="month-prev" type="button" aria-label="Forrige måned">←</button><button class="secondary" id="month-today" type="button">I dag</button><h2 id="month-title"></h2><button class="round-button" id="month-next" type="button" aria-label="Neste måned">→</button></nav>
         <div class="calendar-scroll" tabindex="0">
           <div class="weekdays" aria-hidden="true"><span>Man</span><span>Tir</span><span>Ons</span><span>Tor</span><span>Fre</span><span>Lør</span><span>Søn</span></div>
           <div class="calendar-grid" id="calendar-grid"></div>
         </div>
+        <p class="calendar-legend"><span><i class="legend-own" aria-hidden="true"></i>Dine bookinger</span><span><i class="legend-other" aria-hidden="true"></i>Andres bookinger</span><span>Trykk på en booking for å se hele tidsrommet og detaljene.</span></p>
       </section>
       <section class="agenda-card"><div class="agenda-head"><div><span class="kicker">BOOKINGER</span><h2>Kommende tider</h2></div><span id="booking-total">0 bookinger</span></div><div class="agenda" id="agenda"></div></section>
-      <aside class="rules"><strong>Viktig</strong><p>Du kan opprette bookinger og se kalenderen for ditt studio. Dine egne bookinger kan redigeres eller slettes fra listen over kommende tider. Andre brukeres bookinger er synlige, men kan ikke endres.</p></aside>
+      <aside class="rules"><strong>Viktig</strong><p>Du ser bare kalenderen for ditt studio. Du kan endre dine egne kommende bookinger ved å trykke på dem. Andre brukeres bookinger kan leses, men ikke endres. Kontakt Leon eller Charles dersom en booking må slettes.</p></aside>
     </section>
   </main>
 
   <div class="modal-backdrop" id="booking-modal" hidden>
     <section class="modal" role="dialog" aria-modal="true" aria-labelledby="booking-title">
       <div class="modal-head"><div><span class="kicker" id="booking-studio-label"></span><h2 id="booking-title">Book tid</h2></div><button class="close" id="close-modal" type="button" aria-label="Lukk">×</button></div>
+      <p class="booking-info" id="booking-info"></p>
       <form id="booking-form">
         <label>Tittel / aktivitet<input name="title" required maxlength="180" placeholder="Øving, produksjon, innspilling …"></label>
         <div class="time-grid"><label>Dato<input name="date" type="date" required></label><label>Fra<input name="startTime" type="time" required value="10:00" step="900"></label><label>Til<input name="endTime" type="time" required value="12:00" step="900"></label></div>
         <label>Praktisk informasjon <span>(valgfritt)</span><textarea name="notes" maxlength="2000" placeholder="Hvem kommer, behov eller annen informasjon …"></textarea></label>
-        <div class="modal-actions"><button class="danger" id="delete-booking" type="button" hidden>Slett booking</button><button class="secondary" id="cancel-modal" type="button">Avbryt</button><button class="primary" id="booking-submit" type="submit">Bekreft booking</button></div>
+        <div class="modal-actions"><button class="secondary" id="cancel-modal" type="button">Lukk</button><button class="primary" id="booking-submit" type="submit">Bekreft booking</button></div>
       </form>
       <p class="form-status" id="booking-status" role="status" aria-live="polite"></p>
     </section>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="/booking/booking.js?v=20261012-booking-edit"></script>
+  <script src="/booking/booking.js?v=20261027-calendar-edit"></script>
 </body>
 </html>

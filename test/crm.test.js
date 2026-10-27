@@ -39,6 +39,7 @@ const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeNoteAttachment
 const {
   bookingConflict: tenantBookingConflict,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
+  editBooking: editTenantBooking,
   SESSION_MAX_AGE_SECONDS,
   createLoginChallenge: createTenantLoginChallenge,
   createSessionToken: createTenantSessionToken,
@@ -1496,29 +1497,57 @@ test("tenant booking ownership enables edits only for the creator in the same st
   assert.equal(Object.hasOwn(publicTenantBooking(original, owner), "createdByEmail"), false);
 });
 
+test("tenant booking changes enforce ownership, prevent overlap and preserve the creator for admin edits", () => {
+  const owner = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
+  const colleague = sanitizeTenantAccount({ name: "Ola", email: "ola@example.com", studio: "Studio C", status: "approved" });
+  const otherStudio = sanitizeTenantAccount({ name: "Dina", email: "dina@example.com", studio: "Studio D", status: "approved" });
+  const first = sanitizeTenantBooking({ title: "Øving", date: "2099-10-20", startTime: "10:00", endTime: "12:00" }, owner);
+  const second = sanitizeTenantBooking({ title: "Opptak", date: "2099-10-20", startTime: "13:00", endTime: "15:00" }, colleague);
+  const all = [first, second];
+  assert.equal(editTenantBooking(all, first.id, { title: "Overtatt" }, colleague, { today: "2099-01-01" }).error.status, 403);
+  assert.equal(editTenantBooking(all, first.id, { title: "Feil studio" }, otherStudio, { today: "2099-01-01" }).error.status, 404);
+  assert.equal(editTenantBooking(all, first.id, { startTime: "14:00", endTime: "16:00" }, owner, { today: "2099-01-01" }).error.status, 409);
+  const ownEdit = editTenantBooking(all, first.id, { startTime: "11:00", endTime: "12:30" }, owner, { today: "2099-01-01" });
+  assert.equal(ownEdit.result.startTime, "11:00");
+  assert.equal(ownEdit.result.endTime, "12:30");
+  assert.equal(all[0].startTime, "10:00");
+  const adminEdit = editTenantBooking(all, first.id, { title: "Flyttet", date: "2099-10-21", studio: "Studio D", createdById: colleague.id }, { email: "leon@lokilyd.no" }, { admin: true, today: "2099-01-01" });
+  assert.equal(adminEdit.result.createdById, owner.id);
+  assert.equal(adminEdit.result.createdByEmail, owner.email);
+  assert.equal(adminEdit.result.studio, "Studio C");
+  assert.equal(adminEdit.result.date, "2099-10-21");
+});
+
 test("external booking portal is isolated from CRM and exposes approval administration", () => {
   const portal = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
   const client = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
   const api = fs.readFileSync(path.join(__dirname, "..", "lib", "tenant-booking-handler.js"), "utf8");
   const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
   const crm = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const crmOperations = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "operations.js"), "utf8");
   assert.match(portal, /Søk om tilgang/);
   assert.match(portal, /Studio C/);
   assert.match(portal, /Studio D/);
-  assert.match(portal, /Dine egne bookinger kan redigeres eller slettes/);
+  assert.match(portal, /Du kan endre dine egne kommende bookinger/);
   assert.doesNotMatch(client, /crm-login|crmplatform/);
   assert.match(client, /action=tenant-/);
   assert.match(api, /requireUser\(req, res\)/);
   assert.match(api, /item\.studio === account\.studio/);
   assert.match(api, /req\.method === "PATCH"/);
   assert.match(api, /req\.method === "DELETE"/);
-  assert.match(api, /bookingOwnedByAccount/);
-  assert.match(client, /data-edit-booking/);
-  assert.match(client, /data-delete-booking/);
+  assert.match(api, /editBooking\(bookings, id/);
+  assert.match(client, /data-calendar-booking/);
+  assert.match(client, /data-view-booking/);
+  assert.match(client, /item\.startTime.*item\.endTime/);
+  assert.doesNotMatch(client, /data-delete-booking/);
+  assert.match(api, /Bare Loki Lydstudio kan slette bookinger/);
   assert.match(api, /action === "admin-booking"/);
   assert.match(studioApi, /tenantBookingHandler/);
   assert.match(api, /to: address/);
   assert.match(crm, /id="tenant-user-list"/);
+  assert.match(crm, /id="tenant-booking-form"/);
+  assert.match(crmOperations, /data-tenant-booking-edit/);
+  assert.match(crmOperations, /method: "PATCH"/);
   assert.match(crm, /Åpne bookingportalen/);
 });
 

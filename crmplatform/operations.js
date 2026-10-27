@@ -225,13 +225,16 @@
     }).join("") : `<div class="empty">Ingen brukere for ${esc(selectedTenantStudio)}.</div>`;
     bookingList.innerHTML = visibleBookings.length ? visibleBookings.map((booking) => {
       const date = bookingDate(booking.date);
-      return `<article class="tenant-booking-row"><div class="booking-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></div><div><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span>${booking.notes ? `<small>${esc(booking.notes)}</small>` : ""}</div><button class="tiny-button danger" data-tenant-booking-delete="${esc(booking.id)}">Slett</button></article>`;
+      return `<article class="tenant-booking-row"><div class="booking-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></div><div><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span>${booking.notes ? `<small>${esc(booking.notes)}</small>` : ""}</div><div class="tenant-booking-actions"><button class="tiny-button" type="button" data-tenant-booking-edit="${esc(booking.id)}">Rediger</button><button class="tiny-button danger" type="button" data-tenant-booking-delete="${esc(booking.id)}">Slett</button></div></article>`;
     }).join("") : `<div class="empty">Ingen kommende bookinger i ${esc(selectedTenantStudio)}.</div>`;
     document.querySelectorAll("[data-tenant-user-status]").forEach((button) => {
       button.onclick = () => updateTenantUser(button.dataset.tenantUserId, button.dataset.tenantUserStatus, button);
     });
     document.querySelectorAll("[data-tenant-booking-delete]").forEach((button) => {
       button.onclick = () => deleteTenantBooking(button.dataset.tenantBookingDelete);
+    });
+    document.querySelectorAll("[data-tenant-booking-edit]").forEach((button) => {
+      button.onclick = () => openTenantBooking(button.dataset.tenantBookingEdit);
     });
     renderMetrics();
   }
@@ -270,6 +273,41 @@
       renderTenantAdmin();
       toast("Bookingen er slettet, og brukeren er varslet.");
     } catch (error) { toast(error.message); }
+  }
+
+  function openTenantBooking(id) {
+    const booking = tenantBookings.find((item) => item.id === id);
+    if (!booking) return;
+    const form = document.getElementById("tenant-booking-form");
+    form.reset();
+    for (const field of ["id", "title", "date", "startTime", "endTime", "notes"]) form.elements[field].value = booking[field] || "";
+    form.elements.date.min = localDate();
+    document.getElementById("tenant-booking-modal-title").textContent = `Rediger booking · ${booking.studio}`;
+    document.getElementById("tenant-booking-owner").textContent = `Opprettet av ${booking.createdByName}. Endringer herfra kan gjøres av Leon og Charles.`;
+    document.getElementById("tenant-booking-edit-status").textContent = "";
+    document.getElementById("tenant-booking-modal").classList.add("open");
+    form.elements.title.focus();
+  }
+
+  async function saveTenantBooking(event) {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const values = Object.fromEntries(new FormData(form));
+    const button = form.querySelector('button[type="submit"]');
+    button.disabled = true;
+    document.getElementById("tenant-booking-edit-status").textContent = "Lagrer …";
+    try {
+      const data = await api("/api/studio?action=tenant-admin-booking", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: values.id, changes: { title: values.title, date: values.date, startTime: values.startTime, endTime: values.endTime, notes: values.notes } }),
+      });
+      tenantBookings = tenantBookings.map((item) => item.id === values.id ? data.booking : item);
+      closeModal("tenant-booking-modal");
+      renderTenantAdmin();
+      toast("Leietakerbookingen er oppdatert.");
+    } catch (error) { document.getElementById("tenant-booking-edit-status").textContent = error.message; }
+    finally { button.disabled = false; }
   }
 
   function lineMarkup(item = {}) {
@@ -583,6 +621,9 @@
     document.getElementById("crm-backup").onclick = createBackup;
     document.getElementById("refresh-google-calendar").onclick = () => loadGoogleCalendar(true);
     document.getElementById("refresh-tenant-booking").onclick = loadTenantAdmin;
+    document.getElementById("tenant-booking-form").onsubmit = saveTenantBooking;
+    document.getElementById("close-tenant-booking-modal").onclick = () => closeModal("tenant-booking-modal");
+    document.getElementById("cancel-tenant-booking-modal").onclick = () => closeModal("tenant-booking-modal");
     document.querySelectorAll("[data-tenant-studio]").forEach((button) => {
       button.onclick = () => { selectedTenantStudio = button.dataset.tenantStudio; renderTenantAdmin(); };
     });
