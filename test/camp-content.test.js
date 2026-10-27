@@ -16,26 +16,26 @@ function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
-test("public homepages promote Loki New Voices in their selected language", () => {
+test("public homepages show Loki New Voices as full in their selected language", () => {
   const norwegian = read("index.html");
   assert.match(norwegian, /<html lang="no">/);
-  assert.match(norwegian, /Søknaden er åpen: Loki New Voices/);
+  assert.match(norwegian, /Loki New Voices &middot; 4\.–6\. desember 2026 &middot; Fullbooket/);
   assert.match(norwegian, /4\.–6\. desember 2026/);
-  assert.match(norwegian, /Søknaden til Loki New Voices er nå åpen – vår neste låtskrivercamp for låtskrivere, artister og produsenter\./);
+  assert.match(norwegian, /Loki New Voices er fullbooket, og søknaden til campen 4\.–6\. desember 2026 er stengt\./);
   assert.doesNotMatch(norwegian, /tredagers låtskrivercamp|for unge og fremadstormende/i);
-  assert.match(norwegian, /SØK TIL LOKI NEW VOICES/);
+  assert.match(norwegian, /MELD INTERESSE FOR FREMTIDIGE CAMPER/);
   assert.match(norwegian, /href="\/loki-songs-camp\.html"/);
-  assert.doesNotMatch(norwegian, /Applications are now open for Loki New Voices/);
+  assert.doesNotMatch(norwegian, /Applications are now open for Loki New Voices|Søknaden er åpen/);
 
   const english = read("en/index.html");
   assert.match(english, /<html lang="en">/);
-  assert.match(english, /Applications open: Loki New Voices/);
+  assert.match(english, /Loki New Voices &middot; 4–6 December 2026 &middot; Fully booked/);
   assert.match(english, /4–6 December 2026/);
-  assert.match(english, /Applications are now open for Loki New Voices – our next songwriting camp for songwriters, artists and producers\./);
+  assert.match(english, /Loki New Voices is fully booked, and applications for the 4–6 December 2026 camp are closed\./);
   assert.doesNotMatch(english, /three-day songwriting camp|for emerging songwriters/i);
-  assert.match(english, /APPLY TO LOKI NEW VOICES/);
+  assert.match(english, /REGISTER INTEREST IN FUTURE CAMPS/);
   assert.match(english, /href="\/en\/loki-songs-camp_en\.html"/);
-  assert.doesNotMatch(english, /Søknaden til Loki New Voices er nå åpen/);
+  assert.doesNotMatch(english, /Søknaden til Loki New Voices er nå åpen|Applications are now open/);
 });
 
 test("the completed September campaign is absent from all public camp pages", () => {
@@ -54,7 +54,8 @@ test("dedicated camp pages contain localized Loki New Voices information", () =>
   assert.match(norwegian, /Skriv sammen/);
   assert.match(norwegian, /Utvikle deg/);
   assert.match(norwegian, /Bygg nettverk/);
-  assert.match(norwegian, /SØK NÅ/);
+  assert.match(norwegian, /Søknaden er stengt, men campen går som planlagt/);
+  assert.match(norwegian, /MELD INTERESSE FOR FREMTIDIGE CAMPER/);
   assert.doesNotMatch(norwegian, /tredagers|\bunge\b/i);
   assert.doesNotMatch(norwegian, /SONGWRITING CAMPS FOR EMERGING CREATIVES/);
 
@@ -65,15 +66,18 @@ test("dedicated camp pages contain localized Loki New Voices information", () =>
   assert.match(english, /Write together/);
   assert.match(english, /Develop your craft/);
   assert.match(english, /Build connections/);
-  assert.match(english, /APPLY NOW/);
+  assert.match(english, /Applications are closed, but the camp will take place as planned/);
+  assert.match(english, /REGISTER INTEREST IN FUTURE CAMPS/);
   assert.doesNotMatch(english, /three-day|\bemerging\b/i);
   assert.doesNotMatch(english, /LÅTSKRIVERCAMPER FOR NYE TALENTER/);
 });
 
-test("every campaign page links safely to the published application form", () => {
+test("all campaign pages remove the application link and offer future-camp contact", () => {
   for (const relativePath of publicCampPages) {
     const html = read(relativePath);
-    assert.match(html, new RegExp(`href="${applicationUrl.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*target="_blank"[^>]*rel="noopener noreferrer"`));
+    assert.doesNotMatch(html, /href="https:\/\/docs\.google\.com\/forms\//);
+    assert.ok(!html.includes(applicationUrl));
+    assert.match(html, /href="mailto:camps@lokilyd\.no\?subject=/);
   }
 });
 
