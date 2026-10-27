@@ -7,3 +7,5 @@ Accounts are created and approved through the existing booking portal. After sig
 Generate the Xcode project with `xcodegen generate --spec project.yml`. Build without signing for the simulator with `xcodebuild -project LokiBooking.xcodeproj -scheme LokiBooking -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build`.
 
 The production bundle ID is `no.lokilyd.booking`. Distribution credentials and profiles must remain outside the repository.
+
+Version 1.0, build 2, was uploaded to App Store Connect on October 27, 2026. The internal TestFlight group is `Loki internt`; the external group for tenants is `Studio C og D`. External installation requires Apple's first beta review and a TestFlight invitation or public link. Testers still need a studio booking account approved by Leon or Charles; installing the app does not grant booking or CRM access.
