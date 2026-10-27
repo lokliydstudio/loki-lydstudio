@@ -7,3 +7,4 @@ node_modules/
 ios/**/xcuserdata/
 ios/**/.build/
 ios/**/DerivedData/
+ios/**/build/
