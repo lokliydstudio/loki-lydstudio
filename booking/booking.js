@@ -62,6 +62,9 @@
     $("user-studio").textContent = user.studio;
     $("calendar-heading").textContent = `${user.studio}-kalender`;
     $("booking-studio-label").textContent = user.studio.toUpperCase();
+    $("booking-email-alerts").checked = user.emailOnNewBooking === true;
+    $("booking-email-description").textContent = `Send meg e-post når noen oppretter en ny booking i ${user.studio}.`;
+    $("booking-preference-status").textContent = "";
   }
 
   function dateLabel(value) {
@@ -251,6 +254,27 @@
   $("month-prev").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1, 12); renderCalendar(); };
   $("month-next").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12); renderCalendar(); };
   $("month-today").onclick = () => { const now = new Date(); cursor = new Date(now.getFullYear(), now.getMonth(), 1, 12); renderCalendar(); };
+
+  $("booking-email-alerts").onchange = async (event) => {
+    const checkbox = event.currentTarget;
+    const enabled = checkbox.checked;
+    const status = $("booking-preference-status");
+    checkbox.disabled = true;
+    status.classList.remove("error");
+    status.textContent = "Lagrer …";
+    try {
+      const data = await api("preferences", { method: "PATCH", body: JSON.stringify({ emailOnNewBooking: enabled }) });
+      user = data.user;
+      checkbox.checked = user.emailOnNewBooking === true;
+      status.textContent = enabled ? "E-postvarsler er på." : "E-postvarsler er av.";
+    } catch (error) {
+      checkbox.checked = !enabled;
+      status.classList.add("error");
+      status.textContent = error.message;
+    } finally {
+      checkbox.disabled = false;
+    }
+  };
 
   document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
     button.onclick = () => applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark", true);

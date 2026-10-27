@@ -38,6 +38,7 @@ const { publicSummary } = require("../lib/crm-prospect-handler");
 const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeNoteAttachments, sanitizeTask } = require("../lib/crm-workspace");
 const {
   bookingConflict: tenantBookingConflict,
+  bookingNotificationRecipients,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
   editBooking: editTenantBooking,
   isStaffBooking,
@@ -1439,8 +1440,21 @@ test("tenant booking accounts are limited to Studio C or Studio D", () => {
   assert.equal(account.email, "ola@example.com");
   assert.equal(account.studio, "Studio C");
   assert.equal(account.status, "pending");
+  assert.equal(account.emailOnNewBooking, false);
   assert.equal(sanitizeTenantAccount({ name: "Ugyldig", email: "u@example.com", studio: "Studio B" }), null);
-  assert.deepEqual(Object.keys(publicTenantAccount(account)).sort(), ["email", "id", "name", "status", "studio"]);
+  assert.deepEqual(Object.keys(publicTenantAccount(account)).sort(), ["email", "emailOnNewBooking", "id", "name", "status", "studio"]);
+});
+
+test("new booking emails go only to opted-in approved members of that studio", () => {
+  const approvedC = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
+  const optedC = sanitizeTenantAccount({}, { ...approvedC, emailOnNewBooking: true });
+  const notOptedC = sanitizeTenantAccount({ name: "Ola", email: "ola@example.com", studio: "Studio C", status: "approved" });
+  const approvedD = sanitizeTenantAccount({ name: "Dina", email: "dina@example.com", studio: "Studio D", status: "approved" });
+  const optedD = sanitizeTenantAccount({}, { ...approvedD, emailOnNewBooking: true });
+  const pendingC = sanitizeTenantAccount({ name: "Per", email: "per@example.com", studio: "Studio C", status: "pending" });
+  const optedPendingC = sanitizeTenantAccount({}, { ...pendingC, emailOnNewBooking: true });
+  assert.equal(publicTenantAccount(optedC).emailOnNewBooking, true);
+  assert.deepEqual(bookingNotificationRecipients([notOptedC, optedC, optedD, optedPendingC], { studio: "Studio C" }).map((item) => item.email), ["kari@example.com"]);
 });
 
 test("approved tenant accounts use a separate signed login challenge and session cookie", () => {
@@ -1546,6 +1560,7 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(portal, /Studio C/);
   assert.match(portal, /Studio D/);
   assert.match(portal, /Du kan endre dine egne kommende bookinger/);
+  assert.match(portal, /id="booking-email-alerts" type="checkbox"/);
   assert.doesNotMatch(client, /crm-login|crmplatform/);
   assert.match(client, /action=tenant-/);
   assert.match(api, /requireUser\(req, res\)/);
@@ -1559,6 +1574,8 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.doesNotMatch(client, /data-delete-booking/);
   assert.match(api, /Bare Loki Lydstudio kan slette bookinger/);
   assert.match(api, /action === "admin-booking"/);
+  assert.match(api, /action === "preferences"/);
+  assert.match(api, /sendNewBookingEmails\(booking\)/);
   assert.match(studioApi, /tenantBookingHandler/);
   assert.match(api, /to: address/);
   assert.match(crm, /id="tenant-user-list"/);

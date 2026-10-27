@@ -41,3 +41,12 @@ html[data-theme="dark"] .rules{background:#252520}
 html[data-theme="dark"] .danger{border-color:#8d4b42;background:#442821;color:#ffb2a7}
 html[data-theme="dark"] .privacy-note{color:#b9b3a8}
 @media(max-width:780px){.portal-header .theme-toggle{width:40px;padding:8px}.portal-header .theme-toggle [data-theme-label]{display:none}}
+.booking-preferences{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;margin:-5px 0 20px;padding:14px 18px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.booking-mail-choice{display:flex;align-items:center;gap:12px;cursor:pointer}
+.booking-mail-choice input{width:20px;height:20px;flex:none;margin:0;accent-color:#789d29;cursor:pointer}
+.booking-mail-choice input:disabled{cursor:wait}
+.booking-mail-choice span{display:grid;gap:3px}
+.booking-mail-choice strong{font-size:12px}
+.booking-mail-choice small{color:var(--muted);font-size:11px;line-height:1.4}
+.booking-preference-status{color:var(--muted);font-size:11px}
+.booking-preference-status.error{color:var(--danger)}
