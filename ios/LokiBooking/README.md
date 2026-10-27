@@ -8,4 +8,4 @@ Generate the Xcode project with `xcodegen generate --spec project.yml`. Build wi
 
 The production bundle ID is `no.lokilyd.booking`. Distribution credentials and profiles must remain outside the repository.
 
-Version 1.0, build 2, was uploaded to App Store Connect on October 27, 2026. The internal TestFlight group is `Loki internt`; the external group for tenants is `Studio C og D`. External installation requires Apple's first beta review and a TestFlight invitation or public link. Testers still need a studio booking account approved by Leon or Charles; installing the app does not grant booking or CRM access.
+Version 1.0, build 2, was uploaded to App Store Connect on October 27, 2026. The internal TestFlight group is `Loki internt`; Leon was invited on his Apple account. The external group for tenants is `Studio C og D`; build 2 was submitted for Apple's first beta review. The external public link is `https://testflight.apple.com/join/MMcvtN56` and only allows installation after Apple approval. Testers still need a studio booking account approved by Leon or Charles; installing the app does not grant booking or CRM access.
