@@ -1532,22 +1532,25 @@ test("Leon and Charles bookings are marked for orange display by verified bookin
   assert.equal(publicTenantBooking(booking, impersonator).editable, true);
 });
 
-test("Leon and Charles can delete each other's Loki bookings in the same studio", () => {
+test("Leon and Charles can delete any booking in their studio, including past tenant bookings", () => {
   const leon = sanitizeTenantAccount({ name: "Leon Frick", email: "leon@lokilyd.no", studio: "Studio C", status: "approved" });
   const charles = sanitizeTenantAccount({ name: "Charles Wise", email: "charles@lokilyd.no", studio: "Studio C", status: "approved" });
   const charlesD = sanitizeTenantAccount({ name: "Charles Wise", email: "charles@lokilyd.no", studio: "Studio D", status: "approved" });
   const tenant = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
   const imitator = sanitizeTenantAccount({ name: "Charles Wise", email: "not-charles@example.com", studio: "Studio C", status: "approved" });
   const lokiBooking = sanitizeTenantBooking({ title: "Loki-økt", date: "2099-10-20", startTime: "10:00", endTime: "12:00" }, leon);
-  const tenantBooking = sanitizeTenantBooking({ title: "Leietakerøkt", date: "2099-10-21", startTime: "10:00", endTime: "12:00" }, tenant);
+  const tenantBooking = sanitizeTenantBooking({ title: "Leietakerøkt", date: "2025-10-21", startTime: "10:00", endTime: "12:00" }, tenant);
   assert.equal(bookingDeletableByAccount(lokiBooking, charles), true);
   assert.equal(publicTenantBooking(lokiBooking, charles).editable, false);
   assert.equal(publicTenantBooking(lokiBooking, charles).deletable, true);
   assert.equal(deleteTenantBooking([lokiBooking], lokiBooking.id, charles).result.id, lokiBooking.id);
   assert.equal(bookingDeletableByAccount(lokiBooking, charlesD), false);
   assert.equal(bookingDeletableByAccount(lokiBooking, imitator), false);
-  assert.equal(bookingDeletableByAccount(tenantBooking, charles), false);
-  assert.equal(deleteTenantBooking([tenantBooking], tenantBooking.id, charles).error.status, 403);
+  assert.equal(bookingDeletableByAccount(tenantBooking, charles), true);
+  assert.equal(publicTenantBooking(tenantBooking, charles).deletable, true);
+  assert.equal(deleteTenantBooking([tenantBooking], tenantBooking.id, charles).result.id, tenantBooking.id);
+  assert.equal(bookingDeletableByAccount(tenantBooking, charlesD), false);
+  assert.equal(bookingDeletableByAccount(tenantBooking, imitator), false);
 });
 
 test("tenant booking changes enforce ownership, prevent overlap and preserve the creator for admin edits", () => {
