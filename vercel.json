@@ -24,6 +24,25 @@
       ]
     },
     {
+      "source": "/camp-application/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow, noarchive" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "no-referrer" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'" }
+      ]
+    },
+    {
+      "source": "/api/camp-application",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "no-referrer" }
+      ]
+    },
+    {
       "source": "/api/crm/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
@@ -71,7 +90,8 @@
   ],
   "redirects": [
     { "source": "/crmplatform", "destination": "/crmplatform/", "permanent": false },
-    { "source": "/booking", "destination": "/booking/", "permanent": false }
+    { "source": "/booking", "destination": "/booking/", "permanent": false },
+    { "source": "/camp-application", "destination": "/camp-application/", "permanent": false }
   ],
   "functions": {
     "api/crm/mailbox.js": { "maxDuration": 30 },

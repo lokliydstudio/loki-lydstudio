@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="nb">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <meta name="theme-color" content="#20211f">
+  <title>Søknad til låtskrivercamper · Loki Songs</title>
+  <link rel="icon" href="/assets/brand/loki-icon-192.png">
+  <link rel="stylesheet" href="/camp-application/application.css">
+  <script src="/camp-application/application.js" defer></script>
+</head>
+<body>
+  <div class="page-shell">
+    <header class="site-header">
+      <div class="brand" aria-label="Loki Lydstudio">
+        <img src="/assets/brand/loki-symbol.png" alt="">
+        <span><strong>LOKI</strong><small>SONGS · LYDSTUDIO</small></span>
+      </div>
+      <span class="header-tag">SØKNADSSKJEMA</span>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <span class="eyebrow">LOKI SONGS / SØKNAD</span>
+        <h1 id="page-title">Søk om plass på fremtidige låtskrivercamper</h1>
+        <p>Fortell oss hvem du er og hva du lager. Vi bruker svarene til å sette sammen gode skrivegrupper og ta kontakt om en aktuell camp. Innsending av skjemaet garanterer ikke plass.</p>
+        <div class="hero-line"><span>ARTISTER</span><i></i><span>LÅTSKRIVERE</span><i></i><span>PRODUSENTER</span></div>
+      </section>
+
+      <form id="application-form" class="application-form">
+        <div class="honeypot" aria-hidden="true"><label>Nettside<input name="website" tabindex="-1" autocomplete="off"></label></div>
+
+        <section class="form-section" aria-labelledby="contact-title">
+          <div class="section-heading"><span class="section-number">01</span><div><p class="section-kicker">DET PRAKTISKE</p><h2 id="contact-title">Om deg</h2></div></div>
+          <div class="fields two-col">
+            <label>Fullt navn <span class="required">*</span><input name="name" required autocomplete="name" maxlength="160" placeholder="Fornavn og etternavn"></label>
+            <label>E-postadresse <span class="required">*</span><input name="email" type="email" required autocomplete="email" maxlength="254" placeholder="navn@eksempel.no"></label>
+            <label>Telefon med landskode <span class="required">*</span><input name="phone" type="tel" required autocomplete="tel" maxlength="50" placeholder="+47 000 00 000"></label>
+            <label>Adresse <span class="required">*</span><input name="address" required autocomplete="street-address" maxlength="300" placeholder="Gateadresse, postnummer og sted"></label>
+            <label class="wide">Management, plateselskap, forlag eller booking <span class="optional">(hvis relevant)</span><input name="management" maxlength="200" placeholder="Skriv «ingen» eller la feltet stå tomt"></label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="music-title">
+          <div class="section-heading"><span class="section-number">02</span><div><p class="section-kicker">MUSIKKEN DIN</p><h2 id="music-title">Hva vil du bidra med?</h2></div></div>
+          <fieldset class="choice-group" id="roles-group"><legend>Rolle <span class="required">*</span> <small>Du kan velge flere.</small></legend>
+            <div class="choice-grid">
+              <label class="choice"><input type="checkbox" name="roles" value="Artist"><span>Artist</span></label>
+              <label class="choice"><input type="checkbox" name="roles" value="Låtskriver"><span>Låtskriver</span></label>
+              <label class="choice"><input type="checkbox" name="roles" value="Produsent"><span>Produsent</span></label>
+              <label class="choice"><input type="checkbox" name="roles" value="Topliner"><span>Topliner</span></label>
+            </div>
+          </fieldset>
+          <div class="fields">
+            <label>Kort musikkbiografi <span class="required">*</span><span class="field-hint">Fortell om ferdigheter, sjanger, inspirasjon, erfaring og hva du vil videre. Maks 500 ord.</span><textarea name="bio" required rows="7" maxlength="4000" placeholder="Skriv litt om deg selv og musikken din …"></textarea><span id="bio-count" class="counter">0 / 500 ord</span></label>
+            <label>Låteksempler <span class="optional">(valgfritt)</span><span class="field-hint">Del lenker til inntil tre låter og skriv hvilken rolle du hadde på hver. Spotify, Dropbox og SoundCloud fungerer fint.</span><textarea name="songs" rows="5" maxlength="2500" placeholder="1. Lenke – min rolle\n2. Lenke – min rolle\n3. Lenke – min rolle"></textarea></label>
+          </div>
+        </section>
+
+        <section class="form-section" aria-labelledby="practical-title">
+          <div class="section-heading"><span class="section-number">03</span><div><p class="section-kicker">FØR DU SENDER</p><h2 id="practical-title">Praktisk informasjon</h2></div></div>
+          <fieldset class="choice-group"><legend>Fordeling av låtskriverandeler <span class="required">*</span><small>Andelene fordeles likt mellom alle i skrivegruppen. For eksempel får hver person 25 % i en gruppe på fire. Split sheets fylles ut under campen.</small></legend>
+            <div class="choice-grid two-choices">
+              <label class="choice"><input type="radio" name="splits" value="agree" required><span>Jeg godtar dette</span></label>
+              <label class="choice"><input type="radio" name="splits" value="disagree"><span>Jeg godtar ikke dette</span></label>
+            </div>
+          </fieldset>
+          <div class="fields">
+            <label>Matbehov <span class="required">*</span><span class="field-hint">Du kan velge «Oppgis senere» hvis du ikke vil dele dette nå.</span><select name="dietary" required><option value="">Velg et alternativ</option><option value="Oppgis senere">Oppgis senere</option><option value="Ingen">Ingen</option><option value="Vegetar">Vegetar</option><option value="Vegan">Vegan</option><option value="Kosher">Kosher</option><option value="Glutenfri">Glutenfri</option><option value="Pescetarian">Pescetarian</option><option value="Annet">Annet</option></select></label>
+            <label id="dietary-other-wrap" hidden>Beskriv matbehovet <span class="required">*</span><input name="dietaryOther" maxlength="160" placeholder="Hva trenger vi å vite?"></label>
+          </div>
+          <div class="agreements">
+            <label class="agreement" id="dietary-consent-wrap" hidden><input type="checkbox" name="dietaryConsent"><span>Jeg samtykker uttrykkelig til at matbehovet jeg oppgir brukes til planlegging av servering ved en eventuell camp. Jeg kan trekke samtykket tilbake ved å kontakte <a href="mailto:camps@lokilyd.no">camps@lokilyd.no</a>. <span class="required">*</span></span></label>
+            <label class="agreement"><input type="checkbox" name="feeAccepted" required><span>Jeg forstår at dersom jeg takker ja til en invitasjon, faktureres jeg <strong>1 300 kr</strong>. Beløpet refunderes ikke. <span class="required">*</span></span></label>
+            <label class="agreement"><input type="checkbox" name="privacyAccepted" required><span>Jeg har lest hvordan Loki Lydstudio bruker opplysningene i søknaden for å vurdere deltakelse og kontakte meg. <a href="/personvern.html" target="_blank" rel="noopener noreferrer">Les personvernerklæringen</a>. <span class="required">*</span></span></label>
+          </div>
+        </section>
+
+        <div class="submit-panel">
+          <div><strong>Klar til å sende?</strong><p>Vi bekrefter når søknaden er registrert. Spørsmål kan sendes til <a href="mailto:camps@lokilyd.no">camps@lokilyd.no</a>.</p></div>
+          <button type="submit" id="submit-button"><span id="submit-label">Send søknad</span><span aria-hidden="true">↗</span></button>
+        </div>
+        <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
+      </form>
+
+      <section class="success-card" id="success-card" hidden aria-live="polite">
+        <span class="success-icon" aria-hidden="true">✓</span>
+        <h2>Søknaden er registrert</h2>
+        <p>Takk for at du vil skrive musikk med oss. Vi tar kontakt på e-post hvis vi trenger mer informasjon eller kan tilby deg plass.</p>
+        <a href="https://www.lokilyd.no/">Tilbake til Loki Lydstudio</a>
+      </section>
+    </main>
+
+    <footer><span>LOKI LYDSTUDIO · FRYDENBØLIEN 17, BERGEN</span><a href="mailto:camps@lokilyd.no">CAMPS@LOKILYD.NO</a></footer>
+  </div>
+</body>
+</html>
