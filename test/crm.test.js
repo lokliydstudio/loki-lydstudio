@@ -1534,6 +1534,7 @@ test("Leon and Charles bookings are marked for orange display by verified bookin
 
 test("Leon and Charles can delete any booking in their studio, including past tenant bookings", () => {
   const leon = sanitizeTenantAccount({ name: "Leon Frick", email: "leon@lokilyd.no", studio: "Studio C", status: "approved" });
+  const leonBookingAccount = sanitizeTenantAccount({ name: "Leon Frick", email: "leon.frick@live.no", studio: "Studio C", status: "approved" });
   const charles = sanitizeTenantAccount({ name: "Charles Wise", email: "charles@lokilyd.no", studio: "Studio C", status: "approved" });
   const charlesD = sanitizeTenantAccount({ name: "Charles Wise", email: "charles@lokilyd.no", studio: "Studio D", status: "approved" });
   const tenant = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
@@ -1547,7 +1548,9 @@ test("Leon and Charles can delete any booking in their studio, including past te
   assert.equal(bookingDeletableByAccount(lokiBooking, charlesD), false);
   assert.equal(bookingDeletableByAccount(lokiBooking, imitator), false);
   assert.equal(bookingDeletableByAccount(tenantBooking, charles), true);
+  assert.equal(bookingDeletableByAccount(tenantBooking, leonBookingAccount), true);
   assert.equal(publicTenantBooking(tenantBooking, charles).deletable, true);
+  assert.equal(publicTenantBooking(tenantBooking, leonBookingAccount).deletable, true);
   assert.equal(deleteTenantBooking([tenantBooking], tenantBooking.id, charles).result.id, tenantBooking.id);
   assert.equal(bookingDeletableByAccount(tenantBooking, charlesD), false);
   assert.equal(bookingDeletableByAccount(tenantBooking, imitator), false);
