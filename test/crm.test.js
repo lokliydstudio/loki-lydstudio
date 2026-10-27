@@ -39,6 +39,7 @@ const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeNoteAttachment
 const {
   bookingConflict: tenantBookingConflict,
   bookingNotificationRecipients,
+  bookingDeletableByAccount,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
   deleteBooking: deleteTenantBooking,
   editBooking: editTenantBooking,
@@ -1509,7 +1510,9 @@ test("tenant booking ownership enables edits only for the creator in the same st
   assert.equal(tenantBookingOwnedByAccount(original, studioMate), false);
   assert.equal(tenantBookingOwnedByAccount(original, otherStudio), false);
   assert.equal(publicTenantBooking(original, owner).editable, true);
+  assert.equal(publicTenantBooking(original, owner).deletable, true);
   assert.equal(publicTenantBooking(original, studioMate).editable, false);
+  assert.equal(publicTenantBooking(original, studioMate).deletable, false);
   assert.equal(Object.hasOwn(publicTenantBooking(original, owner), "createdByEmail"), false);
 });
 
@@ -1527,6 +1530,24 @@ test("Leon and Charles bookings are marked for orange display by verified bookin
   const booking = sanitizeTenantBooking({ title: "Øving", date: "2099-10-20", startTime: "10:00", endTime: "12:00" }, impersonator);
   assert.equal(publicTenantBooking(booking, impersonator).staffBooking, false);
   assert.equal(publicTenantBooking(booking, impersonator).editable, true);
+});
+
+test("Leon and Charles can delete each other's Loki bookings in the same studio", () => {
+  const leon = sanitizeTenantAccount({ name: "Leon Frick", email: "leon@lokilyd.no", studio: "Studio C", status: "approved" });
+  const charles = sanitizeTenantAccount({ name: "Charles Wise", email: "charles@lokilyd.no", studio: "Studio C", status: "approved" });
+  const charlesD = sanitizeTenantAccount({ name: "Charles Wise", email: "charles@lokilyd.no", studio: "Studio D", status: "approved" });
+  const tenant = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
+  const imitator = sanitizeTenantAccount({ name: "Charles Wise", email: "not-charles@example.com", studio: "Studio C", status: "approved" });
+  const lokiBooking = sanitizeTenantBooking({ title: "Loki-økt", date: "2099-10-20", startTime: "10:00", endTime: "12:00" }, leon);
+  const tenantBooking = sanitizeTenantBooking({ title: "Leietakerøkt", date: "2099-10-21", startTime: "10:00", endTime: "12:00" }, tenant);
+  assert.equal(bookingDeletableByAccount(lokiBooking, charles), true);
+  assert.equal(publicTenantBooking(lokiBooking, charles).editable, false);
+  assert.equal(publicTenantBooking(lokiBooking, charles).deletable, true);
+  assert.equal(deleteTenantBooking([lokiBooking], lokiBooking.id, charles).result.id, lokiBooking.id);
+  assert.equal(bookingDeletableByAccount(lokiBooking, charlesD), false);
+  assert.equal(bookingDeletableByAccount(lokiBooking, imitator), false);
+  assert.equal(bookingDeletableByAccount(tenantBooking, charles), false);
+  assert.equal(deleteTenantBooking([tenantBooking], tenantBooking.id, charles).error.status, 403);
 });
 
 test("tenant booking changes enforce ownership, prevent overlap and preserve the creator for admin edits", () => {
@@ -1590,6 +1611,7 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(client, /data-view-booking/);
   assert.match(client, /item\.startTime.*item\.endTime/);
   assert.match(portal, /id="booking-delete"[^>]+hidden/);
+  assert.match(client, /booking\?\.deletable/);
   assert.match(client, /method: "DELETE"/);
   assert.match(api, /deleteBooking\(bookings, id, account\)/);
   assert.match(api, /action === "admin-booking"/);

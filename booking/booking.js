@@ -97,7 +97,7 @@
       const key = localDate(date);
       const items = bookings.filter((booking) => booking.date === key).sort((a, b) => a.startTime.localeCompare(b.startTime));
       const outside = date.getMonth() !== cursor.getMonth();
-      cells.push(`<section class="day${outside ? " outside" : ""}${key === today ? " today" : ""}" aria-label="${esc(dateLabel(key))}"><button class="day-create" type="button" data-day="${key}" aria-label="Book ny tid ${esc(dateLabel(key))}" ${key < today ? "disabled" : ""}><span class="day-number"><span>${date.getDate()}</span></span><span class="day-add" aria-hidden="true">+</span></button><div class="day-events">${items.map((item) => `<button class="day-booking${item.editable ? " own" : ""}" type="button" data-calendar-booking="${esc(item.id)}" title="${esc(item.title)} · ${esc(item.startTime)}–${esc(item.endTime)} · ${esc(item.createdByName)}" aria-label="${esc(item.title)}, ${esc(item.startTime)} til ${esc(item.endTime)}${item.editable ? ", din booking, åpne for å redigere" : ", åpne detaljer"}"><span class="day-booking-time">${esc(item.startTime)}–${esc(item.endTime)}</span><span class="day-booking-title">${esc(item.title)}</span><span class="day-booking-owner">${esc(item.createdByName)}</span></button>`).join("")}</div></section>`);
+      cells.push(`<section class="day${outside ? " outside" : ""}${key === today ? " today" : ""}" aria-label="${esc(dateLabel(key))}"><button class="day-create" type="button" data-day="${key}" aria-label="Book ny tid ${esc(dateLabel(key))}" ${key < today ? "disabled" : ""}><span class="day-number"><span>${date.getDate()}</span></span><span class="day-add" aria-hidden="true">+</span></button><div class="day-events">${items.map((item) => `<button class="day-booking${item.editable ? " own" : ""}" type="button" data-calendar-booking="${esc(item.id)}" title="${esc(item.title)} · ${esc(item.startTime)}–${esc(item.endTime)} · ${esc(item.createdByName)}" aria-label="${esc(item.title)}, ${esc(item.startTime)} til ${esc(item.endTime)}${item.editable ? ", din booking, åpne for å redigere eller slette" : item.deletable ? ", Loki Lydstudio-booking, åpne for å slette" : ", åpne detaljer"}"><span class="day-booking-time">${esc(item.startTime)}–${esc(item.endTime)}</span><span class="day-booking-title">${esc(item.title)}</span><span class="day-booking-owner">${esc(item.createdByName)}</span></button>`).join("")}</div></section>`);
     }
     $("calendar-grid").innerHTML = cells.join("");
     document.querySelectorAll("[data-day]").forEach((button) => { button.onclick = () => openBooking(button.dataset.day); });
@@ -113,7 +113,7 @@
     $("booking-total").textContent = `${visible.length} ${visible.length === 1 ? "booking" : "bookinger"}`;
     $("agenda").innerHTML = visible.length ? visible.map((booking) => {
       const date = shortDate(booking.date);
-      return `<button class="agenda-item${booking.editable ? " own-booking" : ""}" type="button" data-view-booking="${esc(booking.id)}" aria-label="${esc(booking.title)}, ${esc(dateLabel(booking.date))} klokken ${esc(booking.startTime)} til ${esc(booking.endTime)}"><span class="agenda-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></span><span class="agenda-copy"><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span></span><span class="agenda-side">${booking.editable ? "Din booking · Rediger" : "Vis detaljer"}</span></button>`;
+      return `<button class="agenda-item${booking.editable ? " own-booking" : ""}" type="button" data-view-booking="${esc(booking.id)}" aria-label="${esc(booking.title)}, ${esc(dateLabel(booking.date))} klokken ${esc(booking.startTime)} til ${esc(booking.endTime)}"><span class="agenda-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></span><span class="agenda-copy"><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span></span><span class="agenda-side">${booking.editable ? "Din booking · Rediger eller slett" : booking.deletable ? "Loki Lydstudio · Slett" : "Vis detaljer"}</span></button>`;
     }).join("") : '<div class="empty">Ingen kommende bookinger i dette studioet.</div>';
     document.querySelectorAll("[data-view-booking]").forEach((button) => {
       button.classList.toggle("staff", Boolean(bookings.find((item) => item.id === button.dataset.viewBooking)?.staffBooking));
@@ -141,7 +141,7 @@
     const form = $("booking-form");
     form.reset();
     const canEdit = Boolean(booking?.editable && booking.date >= localDate());
-    const canDelete = Boolean(booking?.editable);
+    const canDelete = Boolean(booking?.deletable);
     editingBookingId = canEdit ? booking.id : "";
     deletingBookingId = canDelete ? booking.id : "";
     form.querySelectorAll("input, textarea").forEach((field) => { field.disabled = Boolean(booking && !canEdit); });
@@ -155,7 +155,7 @@
     $("booking-submit").textContent = editingBookingId ? "Lagre endringer" : "Bekreft booking";
     $("booking-submit").hidden = Boolean(booking && !canEdit);
     $("booking-delete").hidden = !canDelete;
-    $("booking-info").textContent = booking ? (canEdit ? `Opprettet av ${booking.createdByName}. Du kan endre eller slette bookingen.` : canDelete ? "Tidligere bookinger kan ikke endres, men du kan slette dine egne bookinger." : booking.date < localDate() ? "Tidligere bookinger kan ikke endres." : `Opprettet av ${booking.createdByName}. Bare personen som opprettet bookingen, og Loki Lydstudio, kan endre eller slette den.`) : "Velg en ledig tid. Trykk på en eksisterende booking i kalenderen for å se den.";
+    $("booking-info").textContent = booking ? (canEdit ? `Opprettet av ${booking.createdByName}. Du kan endre eller slette bookingen.` : canDelete ? `Opprettet av ${booking.createdByName}. ${booking.date < localDate() ? "Tidligere bookinger kan ikke endres." : "Bare den som opprettet bookingen, eller admin i CRM, kan endre den."} Du kan slette denne bookingen.` : booking.date < localDate() ? "Tidligere bookinger kan ikke endres." : `Opprettet av ${booking.createdByName}. Bare personen som opprettet bookingen, og Loki Lydstudio, kan endre eller slette den.`) : "Velg en ledig tid. Trykk på en eksisterende booking i kalenderen for å se den.";
     setStatus("", false, "booking-status");
     $("booking-modal").hidden = false;
     (booking && !canEdit ? $("close-modal") : form.elements.title).focus();
