@@ -17,3 +17,5 @@
 @media(max-width:600px){.tenant-booking-head .button-row{align-items:stretch;flex-direction:column}.tenant-portal-link{justify-content:center}.tenant-studio-tabs{grid-template-columns:1fr 1fr}.tenant-user-row{grid-template-columns:36px minmax(0,1fr)}.tenant-user-row>em{grid-column:1}.tenant-row-actions{grid-column:2}.tenant-booking-row{grid-template-columns:44px minmax(0,1fr)}.tenant-booking-row>button{grid-column:2;justify-self:end}}
 .tenant-booking-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}.tenant-edit-status{min-height:18px;color:var(--danger);font-size:10px}.modal-head #tenant-booking-owner{margin-top:8px;color:var(--muted);font-size:10px;line-height:1.5}
 @media(max-width:600px){.tenant-booking-actions{grid-column:2;justify-content:flex-start}}
+.tenant-booking-row.staff{border-left:4px solid #d8731d;background:#fff6eb}.tenant-booking-row.staff .booking-date{background:#b85a12}
+@media screen{html[data-theme="dark"] .tenant-booking-row.staff{background:#33271e}}

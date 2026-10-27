@@ -84,7 +84,10 @@
     }
     $("calendar-grid").innerHTML = cells.join("");
     document.querySelectorAll("[data-day]").forEach((button) => { button.onclick = () => openBooking(button.dataset.day); });
-    document.querySelectorAll("[data-calendar-booking]").forEach((button) => { button.onclick = () => openExistingBooking(button.dataset.calendarBooking); });
+    document.querySelectorAll("[data-calendar-booking]").forEach((button) => {
+      button.classList.toggle("staff", Boolean(bookings.find((item) => item.id === button.dataset.calendarBooking)?.staffBooking));
+      button.onclick = () => openExistingBooking(button.dataset.calendarBooking);
+    });
   }
 
   function renderAgenda() {
@@ -95,7 +98,10 @@
       const date = shortDate(booking.date);
       return `<button class="agenda-item${booking.editable ? " own-booking" : ""}" type="button" data-view-booking="${esc(booking.id)}" aria-label="${esc(booking.title)}, ${esc(dateLabel(booking.date))} klokken ${esc(booking.startTime)} til ${esc(booking.endTime)}"><span class="agenda-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></span><span class="agenda-copy"><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span></span><span class="agenda-side">${booking.editable ? "Din booking · Rediger" : "Vis detaljer"}</span></button>`;
     }).join("") : '<div class="empty">Ingen kommende bookinger i dette studioet.</div>';
-    document.querySelectorAll("[data-view-booking]").forEach((button) => { button.onclick = () => openExistingBooking(button.dataset.viewBooking); });
+    document.querySelectorAll("[data-view-booking]").forEach((button) => {
+      button.classList.toggle("staff", Boolean(bookings.find((item) => item.id === button.dataset.viewBooking)?.staffBooking));
+      button.onclick = () => openExistingBooking(button.dataset.viewBooking);
+    });
   }
 
   function render() {

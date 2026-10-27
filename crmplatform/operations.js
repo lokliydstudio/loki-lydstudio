@@ -234,6 +234,7 @@
       button.onclick = () => deleteTenantBooking(button.dataset.tenantBookingDelete);
     });
     document.querySelectorAll("[data-tenant-booking-edit]").forEach((button) => {
+      button.closest(".tenant-booking-row").classList.toggle("staff", Boolean(tenantBookings.find((item) => item.id === button.dataset.tenantBookingEdit)?.staffBooking));
       button.onclick = () => openTenantBooking(button.dataset.tenantBookingEdit);
     });
     renderMetrics();

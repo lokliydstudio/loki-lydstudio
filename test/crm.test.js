@@ -40,6 +40,7 @@ const {
   bookingConflict: tenantBookingConflict,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
   editBooking: editTenantBooking,
+  isStaffBooking,
   SESSION_MAX_AGE_SECONDS,
   createLoginChallenge: createTenantLoginChallenge,
   createSessionToken: createTenantSessionToken,
@@ -1495,6 +1496,22 @@ test("tenant booking ownership enables edits only for the creator in the same st
   assert.equal(publicTenantBooking(original, owner).editable, true);
   assert.equal(publicTenantBooking(original, studioMate).editable, false);
   assert.equal(Object.hasOwn(publicTenantBooking(original, owner), "createdByEmail"), false);
+});
+
+test("Leon and Charles bookings are marked for orange display by verified booking email", () => {
+  for (const [name, email, studio] of [
+    ["Leon Frick", "leon@lokilyd.no", "Studio D"],
+    ["Charles Wise", "charles@lokilyd.no", "Studio C"],
+  ]) {
+    const account = sanitizeTenantAccount({ name, email, studio, status: "approved" });
+    const booking = sanitizeTenantBooking({ title: "Studioøkt", date: "2099-10-20", startTime: "10:00", endTime: "12:00" }, account);
+    assert.equal(isStaffBooking(booking), true);
+    assert.equal(publicTenantBooking(booking, account).staffBooking, true);
+  }
+  const impersonator = sanitizeTenantAccount({ name: "Leon Frick", email: "other@example.com", studio: "Studio C", status: "approved" });
+  const booking = sanitizeTenantBooking({ title: "Øving", date: "2099-10-20", startTime: "10:00", endTime: "12:00" }, impersonator);
+  assert.equal(publicTenantBooking(booking, impersonator).staffBooking, false);
+  assert.equal(publicTenantBooking(booking, impersonator).editable, true);
 });
 
 test("tenant booking changes enforce ownership, prevent overlap and preserve the creator for admin edits", () => {
