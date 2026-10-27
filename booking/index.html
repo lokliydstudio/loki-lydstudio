@@ -8,7 +8,7 @@
   <title>Loki Studio · Booking</title>
   <link rel="icon" href="/assets/brand/loki-icon-192.png">
   <script src="/booking/theme-init.js?v=20261027-theme"></script>
-  <link rel="stylesheet" href="/booking/booking.css?v=20261027-booking-mail">
+  <link rel="stylesheet" href="/booking/booking.css?v=20261027-self-delete">
 </head>
 <body>
   <main class="auth-shell" id="auth-shell">
@@ -69,7 +69,7 @@
         <p class="calendar-legend"><span><i class="legend-staff" aria-hidden="true"></i>Loki Lydstudio</span><span><i class="legend-own" aria-hidden="true"></i>Dine øvrige bookinger</span><span><i class="legend-other" aria-hidden="true"></i>Andre leietakere</span><span>Trykk på en booking for å se hele tidsrommet og detaljene.</span></p>
       </section>
       <section class="agenda-card"><div class="agenda-head"><div><span class="kicker">BOOKINGER</span><h2>Kommende tider</h2></div><span id="booking-total">0 bookinger</span></div><div class="agenda" id="agenda"></div></section>
-      <aside class="rules"><strong>Viktig</strong><p>Du ser bare kalenderen for ditt studio. Du kan endre dine egne kommende bookinger ved å trykke på dem. Andre brukeres bookinger kan leses, men ikke endres. Kontakt Leon eller Charles dersom en booking må slettes.</p></aside>
+      <aside class="rules"><strong>Viktig</strong><p>Du ser bare kalenderen for ditt studio. Du kan endre dine egne kommende bookinger og slette bookinger du selv har opprettet. Andre brukeres bookinger kan leses, men ikke endres eller slettes. Leon og Charles kan administrere alle bookinger.</p></aside>
     </section>
   </main>
 
@@ -81,12 +81,12 @@
         <label>Tittel / aktivitet<input name="title" required maxlength="180" placeholder="Øving, produksjon, innspilling …"></label>
         <div class="time-grid"><label>Dato<input name="date" type="date" required></label><label>Fra<input name="startTime" type="time" required value="10:00" step="900"></label><label>Til<input name="endTime" type="time" required value="12:00" step="900"></label></div>
         <label>Praktisk informasjon <span>(valgfritt)</span><textarea name="notes" maxlength="2000" placeholder="Hvem kommer, behov eller annen informasjon …"></textarea></label>
-        <div class="modal-actions"><button class="secondary" id="cancel-modal" type="button">Lukk</button><button class="primary" id="booking-submit" type="submit">Bekreft booking</button></div>
+        <div class="modal-actions"><button class="danger" id="booking-delete" type="button" hidden>Slett booking</button><button class="secondary" id="cancel-modal" type="button">Lukk</button><button class="primary" id="booking-submit" type="submit">Bekreft booking</button></div>
       </form>
       <p class="form-status" id="booking-status" role="status" aria-live="polite"></p>
     </section>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="/booking/booking.js?v=20261027-booking-mail"></script>
+  <script src="/booking/booking.js?v=20261027-self-delete"></script>
 </body>
 </html>

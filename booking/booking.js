@@ -4,6 +4,7 @@
   let cursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1, 12);
   let loginEmail = "";
   let editingBookingId = "";
+  let deletingBookingId = "";
 
   const $ = (id) => document.getElementById(id);
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -140,7 +141,9 @@
     const form = $("booking-form");
     form.reset();
     const canEdit = Boolean(booking?.editable && booking.date >= localDate());
+    const canDelete = Boolean(booking?.editable);
     editingBookingId = canEdit ? booking.id : "";
+    deletingBookingId = canDelete ? booking.id : "";
     form.querySelectorAll("input, textarea").forEach((field) => { field.disabled = Boolean(booking && !canEdit); });
     form.elements.title.value = booking?.title || "";
     form.elements.date.value = booking?.date || (date < localDate() ? localDate() : date);
@@ -151,7 +154,8 @@
     $("booking-title").textContent = booking ? (canEdit ? "Rediger booking" : "Bookingdetaljer") : "Book tid";
     $("booking-submit").textContent = editingBookingId ? "Lagre endringer" : "Bekreft booking";
     $("booking-submit").hidden = Boolean(booking && !canEdit);
-    $("booking-info").textContent = booking ? (canEdit ? `Opprettet av ${booking.createdByName}. Du kan endre tidspunkt og detaljer.` : booking.date < localDate() ? "Tidligere bookinger kan ikke endres." : `Opprettet av ${booking.createdByName}. Bare personen som opprettet bookingen, og Loki Lydstudio, kan endre den.`) : "Velg en ledig tid. Trykk på en eksisterende booking i kalenderen for å se den.";
+    $("booking-delete").hidden = !canDelete;
+    $("booking-info").textContent = booking ? (canEdit ? `Opprettet av ${booking.createdByName}. Du kan endre eller slette bookingen.` : canDelete ? "Tidligere bookinger kan ikke endres, men du kan slette dine egne bookinger." : booking.date < localDate() ? "Tidligere bookinger kan ikke endres." : `Opprettet av ${booking.createdByName}. Bare personen som opprettet bookingen, og Loki Lydstudio, kan endre eller slette den.`) : "Velg en ledig tid. Trykk på en eksisterende booking i kalenderen for å se den.";
     setStatus("", false, "booking-status");
     $("booking-modal").hidden = false;
     (booking && !canEdit ? $("close-modal") : form.elements.title).focus();
@@ -160,6 +164,7 @@
   function closeBooking() {
     $("booking-modal").hidden = true;
     editingBookingId = "";
+    deletingBookingId = "";
   }
 
   async function initialize() {
@@ -250,6 +255,28 @@
   $("new-booking").onclick = () => openBooking();
   $("close-modal").onclick = closeBooking;
   $("cancel-modal").onclick = closeBooking;
+  $("booking-delete").onclick = async () => {
+    const id = deletingBookingId;
+    const booking = bookings.find((item) => item.id === id);
+    if (!booking || !window.confirm(`Vil du slette bookingen «${booking.title}» ${dateLabel(booking.date)} kl. ${booking.startTime}–${booking.endTime}? Dette kan ikke angres.`)) return;
+    const button = $("booking-delete");
+    button.disabled = true;
+    setStatus("Sletter booking …", false, "booking-status");
+    try {
+      await api("calendar", { method: "DELETE", body: JSON.stringify({ id }) });
+      closeBooking();
+      try {
+        await loadCalendar();
+        toast("Bookingen er slettet.");
+      } catch {
+        toast("Bookingen er slettet. Oppdater siden for å se den nye kalenderen.");
+      }
+    } catch (error) {
+      setStatus(error.message, true, "booking-status");
+    } finally {
+      button.disabled = false;
+    }
+  };
   $("booking-modal").onclick = (event) => { if (event.target === $("booking-modal")) closeBooking(); };
   $("month-prev").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1, 12); renderCalendar(); };
   $("month-next").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12); renderCalendar(); };

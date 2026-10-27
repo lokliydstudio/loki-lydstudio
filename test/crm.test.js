@@ -40,6 +40,7 @@ const {
   bookingConflict: tenantBookingConflict,
   bookingNotificationRecipients,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
+  deleteBooking: deleteTenantBooking,
   editBooking: editTenantBooking,
   isStaffBooking,
   SESSION_MAX_AGE_SECONDS,
@@ -1549,6 +1550,23 @@ test("tenant booking changes enforce ownership, prevent overlap and preserve the
   assert.equal(adminEdit.result.date, "2099-10-21");
 });
 
+test("tenant booking deletion removes only the creator's booking in their studio", () => {
+  const owner = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
+  const colleague = sanitizeTenantAccount({ name: "Ola", email: "ola@example.com", studio: "Studio C", status: "approved" });
+  const otherStudio = sanitizeTenantAccount({ name: "Dina", email: "dina@example.com", studio: "Studio D", status: "approved" });
+  const booking = sanitizeTenantBooking({ title: "Tidligere øving", date: "2025-10-20", startTime: "10:00", endTime: "12:00" }, owner);
+  const items = [booking];
+  assert.equal(deleteTenantBooking(items, booking.id, colleague).error.status, 403);
+  assert.equal(deleteTenantBooking(items, booking.id, otherStudio).error.status, 404);
+  assert.equal(deleteTenantBooking(items, "missing", owner).error.status, 404);
+  assert.equal(items.length, 1);
+  const deleted = deleteTenantBooking(items, booking.id, owner);
+  assert.equal(deleted.result.id, booking.id);
+  assert.deepEqual(deleted.items, []);
+  assert.equal(items.length, 1);
+  assert.deepEqual(deleteTenantBooking(items, booking.id, { email: "leon@lokilyd.no" }, { admin: true }).items, []);
+});
+
 test("external booking portal is isolated from CRM and exposes approval administration", () => {
   const portal = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
   const client = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
@@ -1571,8 +1589,9 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(client, /data-calendar-booking/);
   assert.match(client, /data-view-booking/);
   assert.match(client, /item\.startTime.*item\.endTime/);
-  assert.doesNotMatch(client, /data-delete-booking/);
-  assert.match(api, /Bare Loki Lydstudio kan slette bookinger/);
+  assert.match(portal, /id="booking-delete"[^>]+hidden/);
+  assert.match(client, /method: "DELETE"/);
+  assert.match(api, /deleteBooking\(bookings, id, account\)/);
   assert.match(api, /action === "admin-booking"/);
   assert.match(api, /action === "preferences"/);
   assert.match(api, /sendNewBookingEmails\(booking\)/);

@@ -50,3 +50,5 @@ html[data-theme="dark"] .privacy-note{color:#b9b3a8}
 .booking-mail-choice small{color:var(--muted);font-size:11px;line-height:1.4}
 .booking-preference-status{color:var(--muted);font-size:11px}
 .booking-preference-status.error{color:var(--danger)}
+.modal-actions #booking-delete{margin-right:auto}
+@media(max-width:780px){.modal-actions #booking-delete{grid-column:1/-1;width:100%;margin-right:0}}
