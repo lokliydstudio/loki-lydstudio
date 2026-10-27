@@ -40,6 +40,7 @@ const {
   bookingConflict: tenantBookingConflict,
   bookingNotificationRecipients,
   bookingDeletableByAccount,
+  canSwitchStudios,
   bookingOwnedByAccount: tenantBookingOwnedByAccount,
   deleteBooking: deleteTenantBooking,
   editBooking: editTenantBooking,
@@ -53,6 +54,7 @@ const {
   sanitizeBooking: sanitizeTenantBooking,
   sessionCookie: tenantSessionCookie,
   sessionFromRequest: tenantSessionFromRequest,
+  studioForAccount,
   verifyLoginCode: verifyTenantLoginCode,
 } = require("../lib/tenant-booking");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
@@ -1444,7 +1446,28 @@ test("tenant booking accounts are limited to Studio C or Studio D", () => {
   assert.equal(account.status, "pending");
   assert.equal(account.emailOnNewBooking, false);
   assert.equal(sanitizeTenantAccount({ name: "Ugyldig", email: "u@example.com", studio: "Studio B" }), null);
-  assert.deepEqual(Object.keys(publicTenantAccount(account)).sort(), ["email", "emailOnNewBooking", "id", "name", "status", "studio"]);
+  assert.deepEqual(Object.keys(publicTenantAccount(account)).sort(), ["canSwitchStudios", "email", "emailOnNewBooking", "id", "name", "status", "studio"]);
+  assert.equal(publicTenantAccount(account).canSwitchStudios, false);
+});
+
+test("only approved Loki accounts can switch between Studio C and Studio D", () => {
+  const leon = sanitizeTenantAccount({ name: "Leon Frick", email: "leon.frick@live.no", studio: "Studio C", status: "approved" });
+  const charles = sanitizeTenantAccount({ name: "Charles Wise", email: "charles@lokilyd.no", studio: "Studio D", status: "approved" });
+  const tenant = sanitizeTenantAccount({ name: "Kari", email: "kari@example.com", studio: "Studio C", status: "approved" });
+  const imitator = sanitizeTenantAccount({ name: "Leon Frick", email: "other@example.com", studio: "Studio C", status: "approved" });
+  assert.equal(canSwitchStudios(leon), true);
+  assert.equal(publicTenantAccount(leon).canSwitchStudios, true);
+  assert.equal(studioForAccount(leon, "Studio D"), "Studio D");
+  assert.equal(studioForAccount(charles, "Studio C"), "Studio C");
+  assert.equal(studioForAccount(leon), "Studio C");
+  assert.equal(studioForAccount(leon, "Studio B"), "");
+  assert.equal(studioForAccount(tenant, "Studio D"), "");
+  assert.equal(studioForAccount(tenant, "Studio C"), "Studio C");
+  assert.equal(studioForAccount(imitator, "Studio D"), "");
+  assert.equal(canSwitchStudios({ ...leon, status: "suspended" }), false);
+  const bookingD = sanitizeTenantBooking({ title: "Studio D-økt", date: "2099-10-20", startTime: "10:00", endTime: "12:00" }, { ...leon, studio: studioForAccount(leon, "Studio D") });
+  assert.equal(bookingD.studio, "Studio D");
+  assert.equal(publicTenantBooking(bookingD, { ...leon, studio: "Studio D" }).deletable, true);
 });
 
 test("new booking emails go only to opted-in approved members of that studio", () => {
@@ -1455,8 +1478,11 @@ test("new booking emails go only to opted-in approved members of that studio", (
   const optedD = sanitizeTenantAccount({}, { ...approvedD, emailOnNewBooking: true });
   const pendingC = sanitizeTenantAccount({ name: "Per", email: "per@example.com", studio: "Studio C", status: "pending" });
   const optedPendingC = sanitizeTenantAccount({}, { ...pendingC, emailOnNewBooking: true });
+  const staffC = sanitizeTenantAccount({ name: "Leon Frick", email: "leon.frick@live.no", studio: "Studio C", status: "approved" });
+  const optedStaffC = sanitizeTenantAccount({}, { ...staffC, emailOnNewBooking: true });
   assert.equal(publicTenantAccount(optedC).emailOnNewBooking, true);
   assert.deepEqual(bookingNotificationRecipients([notOptedC, optedC, optedD, optedPendingC], { studio: "Studio C" }).map((item) => item.email), ["kari@example.com"]);
+  assert.deepEqual(bookingNotificationRecipients([notOptedC, optedC, optedD, optedPendingC, optedStaffC], { studio: "Studio D" }).map((item) => item.email), ["dina@example.com", "leon.frick@live.no"]);
 });
 
 test("approved tenant accounts use a separate signed login challenge and session cookie", () => {
@@ -1607,9 +1633,12 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(portal, /Du kan endre dine egne kommende bookinger/);
   assert.match(portal, /id="booking-email-alerts" type="checkbox"/);
   assert.doesNotMatch(client, /crm-login|crmplatform/);
-  assert.match(client, /action=tenant-/);
+  assert.match(client, /tenant-\$\{action\}/);
   assert.match(api, /requireUser\(req, res\)/);
-  assert.match(api, /item\.studio === account\.studio/);
+  assert.match(api, /item\.studio === studio/);
+  assert.match(api, /studioForAccount\(account, req\.query\?\.studio\)/);
+  assert.match(portal, /id="studio-switch"/);
+  assert.match(client, /loki_booking_studio/);
   assert.match(api, /req\.method === "PATCH"/);
   assert.match(api, /req\.method === "DELETE"/);
   assert.match(api, /editBooking\(bookings, id/);
@@ -1619,7 +1648,7 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(portal, /id="booking-delete"[^>]+hidden/);
   assert.match(client, /booking\?\.deletable/);
   assert.match(client, /method: "DELETE"/);
-  assert.match(api, /deleteBooking\(bookings, id, account\)/);
+  assert.match(api, /deleteBooking\(bookings, id, actor\)/);
   assert.match(api, /action === "admin-booking"/);
   assert.match(api, /action === "preferences"/);
   assert.match(api, /sendNewBookingEmails\(booking\)/);

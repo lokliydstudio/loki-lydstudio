@@ -52,3 +52,7 @@ html[data-theme="dark"] .privacy-note{color:#b9b3a8}
 .booking-preference-status.error{color:var(--danger)}
 .modal-actions #booking-delete{margin-right:auto}
 @media(max-width:780px){.modal-actions #booking-delete{grid-column:1/-1;width:100%;margin-right:0}}
+.portal-actions{display:flex;align-items:flex-end;gap:12px;flex:none}
+.studio-switch{display:grid;gap:6px;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.studio-switch select{min-width:150px;min-height:43px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--ink);font-size:13px;font-weight:800;letter-spacing:normal;text-transform:none;cursor:pointer}
+@media(max-width:780px){.portal-actions{width:100%;align-items:stretch;flex-direction:column}.studio-switch select{width:100%}}

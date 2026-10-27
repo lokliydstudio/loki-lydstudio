@@ -8,7 +8,7 @@
   <title>Loki Studio · Booking</title>
   <link rel="icon" href="/assets/brand/loki-icon-192.png">
   <script src="/booking/theme-init.js?v=20261027-theme"></script>
-  <link rel="stylesheet" href="/booking/booking.css?v=20261027-self-delete">
+  <link rel="stylesheet" href="/booking/booking.css?v=20261027-studio-switch">
 </head>
 <body>
   <main class="auth-shell" id="auth-shell">
@@ -48,7 +48,7 @@
         </form>
       </div>
       <p class="form-status" id="auth-status" role="status" aria-live="polite"></p>
-      <p class="privacy-note">Kontoen gir bare tilgang til kalenderen for ditt studio – aldri til Loki CRM.</p>
+      <p class="privacy-note">Leietakere får bare tilgang til sitt studio. Loki Lydstudio kan bytte mellom Studio C og D. Bookingportalen gir ikke tilgang til CRM.</p>
     </section>
   </main>
 
@@ -58,7 +58,7 @@
       <div class="user-box"><div><strong id="user-name"></strong><span id="user-studio"></span></div><button class="theme-toggle" type="button" data-theme-toggle aria-label="Bytt til mørkt tema" aria-pressed="false"><span data-theme-icon aria-hidden="true">☾</span><span data-theme-label>Mørkt tema</span></button><button class="secondary" id="logout" type="button">Logg ut</button></div>
     </header>
     <section class="portal-content">
-      <div class="portal-intro"><div><span class="kicker">LEIETAKERKALENDER</span><h1 id="calendar-heading">Booking</h1><p>Trykk på en booking for detaljer eller endring. Bruk + ved datoen for å booke ny tid.</p></div><button class="primary" id="new-booking" type="button">+ Book tid</button></div>
+      <div class="portal-intro"><div><span class="kicker">STUDIOKALENDER</span><h1 id="calendar-heading">Booking</h1><p>Trykk på en booking for detaljer eller endring. Bruk + ved datoen for å booke ny tid.</p></div><div class="portal-actions"><label class="studio-switch" id="studio-switch-wrap" hidden><span>Vis kalender for</span><select id="studio-switch"><option value="Studio C">Studio C</option><option value="Studio D">Studio D</option></select></label><button class="primary" id="new-booking" type="button">+ Book tid</button></div></div>
       <div class="booking-preferences"><label class="booking-mail-choice"><input id="booking-email-alerts" type="checkbox"><span><strong>E-postvarsler</strong><small id="booking-email-description">Send meg e-post når noen oppretter en ny booking i studioet mitt.</small></span></label><span class="booking-preference-status" id="booking-preference-status" role="status" aria-live="polite"></span></div>
       <section class="calendar-card">
         <nav class="calendar-nav"><button class="round-button" id="month-prev" type="button" aria-label="Forrige måned">←</button><button class="secondary" id="month-today" type="button">I dag</button><h2 id="month-title"></h2><button class="round-button" id="month-next" type="button" aria-label="Neste måned">→</button></nav>
@@ -69,7 +69,7 @@
         <p class="calendar-legend"><span><i class="legend-staff" aria-hidden="true"></i>Loki Lydstudio</span><span><i class="legend-own" aria-hidden="true"></i>Dine øvrige bookinger</span><span><i class="legend-other" aria-hidden="true"></i>Andre leietakere</span><span>Trykk på en booking for å se hele tidsrommet og detaljene.</span></p>
       </section>
       <section class="agenda-card"><div class="agenda-head"><div><span class="kicker">BOOKINGER</span><h2>Kommende tider</h2></div><span id="booking-total">0 bookinger</span></div><div class="agenda" id="agenda"></div></section>
-      <aside class="rules"><strong>Viktig</strong><p>Du ser bare kalenderen for ditt studio. Du kan endre dine egne kommende bookinger og slette bookinger du selv har opprettet. Andre leietakeres bookinger kan bare leses. Loki Lydstudio (Leon og Charles) kan slette alle bookinger i studioet, også tidligere bookinger, og administrere begge studioene i CRM.</p></aside>
+      <aside class="rules"><strong>Viktig</strong><p>Leietakere ser bare sitt eget studio. Du kan endre dine egne kommende bookinger og slette bookinger du selv har opprettet. Andre leietakeres bookinger kan bare leses. Loki Lydstudio (Leon og Charles) kan bytte mellom Studio C og D og slette bookinger i begge kalendere.</p></aside>
     </section>
   </main>
 
@@ -87,6 +87,6 @@
     </section>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <script src="/booking/booking.js?v=20261027-staff-all-delete"></script>
+  <script src="/booking/booking.js?v=20261027-studio-switch"></script>
 </body>
 </html>

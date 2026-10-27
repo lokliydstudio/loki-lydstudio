@@ -5,6 +5,8 @@
   let loginEmail = "";
   let editingBookingId = "";
   let deletingBookingId = "";
+  let activeStudio = "";
+  let calendarRequest = 0;
 
   const $ = (id) => document.getElementById(id);
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -23,8 +25,10 @@
     if (persist) try { localStorage.setItem("loki_booking_theme", dark ? "dark" : "light"); } catch {}
   }
 
-  async function api(action, options = {}) {
-    const response = await fetch(`/api/studio?action=tenant-${encodeURIComponent(action)}`, {
+  async function api(action, options = {}, studio = "") {
+    const query = new URLSearchParams({ action: `tenant-${action}` });
+    if (studio) query.set("studio", studio);
+    const response = await fetch(`/api/studio?${query}`, {
       credentials: "same-origin",
       ...options,
       headers: options.body ? { "content-type": "application/json", ...(options.headers || {}) } : options.headers,
@@ -60,12 +64,23 @@
     $("auth-shell").hidden = true;
     $("portal").hidden = false;
     $("user-name").textContent = user.name;
-    $("user-studio").textContent = user.studio;
-    $("calendar-heading").textContent = `${user.studio}-kalender`;
-    $("booking-studio-label").textContent = user.studio.toUpperCase();
+    $("studio-switch-wrap").hidden = !user.canSwitchStudios;
+    let savedStudio = "";
+    try { savedStudio = localStorage.getItem("loki_booking_studio") || ""; } catch {}
+    setActiveStudio(user.canSwitchStudios && ["Studio C", "Studio D"].includes(savedStudio) ? savedStudio : user.studio);
     $("booking-email-alerts").checked = user.emailOnNewBooking === true;
-    $("booking-email-description").textContent = `Send meg e-post når noen oppretter en ny booking i ${user.studio}.`;
+    $("booking-email-description").textContent = user.canSwitchStudios
+      ? "Send meg e-post når noen oppretter en ny booking i Studio C eller Studio D."
+      : `Send meg e-post når noen oppretter en ny booking i ${user.studio}.`;
     $("booking-preference-status").textContent = "";
+  }
+
+  function setActiveStudio(studio) {
+    activeStudio = studio;
+    $("studio-switch").value = studio;
+    $("user-studio").textContent = studio;
+    $("calendar-heading").textContent = `${studio}-kalender`;
+    $("booking-studio-label").textContent = studio.toUpperCase();
   }
 
   function dateLabel(value) {
@@ -127,7 +142,11 @@
   }
 
   async function loadCalendar() {
-    const data = await api("calendar");
+    const studio = activeStudio;
+    const requestId = ++calendarRequest;
+    const data = await api("calendar", {}, studio);
+    if (requestId !== calendarRequest) return;
+    if (data.studio !== studio) throw new Error("Feil studiokalender ble returnert. Prøv igjen.");
     bookings = data.bookings || [];
     render();
   }
@@ -236,7 +255,7 @@
       await api("calendar", {
         method: isEditing ? "PATCH" : "POST",
         body: JSON.stringify(isEditing ? { id: editingBookingId, changes } : { booking: changes }),
-      });
+      }, activeStudio);
       closeBooking();
       await loadCalendar();
       toast(isEditing ? "Endringene er lagret." : "Bookingen er lagret. Trykk på den i kalenderen for å redigere.");
@@ -263,7 +282,7 @@
     button.disabled = true;
     setStatus("Sletter booking …", false, "booking-status");
     try {
-      await api("calendar", { method: "DELETE", body: JSON.stringify({ id }) });
+      await api("calendar", { method: "DELETE", body: JSON.stringify({ id }) }, activeStudio);
       closeBooking();
       try {
         await loadCalendar();
@@ -281,6 +300,30 @@
   $("month-prev").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1, 12); renderCalendar(); };
   $("month-next").onclick = () => { cursor = new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1, 12); renderCalendar(); };
   $("month-today").onclick = () => { const now = new Date(); cursor = new Date(now.getFullYear(), now.getMonth(), 1, 12); renderCalendar(); };
+
+  $("studio-switch").onchange = async (event) => {
+    const select = event.currentTarget;
+    const previousStudio = activeStudio;
+    const previousBookings = bookings;
+    const nextStudio = select.value;
+    if (nextStudio === previousStudio) return;
+    select.disabled = true;
+    setActiveStudio(nextStudio);
+    bookings = [];
+    render();
+    try {
+      await loadCalendar();
+      try { localStorage.setItem("loki_booking_studio", nextStudio); } catch {}
+      toast(`${nextStudio}-kalenderen er åpnet.`);
+    } catch (error) {
+      setActiveStudio(previousStudio);
+      bookings = previousBookings;
+      render();
+      toast(error.message);
+    } finally {
+      select.disabled = false;
+    }
+  };
 
   $("booking-email-alerts").onchange = async (event) => {
     const checkbox = event.currentTarget;
