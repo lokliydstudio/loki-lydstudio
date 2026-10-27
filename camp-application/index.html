@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="nb">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#20211f">
-  <title>Søknad til låtskrivercamper · Loki Songs</title>
+  <title>Songwriting camp application · Loki Songs</title>
   <link rel="icon" href="/assets/brand/loki-icon-192.png">
   <link rel="stylesheet" href="/camp-application/application.css">
   <script src="/camp-application/application.js" defer></script>
@@ -17,78 +17,78 @@
         <img src="/assets/brand/loki-symbol.png" alt="">
         <span><strong>LOKI</strong><small>SONGS · LYDSTUDIO</small></span>
       </div>
-      <span class="header-tag">SØKNADSSKJEMA</span>
+      <span class="header-tag">APPLICATION FORM</span>
     </header>
 
     <main>
       <section class="hero" aria-labelledby="page-title">
-        <span class="eyebrow">LOKI SONGS / SØKNAD</span>
-        <h1 id="page-title">Søk om plass på fremtidige låtskrivercamper</h1>
-        <p>Fortell oss hvem du er og hva du lager. Vi bruker svarene til å sette sammen gode skrivegrupper og ta kontakt om en aktuell camp. Innsending av skjemaet garanterer ikke plass.</p>
-        <div class="hero-line"><span>ARTISTER</span><i></i><span>LÅTSKRIVERE</span><i></i><span>PRODUSENTER</span></div>
+        <span class="eyebrow">LOKI SONGS / APPLICATION</span>
+        <h1 id="page-title">Apply for a future songwriting camp</h1>
+        <p>Tell us who you are and what kind of music you make. We use your answers to put together inspiring writing groups and contact you about a suitable camp. Submitting this form does not guarantee a place.</p>
+        <div class="hero-line"><span>ARTISTS</span><i></i><span>SONGWRITERS</span><i></i><span>PRODUCERS</span></div>
       </section>
 
       <form id="application-form" class="application-form">
-        <div class="honeypot" aria-hidden="true"><label>Nettside<input name="website" tabindex="-1" autocomplete="off"></label></div>
+        <div class="honeypot" aria-hidden="true"><label>Website<input name="website" tabindex="-1" autocomplete="off"></label></div>
 
         <section class="form-section" aria-labelledby="contact-title">
-          <div class="section-heading"><span class="section-number">01</span><div><p class="section-kicker">DET PRAKTISKE</p><h2 id="contact-title">Om deg</h2></div></div>
+          <div class="section-heading"><span class="section-number">01</span><div><p class="section-kicker">THE ESSENTIALS</p><h2 id="contact-title">About you</h2></div></div>
           <div class="fields two-col">
-            <label>Fullt navn <span class="required">*</span><input name="name" required autocomplete="name" maxlength="160" placeholder="Fornavn og etternavn"></label>
-            <label>E-postadresse <span class="required">*</span><input name="email" type="email" required autocomplete="email" maxlength="254" placeholder="navn@eksempel.no"></label>
-            <label>Telefon med landskode <span class="required">*</span><input name="phone" type="tel" required autocomplete="tel" maxlength="50" placeholder="+47 000 00 000"></label>
-            <label>Adresse <span class="required">*</span><input name="address" required autocomplete="street-address" maxlength="300" placeholder="Gateadresse, postnummer og sted"></label>
-            <label class="wide">Management, plateselskap, forlag eller booking <span class="optional">(hvis relevant)</span><input name="management" maxlength="200" placeholder="Skriv «ingen» eller la feltet stå tomt"></label>
+            <label>Full name <span class="required">*</span><input name="name" required autocomplete="name" maxlength="160" placeholder="First and last name"></label>
+            <label>Email address <span class="required">*</span><input name="email" type="email" required autocomplete="email" maxlength="254" placeholder="name@example.com"></label>
+            <label>Phone number with country code <span class="required">*</span><input name="phone" type="tel" required autocomplete="tel" maxlength="50" placeholder="+47 000 00 000"></label>
+            <label>Address <span class="required">*</span><input name="address" required autocomplete="street-address" maxlength="300" placeholder="Street address, postal code and city"></label>
+            <label class="wide">Management, label, publishing or booking <span class="optional">(if applicable)</span><input name="management" maxlength="200" placeholder="Leave blank if none"></label>
           </div>
         </section>
 
         <section class="form-section" aria-labelledby="music-title">
-          <div class="section-heading"><span class="section-number">02</span><div><p class="section-kicker">MUSIKKEN DIN</p><h2 id="music-title">Hva vil du bidra med?</h2></div></div>
-          <fieldset class="choice-group" id="roles-group"><legend>Rolle <span class="required">*</span> <small>Du kan velge flere.</small></legend>
+          <div class="section-heading"><span class="section-number">02</span><div><p class="section-kicker">YOUR MUSIC</p><h2 id="music-title">What will you bring?</h2></div></div>
+          <fieldset class="choice-group" id="roles-group"><legend>Role <span class="required">*</span> <small>Select all that apply.</small></legend>
             <div class="choice-grid">
               <label class="choice"><input type="checkbox" name="roles" value="Artist"><span>Artist</span></label>
-              <label class="choice"><input type="checkbox" name="roles" value="Låtskriver"><span>Låtskriver</span></label>
-              <label class="choice"><input type="checkbox" name="roles" value="Produsent"><span>Produsent</span></label>
+              <label class="choice"><input type="checkbox" name="roles" value="Låtskriver"><span>Songwriter</span></label>
+              <label class="choice"><input type="checkbox" name="roles" value="Produsent"><span>Producer</span></label>
               <label class="choice"><input type="checkbox" name="roles" value="Topliner"><span>Topliner</span></label>
             </div>
           </fieldset>
           <div class="fields">
-            <label>Kort musikkbiografi <span class="required">*</span><span class="field-hint">Fortell om ferdigheter, sjanger, inspirasjon, erfaring og hva du vil videre. Maks 500 ord.</span><textarea name="bio" required rows="7" maxlength="4000" placeholder="Skriv litt om deg selv og musikken din …"></textarea><span id="bio-count" class="counter">0 / 500 ord</span></label>
-            <label>Låteksempler <span class="optional">(valgfritt)</span><span class="field-hint">Del lenker til inntil tre låter og skriv hvilken rolle du hadde på hver. Spotify, Dropbox og SoundCloud fungerer fint.</span><textarea name="songs" rows="5" maxlength="2500" placeholder="1. Lenke – min rolle\n2. Lenke – min rolle\n3. Lenke – min rolle"></textarea></label>
+            <label>Short music biography <span class="required">*</span><span class="field-hint">Tell us about your skills, genres, influences, experience and where you want to go next. Maximum 500 words.</span><textarea name="bio" required rows="7" maxlength="4000" placeholder="Tell us a little about yourself and your music …"></textarea><span id="bio-count" class="counter">0 / 500 words</span></label>
+            <label>Song examples <span class="optional">(optional)</span><span class="field-hint">Share links to up to three songs and describe your role in each. Spotify, Dropbox and SoundCloud links are welcome.</span><textarea name="songs" rows="5" maxlength="2500" placeholder="1. Link – my role\n2. Link – my role\n3. Link – my role"></textarea></label>
           </div>
         </section>
 
         <section class="form-section" aria-labelledby="practical-title">
-          <div class="section-heading"><span class="section-number">03</span><div><p class="section-kicker">FØR DU SENDER</p><h2 id="practical-title">Praktisk informasjon</h2></div></div>
-          <fieldset class="choice-group"><legend>Fordeling av låtskriverandeler <span class="required">*</span><small>Andelene fordeles likt mellom alle i skrivegruppen. For eksempel får hver person 25 % i en gruppe på fire. Split sheets fylles ut under campen.</small></legend>
+          <div class="section-heading"><span class="section-number">03</span><div><p class="section-kicker">BEFORE YOU APPLY</p><h2 id="practical-title">Practical details</h2></div></div>
+          <fieldset class="choice-group"><legend>Songwriting splits <span class="required">*</span><small>Songwriting shares are split equally among everyone in the writing group. For example, each person receives 25% in a group of four. Split sheets are completed during the camp.</small></legend>
             <div class="choice-grid two-choices">
-              <label class="choice"><input type="radio" name="splits" value="agree" required><span>Jeg godtar dette</span></label>
-              <label class="choice"><input type="radio" name="splits" value="disagree"><span>Jeg godtar ikke dette</span></label>
+              <label class="choice"><input type="radio" name="splits" value="agree" required><span>I agree</span></label>
+              <label class="choice"><input type="radio" name="splits" value="disagree"><span>I do not agree</span></label>
             </div>
           </fieldset>
           <div class="fields">
-            <label>Matbehov <span class="required">*</span><span class="field-hint">Du kan velge «Oppgis senere» hvis du ikke vil dele dette nå.</span><select name="dietary" required><option value="">Velg et alternativ</option><option value="Oppgis senere">Oppgis senere</option><option value="Ingen">Ingen</option><option value="Vegetar">Vegetar</option><option value="Vegan">Vegan</option><option value="Kosher">Kosher</option><option value="Glutenfri">Glutenfri</option><option value="Pescetarian">Pescetarian</option><option value="Annet">Annet</option></select></label>
-            <label id="dietary-other-wrap" hidden>Beskriv matbehovet <span class="required">*</span><input name="dietaryOther" maxlength="160" placeholder="Hva trenger vi å vite?"></label>
+            <label>Dietary requirements <span class="required">*</span><span class="field-hint">Choose “I’ll share this later” if you prefer not to provide this information now.</span><select name="dietary" required><option value="">Select an option</option><option value="Oppgis senere">I'll share this later</option><option value="Ingen">None</option><option value="Vegetar">Vegetarian</option><option value="Vegan">Vegan</option><option value="Kosher">Kosher</option><option value="Glutenfri">Gluten-free</option><option value="Pescetarian">Pescatarian</option><option value="Annet">Other</option></select></label>
+            <label id="dietary-other-wrap" hidden>Describe your dietary requirements <span class="required">*</span><input name="dietaryOther" maxlength="160" placeholder="What should we know?"></label>
           </div>
           <div class="agreements">
-            <label class="agreement" id="dietary-consent-wrap" hidden><input type="checkbox" name="dietaryConsent"><span>Jeg samtykker uttrykkelig til at matbehovet jeg oppgir brukes til planlegging av servering ved en eventuell camp. Jeg kan trekke samtykket tilbake ved å kontakte <a href="mailto:camps@lokilyd.no">camps@lokilyd.no</a>. <span class="required">*</span></span></label>
-            <label class="agreement"><input type="checkbox" name="feeAccepted" required><span>Jeg forstår at dersom jeg takker ja til en invitasjon, faktureres jeg <strong>1 300 kr</strong>. Beløpet refunderes ikke. <span class="required">*</span></span></label>
-            <label class="agreement"><input type="checkbox" name="privacyAccepted" required><span>Jeg har lest hvordan Loki Lydstudio bruker opplysningene i søknaden for å vurdere deltakelse og kontakte meg. <a href="/personvern.html" target="_blank" rel="noopener noreferrer">Les personvernerklæringen</a>. <span class="required">*</span></span></label>
+            <label class="agreement" id="dietary-consent-wrap" hidden><input type="checkbox" name="dietaryConsent"><span>I explicitly consent to the dietary information I provide being used to plan catering for a possible camp. I can withdraw this consent by contacting <a href="mailto:camps@lokilyd.no">camps@lokilyd.no</a>. <span class="required">*</span></span></label>
+            <label class="agreement"><input type="checkbox" name="feeAccepted" required><span>I understand that if I accept an invitation, I will be invoiced <strong>NOK 1,300</strong>. This fee is non-refundable. <span class="required">*</span></span></label>
+            <label class="agreement"><input type="checkbox" name="privacyAccepted" required><span>I have read how Loki Lydstudio uses my application details to review my application and contact me. <a href="/en/personvern_en.html" target="_blank" rel="noopener noreferrer">Read the privacy policy</a>. <span class="required">*</span></span></label>
           </div>
         </section>
 
         <div class="submit-panel">
-          <div><strong>Klar til å sende?</strong><p>Vi bekrefter når søknaden er registrert. Spørsmål kan sendes til <a href="mailto:camps@lokilyd.no">camps@lokilyd.no</a>.</p></div>
-          <button type="submit" id="submit-button"><span id="submit-label">Send søknad</span><span aria-hidden="true">↗</span></button>
+          <div><strong>Ready to apply?</strong><p>We'll confirm when your application has been received. Questions? Email <a href="mailto:camps@lokilyd.no">camps@lokilyd.no</a>.</p></div>
+          <button type="submit" id="submit-button"><span id="submit-label">Submit application</span><span aria-hidden="true">↗</span></button>
         </div>
         <p class="form-status" id="form-status" role="status" aria-live="polite"></p>
       </form>
 
       <section class="success-card" id="success-card" hidden aria-live="polite">
         <span class="success-icon" aria-hidden="true">✓</span>
-        <h2>Søknaden er registrert</h2>
-        <p>Takk for at du vil skrive musikk med oss. Vi tar kontakt på e-post hvis vi trenger mer informasjon eller kan tilby deg plass.</p>
-        <a href="https://www.lokilyd.no/">Tilbake til Loki Lydstudio</a>
+        <h2>Application received</h2>
+        <p>Thank you for wanting to write music with us. We'll email you if we need more information or can offer you a place.</p>
+        <a href="https://www.lokilyd.no/en/">Back to Loki Lydstudio</a>
       </section>
     </main>
 

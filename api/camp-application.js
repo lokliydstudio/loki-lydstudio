@@ -9,7 +9,7 @@ const MAX_APPLICATIONS = 2000;
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "private, no-store, max-age=0");
   res.setHeader("X-Content-Type-Options", "nosniff");
-  if (!isConfigured()) return res.status(503).json({ error: "Søknadsskjemaet er midlertidig utilgjengelig." });
+  if (!isConfigured()) return res.status(503).json({ error: "The application form is temporarily unavailable." });
 
   if (req.method === "GET") {
     if (!requireUser(req, res)) return;
@@ -18,23 +18,23 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ applications });
     } catch (error) {
       console.error("Camp application read failed", error?.message);
-      return res.status(503).json({ error: "Kunne ikke hente søknadene." });
+      return res.status(503).json({ error: "Could not load applications." });
     }
   }
 
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   if (req.headers.origin) {
     try {
-      if (new URL(req.headers.origin).host !== req.headers.host) return res.status(403).json({ error: "Søknaden må sendes fra lokilyd.no." });
+      if (new URL(req.headers.origin).host !== req.headers.host) return res.status(403).json({ error: "Applications must be submitted from lokilyd.no." });
     } catch {
-      return res.status(403).json({ error: "Ugyldig opprinnelse." });
+      return res.status(403).json({ error: "Invalid origin." });
     }
   }
   if (!String(req.headers["content-type"] || "").toLowerCase().startsWith("application/json")) {
-    return res.status(415).json({ error: "Søknaden må sendes fra skjemaet." });
+    return res.status(415).json({ error: "Please submit your application from the form." });
   }
-  if (Number(req.headers["content-length"] || 0) > 12000) return res.status(413).json({ error: "Søknaden er for lang." });
-  if (JSON.stringify(req.body || {}).length > 12000) return res.status(413).json({ error: "Søknaden er for lang." });
+  if (Number(req.headers["content-length"] || 0) > 12000) return res.status(413).json({ error: "The application is too long." });
+  if (JSON.stringify(req.body || {}).length > 12000) return res.status(413).json({ error: "The application is too long." });
   // The hidden field is deliberately ignored by real applicants and catches basic form spam.
   if (req.body?.website) return res.status(200).json({ ok: true });
   const { application, error } = normalizeApplication(req.body);
@@ -46,14 +46,14 @@ module.exports = async function handler(req, res) {
         && item.bio === application.bio
         && Date.now() - new Date(item.createdAt).getTime() < 10 * 60 * 1000);
       if (duplicate) return { items, result: { id: duplicate.id, duplicate: true } };
-      if (items.length >= MAX_APPLICATIONS) return { error: "Søknadskapasiteten er nådd. Kontakt camps@lokilyd.no." };
+      if (items.length >= MAX_APPLICATIONS) return { error: "We cannot accept more applications right now. Please contact camps@lokilyd.no." };
       return { items: [application, ...items], result: { id: application.id, duplicate: false } };
     });
     if (stored.error) return res.status(503).json({ error: stored.error });
     if (stored.result.duplicate) return res.status(200).json({ ok: true, id: stored.result.id });
   } catch (storageError) {
     console.error("Camp application storage failed", storageError?.message);
-    return res.status(503).json({ error: "Søknaden kunne ikke lagres. Prøv igjen senere." });
+    return res.status(503).json({ error: "Your application could not be saved. Please try again later." });
   }
 
   try {

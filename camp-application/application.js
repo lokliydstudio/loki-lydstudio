@@ -13,7 +13,7 @@
 
   function updateBioCount() {
     const count = bio.value.trim().split(/\s+/).filter(Boolean).length;
-    counter.textContent = `${count} / 500 ord`;
+    counter.textContent = `${count} / 500 words`;
     counter.classList.toggle("over", count > 500);
   }
 
@@ -34,13 +34,13 @@
     status.textContent = "";
     const roles = [...form.querySelectorAll('input[name="roles"]:checked')].map((input) => input.value);
     if (!roles.length) {
-      status.textContent = "Velg minst én musikalsk rolle.";
+      status.textContent = "Select at least one musical role.";
       document.getElementById("roles-group").scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
     const wordCount = bio.value.trim().split(/\s+/).filter(Boolean).length;
     if (wordCount > 500) {
-      status.textContent = "Musikkbiografien kan være på maks 500 ord.";
+      status.textContent = "Your music biography must be 500 words or fewer.";
       bio.focus();
       return;
     }
@@ -52,7 +52,7 @@
     payload.privacyAccepted = data.has("privacyAccepted");
     payload.dietaryConsent = data.has("dietaryConsent");
     submit.disabled = true;
-    submitLabel.textContent = "Sender …";
+    submitLabel.textContent = "Submitting …";
     try {
       const response = await fetch("/api/camp-application", {
         method: "POST",
@@ -61,17 +61,17 @@
         body: JSON.stringify(payload),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.ok) throw new Error(result.error || "Søknaden kunne ikke sendes. Prøv igjen.");
+      if (!response.ok || !result.ok) throw new Error(result.error || "Your application could not be submitted. Please try again.");
       form.hidden = true;
       const success = document.getElementById("success-card");
       success.hidden = false;
       success.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
-      status.textContent = error.message || "Søknaden kunne ikke sendes. Prøv igjen.";
+      status.textContent = error.message || "Your application could not be submitted. Please try again.";
       status.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally {
       submit.disabled = false;
-      submitLabel.textContent = "Send søknad";
+      submitLabel.textContent = "Submit application";
     }
   });
   updateBioCount();
