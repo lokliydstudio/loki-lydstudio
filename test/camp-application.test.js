@@ -36,6 +36,8 @@ test("form is unlisted and shows the March 2027 camp details", () => {
   assert.match(form, /FRYDENBØLIEN 17/);
   assert.match(form, /<html lang="en">/);
   assert.match(form, /4–6 MARCH 2027/);
+  assert.match(form, /APPLICATIONS ARE OPEN/);
+  assert.match(form, /Loki Songs - March 2027/);
   assert.match(form, /NOK 1,500/);
   assert.doesNotMatch(form, /NOK 1,300|future songwriting camp/i);
   assert.match(form, /href="\/en\/personvern_en.html"/);
