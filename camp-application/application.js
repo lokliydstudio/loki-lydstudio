@@ -61,17 +61,17 @@
         body: JSON.stringify(payload),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok || !result.ok) throw new Error(result.error || "Your application could not be submitted. Please try again.");
+      if (!response.ok || !result.ok) throw new Error(result.error || "Your registration could not be submitted. Please try again.");
       form.hidden = true;
       const success = document.getElementById("success-card");
       success.hidden = false;
       success.scrollIntoView({ behavior: "smooth", block: "start" });
     } catch (error) {
-      status.textContent = error.message || "Your application could not be submitted. Please try again.";
+      status.textContent = error.message || "Your registration could not be submitted. Please try again.";
       status.scrollIntoView({ behavior: "smooth", block: "center" });
     } finally {
       submit.disabled = false;
-      submitLabel.textContent = "Submit application";
+      submitLabel.textContent = "Submit registration";
     }
   });
   updateBioCount();

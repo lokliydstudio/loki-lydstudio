@@ -11,11 +11,14 @@ const valid = {
   splits: "agree", dietary: "Oppgis senere", feeAccepted: true, privacyAccepted: true,
 };
 
-test("camp application requires the fee acknowledgement and stores it as 1300 NOK", () => {
+test("camp registration requires the fee acknowledgement and stores the March 2027 event", () => {
   assert.match(normalizeApplication({ ...valid, feeAccepted: false }).error, /participation fee/);
   const result = normalizeApplication(valid);
   assert.equal(result.error, undefined);
-  assert.equal(result.application.feeNok, 1300);
+  assert.equal(result.application.feeNok, 1500);
+  assert.equal(result.application.campId, "loki-songs-2027-03");
+  assert.equal(result.application.campStart, "2027-03-04");
+  assert.equal(result.application.campEnd, "2027-03-06");
   assert.deepEqual(result.application.roles, ["Artist", "Låtskriver"]);
 });
 
@@ -26,13 +29,15 @@ test("dietary details need separate consent while deferring them does not", () =
   assert.equal(result.application.dietaryConsent, true);
 });
 
-test("form is unlisted and has no event timing", () => {
+test("form is unlisted and shows the March 2027 camp details", () => {
   const root = path.join(__dirname, "..");
   const form = fs.readFileSync(path.join(root, "camp-application/index.html"), "utf8");
   assert.doesNotMatch(form, /event timing|16th.?20th sept|frydenbølien 19/i);
   assert.match(form, /FRYDENBØLIEN 17/);
   assert.match(form, /<html lang="en">/);
-  assert.match(form, /NOK 1,300/);
+  assert.match(form, /4–6 MARCH 2027/);
+  assert.match(form, /NOK 1,500/);
+  assert.doesNotMatch(form, /NOK 1,300|future songwriting camp/i);
   assert.match(form, /href="\/en\/personvern_en.html"/);
   for (const publicPage of ["index.html", "en/index_en.html", "loki-songs-camp.html", "en/loki-songs-camp_en.html"]) {
     if (fs.existsSync(path.join(root, publicPage))) {
