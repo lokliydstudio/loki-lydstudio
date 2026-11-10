@@ -21,7 +21,7 @@ const { checkedJob, safeDestination, safeExistingFile } = require("../bridge/jot
 const { inferLeadDetails, normalizePhone } = require("../lib/crm-lead-enrichment");
 const { classifyEnvelope } = require("../lib/crm-mail-sort");
 const { isOpenLead, leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../lib/crm-leads");
-const { mailConfig, sendMail } = require("../lib/crm-mail");
+const { mailConfig, sendMail, sendOwnerLoginMail } = require("../lib/crm-mail");
 const { openGrant, sealGrant, summarizeFiken } = require("../lib/crm-fiken");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { ONLINE_WINDOW_MS, presenceCollection, presenceHeartbeat, presenceLogin, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
@@ -180,7 +180,7 @@ test("CRM login offers both an emailed one-time code and a secure link", () => {
   assert.match(request, /verifyLoginCode/);
   assert.match(request, /clearLoginChallengeCookie/);
   assert.match(request, /presenceLogin/);
-  assert.match(request, /sendSmtpMail/);
+  assert.match(request, /sendOwnerLoginMail/);
   assert.doesNotMatch(request, /const \{ sendMail \}/);
 });
 
@@ -863,6 +863,50 @@ test("transactional email uses Resend when its secret is configured", async () =
     const body = JSON.parse(request.options.body);
     assert.deepEqual(body.to, ["leon@lokilyd.no"]);
     assert.equal(body.reply_to, "post@lokilyd.no");
+  } finally {
+    global.fetch = originalFetch;
+    delete process.env.RESEND_API_KEY;
+  }
+});
+
+test("CRM owner login clears a Resend suppression before sending and checks delivery", async () => {
+  const originalFetch = global.fetch;
+  process.env.RESEND_API_KEY = "test-resend-key";
+  const calls = [];
+  global.fetch = async (url, options = {}) => {
+    calls.push({ url, method: options.method || "GET" });
+    if (url.includes("/suppressions/") && options.method === "DELETE") {
+      return { ok: true, status: 200, json: async () => ({ object: "suppression" }) };
+    }
+    if (url.includes("/suppressions/")) {
+      return { ok: true, status: 200, json: async () => ({ origin: "bounce" }) };
+    }
+    if (url === "https://api.resend.com/emails" && options.method === "POST") {
+      return { ok: true, status: 200, json: async () => ({ id: "email_login_123" }) };
+    }
+    if (url === "https://api.resend.com/emails/email_login_123") {
+      return { ok: true, status: 200, json: async () => ({ last_event: "sent" }) };
+    }
+    throw new Error(`Unexpected fetch: ${options.method || "GET"} ${url}`);
+  };
+
+  try {
+    const result = await sendOwnerLoginMail({
+      from: "Loki Studio <post@lokilyd.no>",
+      to: "leon@lokilyd.no",
+      subject: "Kode",
+      text: "123 456",
+    }, "leon@lokilyd.no");
+    assert.equal(result.provider, "resend");
+    assert.equal(result.suppression.removed, true);
+    assert.equal(result.suppression.origin, "bounce");
+    assert.equal(result.deliveryEvent, "sent");
+    assert.deepEqual(calls.map(({ method, url }) => `${method} ${url}`), [
+      "GET https://api.resend.com/suppressions/leon%40lokilyd.no",
+      "DELETE https://api.resend.com/suppressions/leon%40lokilyd.no",
+      "POST https://api.resend.com/emails",
+      "GET https://api.resend.com/emails/email_login_123",
+    ]);
   } finally {
     global.fetch = originalFetch;
     delete process.env.RESEND_API_KEY;
