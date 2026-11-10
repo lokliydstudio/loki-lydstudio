@@ -885,7 +885,7 @@ test("CRM owner login clears a Resend suppression before sending and checks deli
       return { ok: true, status: 200, json: async () => ({ id: "email_login_123" }) };
     }
     if (url === "https://api.resend.com/emails/email_login_123") {
-      return { ok: true, status: 200, json: async () => ({ last_event: "sent" }) };
+      return { ok: true, status: 200, json: async () => ({ last_event: "delivered" }) };
     }
     throw new Error(`Unexpected fetch: ${options.method || "GET"} ${url}`);
   };
@@ -900,7 +900,7 @@ test("CRM owner login clears a Resend suppression before sending and checks deli
     assert.equal(result.provider, "resend");
     assert.equal(result.suppression.removed, true);
     assert.equal(result.suppression.origin, "bounce");
-    assert.equal(result.deliveryEvent, "sent");
+    assert.equal(result.deliveryEvent, "delivered");
     assert.deepEqual(calls.map(({ method, url }) => `${method} ${url}`), [
       "GET https://api.resend.com/suppressions/leon%40lokilyd.no",
       "DELETE https://api.resend.com/suppressions/leon%40lokilyd.no",
