@@ -33,6 +33,12 @@
   const moneyFromOre = (value) => new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 0 }).format((Number(value) || 0) / 100);
   const money = (value) => new Intl.NumberFormat("nb-NO", { style: "currency", currency: "NOK", maximumFractionDigits: 0 }).format(Number(value) || 0);
 
+  function notifyWorkspaceChange() {
+    window.dispatchEvent(new CustomEvent("loki-workspace-updated", {
+      detail: { tasks: tasks.map((task) => ({ ...task })) },
+    }));
+  }
+
   function renderTasks() {
     const list = document.getElementById("task-list");
     const open = tasks.filter((task) => !task.completed).length;
@@ -95,6 +101,7 @@
     document.querySelectorAll("[data-task-delete]").forEach((button) => {
       button.onclick = () => deleteItem(button.dataset.taskDelete, "oppgaven");
     });
+    notifyWorkspaceChange();
   }
 
   function renderNotes() {
@@ -401,5 +408,10 @@
     await loadWorkspace();
   }
 
-  window.LokiWorkspace = { init, reload: loadWorkspace };
+  window.LokiWorkspace = {
+    init,
+    reload: loadWorkspace,
+    getTasks: () => tasks.map((task) => ({ ...task })),
+    setTaskCompleted: (id, completed) => updateTask(id, { completed: Boolean(completed) }),
+  };
 })();

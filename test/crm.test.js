@@ -93,6 +93,31 @@ test("CRM shell includes an accessible persistent theme switcher", () => {
   assert.equal(html.indexOf('class="panel rental-workbook"') < html.indexOf('class="panel goals-panel"'), true);
 });
 
+test("CRM uses the professional light and dark design system with discreet navigation counts", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "professional-ui.css"), "utf8");
+  assert.match(html, /professional-ui\.css/);
+  assert.match(styles, /--accent:\s*#315fce/);
+  assert.match(styles, /html\[data-theme="dark"\]/);
+  assert.match(styles, /\.nav \.count\s*\{[^}]*background:\s*transparent/s);
+  assert.match(styles, /\.nav \.count\s*\{[^}]*border-radius:\s*0/s);
+  assert.match(styles, /@media screen and \(max-width: 760px\)/);
+});
+
+test("CRM overview is personalized and prioritizes owner tasks and stale Formspree enquiries", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
+  assert.match(html, /id="overview-greeting"/);
+  assert.match(html, /id="overview-tasks"/);
+  assert.match(html, /id="overview-formspree"/);
+  assert.match(html, /const ownerName=.*charles.*Charles.*Leon/);
+  assert.match(html, /lead\.category==="formspree"&&lead\.stage==="Nytt lead"/);
+  assert.match(html, /24\*60\*60\*1000/);
+  assert.match(workspace, /loki-workspace-updated/);
+  assert.match(workspace, /getTasks:/);
+  assert.match(workspace, /setTaskCompleted:/);
+});
+
 test("tokens cannot be reused for another purpose", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
   assert.equal(auth.verifyToken(token, "session"), null);
@@ -1049,6 +1074,41 @@ test("manual customers persist in the customer register without an email address
   const views = splitLeadViews([customer], []);
   assert.deepEqual(views.leads.map((lead) => lead.id), [customer.id]);
   assert.equal(views.irrelevantLeads.length, 0);
+});
+
+test("lead enquiry type distinguishes studio jobs from rental enquiries without changing source priority", () => {
+  const rental = sanitizeLead({
+    name: "Rominteressert",
+    email: "rom@example.no",
+    project: "Ønsker å leie et rom",
+    source: "Formspree",
+    category: "formspree",
+    enquiryType: "Utleie",
+  });
+  assert.equal(rental.enquiryType, "Utleie");
+  assert.equal(rental.category, "formspree");
+  assert.equal(rental.priority, 100);
+
+  const updated = sanitizeLead({ project: "Studio D" }, rental);
+  assert.equal(updated.enquiryType, "Utleie");
+  assert.equal(updated.category, "formspree");
+
+  const job = sanitizeLead({ name: "Artist", enquiryType: "Oppdrag" });
+  assert.equal(job.enquiryType, "Oppdrag");
+  assert.equal(sanitizeLead({ name: "Ugyldig", enquiryType: "Annet" }).enquiryType, "");
+});
+
+test("lead pipeline exposes enquiry classification in its filter and editable profile", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const profile = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "lead-profile.js"), "utf8");
+  const api = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "leads.js"), "utf8");
+  assert.match(html, /id="lead-enquiry-filter"/);
+  assert.match(html, /name="enquiryType"/);
+  assert.match(html, /option value="Oppdrag"/);
+  assert.match(html, /option value="Utleie"/);
+  assert.match(html, /matchesEnquiryType/);
+  assert.match(profile, /enquiryType: values\.enquiryType/);
+  assert.match(api, /ENQUIRY_TYPES/);
 });
 
 test("shared tasks and meeting notes are normalized", () => {

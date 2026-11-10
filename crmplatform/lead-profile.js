@@ -38,6 +38,7 @@
       setValue(form, "id", "");
       setValue(form, "messageUid", "");
       setValue(form, "stage", "Nytt lead");
+      setValue(form, "enquiryType", "");
       setValue(form, "nextAction", "Ta første kontakt");
       source.hidden = true;
       quickActions.hidden = true;
@@ -51,7 +52,7 @@
     }
 
     function populate(lead) {
-      ["id", "messageUid", "name", "email", "phone", "role", "artistName", "company", "website", "social", "location", "stage", "project", "value", "nextAction", "assignee", "followUpDate", "preferredContact", "lostReason", "notes", "emailSummary"].forEach((field) => setValue(form, field, lead[field]));
+      ["id", "messageUid", "name", "email", "phone", "role", "artistName", "company", "website", "social", "location", "stage", "enquiryType", "project", "value", "nextAction", "assignee", "followUpDate", "preferredContact", "lostReason", "notes", "emailSummary"].forEach((field) => setValue(form, field, lead[field]));
       setValue(form, "stage", lead.stage || "Nytt lead");
       setValue(form, "nextAction", lead.nextAction || "Ta første kontakt");
       setValue(form, "assignee", lead.assignee || "Begge");
@@ -168,6 +169,7 @@
         social: values.social,
         location: values.location,
         stage: values.stage,
+        enquiryType: values.enquiryType,
         project: values.project,
         value: Number(values.value) || 0,
         nextAction: values.nextAction,

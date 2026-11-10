@@ -10,6 +10,7 @@ const { decodeXlsxBase64, parseFikenContacts } = require("../../lib/fiken-contac
 const STAGES = new Set(["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig", "Tapt"]);
 const ASSIGNEES = new Set(["Leon", "Charles", "Begge"]);
 const CONTACT_METHODS = new Set(["E-post", "Telefon", "SMS", "Ingen preferanse"]);
+const ENQUIRY_TYPES = new Set(["Utleie", "Oppdrag"]);
 
 function cleanText(value, max = 250) {
   return String(value || "").replace(/\s+/g, " ").trim().slice(0, max);
@@ -47,6 +48,7 @@ function sanitizeLead(input, existing = {}) {
   const receivedAt = new Date(input?.receivedAt || existing.receivedAt || Date.now());
   const assignee = cleanText(optionalValue(input, existing, "assignee") || "Begge", 20);
   const preferredContact = cleanText(optionalValue(input, existing, "preferredContact") || "E-post", 30);
+  const requestedEnquiryType = cleanText(optionalValue(input, existing, "enquiryType"), 30);
   const lead = {
     id: cleanText(existing.id || input?.id, 120) || `lead-${crypto.randomUUID()}`,
     externalSource: cleanText(optionalValue(input, existing, "externalSource"), 40),
@@ -66,6 +68,7 @@ function sanitizeLead(input, existing = {}) {
       : cleanDate(optionalValue(input, existing, "followUpDate")) || (!existing.id ? new Date(Date.now() + 86400000).toISOString().slice(0, 10) : ""),
     assignee: ASSIGNEES.has(assignee) ? assignee : "Begge",
     preferredContact: CONTACT_METHODS.has(preferredContact) ? preferredContact : "E-post",
+    enquiryType: ENQUIRY_TYPES.has(requestedEnquiryType) ? requestedEnquiryType : "",
     lostReason: cleanText(optionalValue(input, existing, "lostReason"), 300),
     phone,
     role: cleanText(optionalValue(input, existing, "role"), 60),
@@ -313,12 +316,17 @@ async function handler(req, res) {
       current[index] = { ...updated, id: current[index].id, firstSeenAt: current[index].firstSeenAt };
       const prioritized = sortLeads(current);
       await writeCollection("leads", prioritized);
+      const enquiryTypeChanged = String(previous.enquiryType || "") !== String(updated.enquiryType || "");
       const details = previous.stage !== updated.stage
         ? `Flyttet fra «${previous.stage}» til «${updated.stage}».`
-        : "Kundeprofil og oppfølging ble oppdatert.";
+        : enquiryTypeChanged
+          ? updated.enquiryType
+            ? `Henvendelsen ble kategorisert som «${updated.enquiryType}».`
+            : "Klassifiseringen av henvendelsen ble fjernet."
+          : "Kundeprofil og oppfølging ble oppdatert.";
       try {
         const activities = await readCollection("activities");
-        const activity = sanitizeActivity({ leadId: id, type: previous.stage !== updated.stage ? "Status" : "Notat", details }, {}, user.email);
+        const activity = sanitizeActivity({ leadId: id, type: previous.stage !== updated.stage || enquiryTypeChanged ? "Status" : "Notat", details }, {}, user.email);
         if (activity) {
           activities.unshift(activity);
           await writeCollection("activities", activities.slice(0, 3000));
