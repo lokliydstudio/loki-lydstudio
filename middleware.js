@@ -110,6 +110,17 @@ export default async function middleware(request) {
   const url = new URL(request.url);
   const pathname = url.pathname;
 
+  const isCrmRoute = (
+    pathname === "/crm-login.html" ||
+    pathname === "/crmplatform" ||
+    pathname.startsWith("/crmplatform/") ||
+    pathname.startsWith("/api/crm/auth-")
+  );
+  if (url.hostname === "lokilyd.no" && isCrmRoute) {
+    url.hostname = "www.lokilyd.no";
+    return Response.redirect(url, 307);
+  }
+
   if (["/lib/", "/test/", "/ios/", "/android/", "/bridge/", "/build/"].some((prefix) => pathname.startsWith(prefix))) {
     return new Response("Not found", { status: 404, headers: { "Cache-Control": "private, no-store" } });
   }
@@ -126,5 +137,5 @@ export default async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/medlem", "/medlem.html", "/crmplatform", "/crmplatform/:path*", "/lib/:path*", "/test/:path*", "/ios/:path*", "/android/:path*", "/bridge/:path*", "/build/:path*"],
+  matcher: ["/medlem", "/medlem.html", "/crm-login.html", "/crmplatform", "/crmplatform/:path*", "/api/crm/auth-:path*", "/lib/:path*", "/test/:path*", "/ios/:path*", "/android/:path*", "/bridge/:path*", "/build/:path*"],
 };

@@ -20,6 +20,17 @@ test("CRM HTML redirects before it is served without a valid session", async () 
   assert.equal(response.headers.get("location"), "https://www.lokilyd.no/crm-login.html");
 });
 
+test("CRM login and auth use one canonical hostname so the long-lived cookie is retained", async () => {
+  const { default: middleware } = await loadMiddleware();
+  for (const pathname of ["/crm-login.html", "/crmplatform/", "/api/crm/auth-request"]) {
+    const response = await middleware(new Request(`https://lokilyd.no${pathname}`, {
+      method: pathname.startsWith("/api/") ? "POST" : "GET",
+    }));
+    assert.equal(response.status, 307, pathname);
+    assert.equal(response.headers.get("location"), `https://www.lokilyd.no${pathname}`);
+  }
+});
+
 test("CRM HTML is available to a signed owner session", async () => {
   const { default: middleware } = await loadMiddleware();
   const session = auth.createToken("leon@lokilyd.no", "session", 60);

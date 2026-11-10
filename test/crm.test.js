@@ -168,6 +168,9 @@ test("mobile tasks shortcut uses the private CRM workspace and its own start URL
 test("CRM login offers both an emailed one-time code and a secure link", () => {
   const login = fs.readFileSync(path.join(__dirname, "..", "crm-login.html"), "utf8");
   const request = fs.readFileSync(path.join(__dirname, "..", "api", "crm", "auth-request.js"), "utf8");
+  assert.match(login, /data-owner-email="leon@lokilyd\.no"/);
+  assert.match(login, /data-owner-email="charles@lokilyd\.no"/);
+  assert.match(login, /opptil 400 dager/);
   assert.match(login, /id="code-form"/);
   assert.match(login, /autocomplete="one-time-code"/);
   assert.match(login, /\/api\/crm\/auth-request/);
@@ -177,6 +180,8 @@ test("CRM login offers both an emailed one-time code and a secure link", () => {
   assert.match(request, /verifyLoginCode/);
   assert.match(request, /clearLoginChallengeCookie/);
   assert.match(request, /presenceLogin/);
+  assert.match(request, /sendSmtpMail/);
+  assert.doesNotMatch(request, /const \{ sendMail \}/);
 });
 
 test("CRM has a dedicated touch-safe mobile layout", () => {

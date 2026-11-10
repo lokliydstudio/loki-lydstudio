@@ -7,7 +7,7 @@ const {
   sessionCookie,
   verifyLoginCode,
 } = require("../../lib/crm-auth");
-const { sendMail } = require("../../lib/crm-mail");
+const { sendSmtpMail } = require("../../lib/crm-mail");
 const { presenceCollection, presenceLogin } = require("../../lib/crm-presence");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 
@@ -89,11 +89,14 @@ module.exports = async function handler(req, res) {
   const baseUrl = String(process.env.CRM_BASE_URL || "https://www.lokilyd.no").replace(/\/$/, "");
   const link = `${baseUrl}/api/crm/auth-callback?token=${encodeURIComponent(token)}`;
   try {
-    await sendMail({
+    // Owner login is deliberately sent through Loki's own Domeneshop mailbox.
+    // Resend accepting a message does not guarantee final delivery, while this
+    // route keeps the login code inside the studio's existing mail service.
+    await sendSmtpMail({
       from: `Loki Studio <${process.env.MAIL_ADDRESS}>`,
       replyTo: process.env.MAIL_ADDRESS,
       to: email,
-      subject: "Din innloggingskode til Loki Studio",
+      subject: `Loki CRM-kode: ${challenge.code.slice(0, 3)} ${challenge.code.slice(3)}`,
       text: `Din engangskode til Loki Studio er ${challenge.code}.\n\nSkriv koden på innloggingssiden, eller bruk denne lenken:\n${link}\n\nKoden og lenken er gyldige i 15 minutter. Hvis du ikke ba om innloggingen, kan du ignorere meldingen.`,
       html: `<div style="font-family:Arial,Helvetica,sans-serif;color:#191918"><p>Din engangskode til Loki Studio er:</p><p style="margin:22px 0;font-size:32px;font-weight:800;letter-spacing:.22em">${challenge.code.slice(0, 3)} ${challenge.code.slice(3)}</p><p>Skriv koden på innloggingssiden, eller bruk knappen under.</p><p><a href="${link}" style="display:inline-block;padding:12px 18px;border-radius:8px;background:#d9ff53;color:#171716;font-weight:700;text-decoration:none">Logg inn med lenke</a></p><p style="color:#777;font-size:12px">Koden og lenken er gyldige i 15 minutter. Hvis du ikke ba om innloggingen, kan du ignorere meldingen.</p></div>`,
     });
