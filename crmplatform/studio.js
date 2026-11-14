@@ -32,6 +32,7 @@
   let contactDirectory = [];
   const expandedProjectSections = new Set();
   const expandedTrackCards = new Set();
+  const selectedTrackIds = new Set();
   const expandedProjectImages = new Set();
   const ownerContacts = [
     { name: "Leon Frick", email: "leon@lokilyd.no", role: "Grunnlegger" },
@@ -179,6 +180,41 @@
 
   function projectTracks() {
     return tracks.filter((track) => track.projectId === selectedProjectId);
+  }
+
+  function selectedProjectTracks() {
+    return projectTracks().filter((track) => selectedTrackIds.has(track.id));
+  }
+
+  function trackSelectionToolbar() {
+    const visible = projectTracks();
+    if (!visible.length) return "";
+    const selected = selectedProjectTracks().length;
+    const allSelected = selected === visible.length;
+    return `
+      <div class="track-selection-toolbar" aria-label="Flervalg for lydfiler">
+        <label class="track-selection-toggle"><input type="checkbox" data-select-all-tracks ${allSelected ? "checked" : ""}><span>Velg alle</span></label>
+        <span class="track-selection-count" data-selected-track-count aria-live="polite">${selected} valgt</span>
+        <button class="tiny-button danger" type="button" data-delete-selected-tracks ${selected ? "" : "disabled"}>Slett valgte</button>
+      </div>`;
+  }
+
+  function updateTrackSelectionControls() {
+    const visible = projectTracks();
+    const selected = selectedProjectTracks();
+    document.querySelectorAll("[data-select-track]").forEach((checkbox) => {
+      checkbox.checked = selectedTrackIds.has(checkbox.dataset.selectTrack);
+      checkbox.closest(".track-card")?.classList.toggle("selected", checkbox.checked);
+    });
+    const selectAll = document.querySelector("[data-select-all-tracks]");
+    if (selectAll) {
+      selectAll.checked = Boolean(visible.length) && selected.length === visible.length;
+      selectAll.indeterminate = selected.length > 0 && selected.length < visible.length;
+    }
+    const count = document.querySelector("[data-selected-track-count]");
+    if (count) count.textContent = `${selected.length} valgt`;
+    const remove = document.querySelector("[data-delete-selected-tracks]");
+    if (remove) remove.disabled = selected.length === 0;
   }
 
   function currentProjectImages() {
@@ -369,8 +405,8 @@
     return visible.map((track) => {
       const comments = commentsForTrack(track.id).length;
       return `
-      <details class="track-card" data-track-card="${esc(track.id)}" data-track-disclosure="${esc(track.id)}"${expandedTrackCards.has(track.id) ? " open" : ""}>
-        <summary><span><strong>${esc(track.title)} · ${esc(track.version)}</strong><small>${esc(track.filename)} · ${formatBytes(track.size)}</small><span class="track-summary-meta"><em>${comments} ${comments === 1 ? "kommentar" : "kommentarer"}</em><em>${esc(track.jottaStatus || "Venter på lokal synk")}</em></span></span><i aria-hidden="true"></i></summary>
+      <details class="track-card${selectedTrackIds.has(track.id) ? " selected" : ""}" data-track-card="${esc(track.id)}" data-track-disclosure="${esc(track.id)}"${expandedTrackCards.has(track.id) ? " open" : ""}>
+        <summary><label class="track-select-control" data-track-select-control><input class="track-select-box" type="checkbox" data-select-track="${esc(track.id)}" aria-label="Velg ${esc(track.title)} ${esc(track.version)}" ${selectedTrackIds.has(track.id) ? "checked" : ""}></label><span><strong>${esc(track.title)} · ${esc(track.version)}</strong><small>${esc(track.filename)} · ${formatBytes(track.size)}</small><span class="track-summary-meta"><em>${comments} ${comments === 1 ? "kommentar" : "kommentarer"}</em><em>${esc(track.jottaStatus || "Venter på lokal synk")}</em></span></span><i aria-hidden="true"></i></summary>
         <div class="track-main">
           <div class="track-copy">
             <strong>Avspilling og levering</strong>
@@ -552,12 +588,14 @@
             </form>
             <div class="delivery-playlist-list">${deliveryPlaylistCards()}</div>
           </section></div></details>
-        <details class="studio-subdisclosure" data-project-disclosure="audio-tracks"${projectSectionOpen("audio-tracks")}><summary><span><strong>Opplastede låter og mikser</strong><small>${projectTracks().length} ${projectTracks().length === 1 ? "lydfil" : "lydfiler"} · åpne én låt om gangen for avspilling, kommentarer eller sletting</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body"><div class="audio-list" id="audio-list">${trackCards()}</div>
+        <details class="studio-subdisclosure" data-project-disclosure="audio-tracks"${projectSectionOpen("audio-tracks")}><summary><span><strong>Opplastede låter og mikser</strong><small>${projectTracks().length} ${projectTracks().length === 1 ? "lydfil" : "lydfiler"} · marker flere for massesletting eller åpne én for avspilling og kommentarer</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body">${trackSelectionToolbar()}<div class="audio-list" id="audio-list">${trackCards()}</div>
           <p class="storage-note"><span>●</span><span><b>Sikker levering:</b> Avspillingen går gjennom Loki-plattformen fra privat Blob-lagring. Kundelenker er signert og varer i 14 dager. Jottacloud-broen speiler filene til studioets eget arkiv når den kjører på Mac-en.</span></p></div></details>
       </section>`;
   }
 
   function render() {
+    const availableTrackIds = new Set(tracks.map((track) => track.id));
+    for (const id of selectedTrackIds) if (!availableTrackIds.has(id)) selectedTrackIds.delete(id);
     const count = document.getElementById("project-count");
     const list = document.getElementById("project-list");
     const workspace = document.getElementById("project-workspace");
@@ -576,7 +614,11 @@
 
   function bindRenderedControls() {
     document.querySelectorAll("[data-project-id]").forEach((button) => {
-      button.onclick = () => { selectedProjectId = button.dataset.projectId; render(); };
+      button.onclick = () => {
+        if (selectedProjectId !== button.dataset.projectId) selectedTrackIds.clear();
+        selectedProjectId = button.dataset.projectId;
+        render();
+      };
     });
     const save = document.getElementById("save-project");
     if (save) save.onclick = saveProject;
@@ -604,6 +646,27 @@
     const timeForm = document.getElementById("time-entry-form");
     if (timeForm) timeForm.onsubmit = saveTimeEntry;
     bindSpotifyReferenceActions();
+    document.querySelectorAll("[data-track-select-control]").forEach((control) => {
+      control.onclick = (event) => event.stopPropagation();
+    });
+    document.querySelectorAll("[data-select-track]").forEach((checkbox) => {
+      checkbox.onclick = (event) => event.stopPropagation();
+      checkbox.onchange = () => {
+        if (checkbox.checked) selectedTrackIds.add(checkbox.dataset.selectTrack);
+        else selectedTrackIds.delete(checkbox.dataset.selectTrack);
+        updateTrackSelectionControls();
+      };
+    });
+    const selectAllTracks = document.querySelector("[data-select-all-tracks]");
+    if (selectAllTracks) selectAllTracks.onchange = () => {
+      projectTracks().forEach((track) => {
+        if (selectAllTracks.checked) selectedTrackIds.add(track.id);
+        else selectedTrackIds.delete(track.id);
+      });
+      updateTrackSelectionControls();
+    };
+    const deleteSelectedTracksButton = document.querySelector("[data-delete-selected-tracks]");
+    if (deleteSelectedTracksButton) deleteSelectedTracksButton.onclick = deleteSelectedTracks;
     document.querySelectorAll("[data-share-track]").forEach((button) => {
       button.onclick = () => shareTrack(button.dataset.shareTrack);
     });
@@ -1225,6 +1288,7 @@
       audioPlaylists = audioPlaylists.filter((playlist) => playlist.projectId !== project.id);
       projectImages = projectImages.filter((image) => image.projectId !== project.id);
       audioComments = audioComments.filter((comment) => !deletedTrackIds.has(comment.trackId));
+      selectedTrackIds.clear();
       selectedProjectId = projects[0]?.id || null;
       render();
       const trackText = result.deletedTrackCount ? ` og ${result.deletedTrackCount} lydfil${result.deletedTrackCount === 1 ? "" : "er"}` : "";
@@ -1581,17 +1645,51 @@
     }
   }
 
+  function removeDeletedTracksFromState(ids) {
+    const deleted = new Set(ids);
+    tracks = tracks.filter((item) => !deleted.has(item.id));
+    deleted.forEach((id) => {
+      selectedTrackIds.delete(id);
+      expandedTrackCards.delete(id);
+    });
+    audioPlaylists = audioPlaylists
+      .map((playlist) => ({ ...playlist, trackIds: (playlist.trackIds || []).filter((trackId) => !deleted.has(trackId)) }))
+      .filter((playlist) => playlist.trackIds.length);
+    audioComments = audioComments.filter((comment) => !deleted.has(comment.trackId));
+  }
+
+  async function deleteSelectedTracks() {
+    const selected = selectedProjectTracks();
+    if (!selected.length) return;
+    const label = selected.length === 1 ? "den valgte lydfilen" : `${selected.length} valgte lydfiler`;
+    if (!confirm(`Slett ${label} permanent fra lydlageret? Kommentarer fjernes, og låtene tas ut av eksisterende spillelister.`)) return;
+    const button = document.querySelector("[data-delete-selected-tracks]");
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Sletter …";
+    }
+    try {
+      const ids = selected.map((track) => track.id);
+      const data = await request("/api/studio?action=audio", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      removeDeletedTracksFromState(data.deletedIds || ids);
+      render();
+      toast(`${selected.length} ${selected.length === 1 ? "lydfil er" : "lydfiler er"} slettet fra plattformen.`);
+    } catch (error) {
+      toast(error.message || "De valgte lydfilene kunne ikke slettes.");
+      updateTrackSelectionControls();
+    }
+  }
+
   async function deleteTrack(id) {
     const track = tracks.find((item) => item.id === id);
     if (!track || !confirm(`Slett «${track.title} · ${track.version}» permanent fra lydlageret?`)) return;
     try {
       await request(`/api/studio?action=audio&id=${encodeURIComponent(id)}`, { method: "DELETE" });
-      tracks = tracks.filter((item) => item.id !== id);
-      expandedTrackCards.delete(id);
-      audioPlaylists = audioPlaylists
-        .map((playlist) => ({ ...playlist, trackIds: (playlist.trackIds || []).filter((trackId) => trackId !== id) }))
-        .filter((playlist) => playlist.trackIds.length);
-      audioComments = audioComments.filter((comment) => comment.trackId !== id);
+      removeDeletedTracksFromState([id]);
       render();
       toast("Lydfilen er slettet fra plattformen.");
     } catch (error) {
@@ -1621,6 +1719,7 @@
           body: JSON.stringify({ project: Object.fromEntries(values) }),
         });
         projects.unshift(data.project);
+        selectedTrackIds.clear();
         selectedProjectId = data.project.id;
         form.reset();
         delete form.elements.clientName.dataset.contactAutofilled;

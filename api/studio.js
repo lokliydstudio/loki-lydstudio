@@ -331,19 +331,25 @@ async function audioHandler(req, res) {
   }
 
   if (req.method === "DELETE") {
-    const id = cleanText(req.query?.id || req.body?.id, 80);
-    const index = tracks.findIndex((item) => item.id === id);
-    if (index < 0) return res.status(404).json({ error: "Lydfilen ble ikke funnet." });
-    const [track] = tracks.splice(index, 1);
-    await del(track.pathname);
-    await writeCollection("audio", tracks);
+    const candidates = Array.isArray(req.body?.ids)
+      ? req.body.ids
+      : [req.query?.id || req.body?.id];
+    if (candidates.length > 100) return res.status(400).json({ error: "Du kan slette maksimalt 100 lydfiler om gangen." });
+    const ids = [...new Set(candidates.map((id) => cleanText(id, 80)).filter(Boolean))];
+    if (!ids.length) return res.status(400).json({ error: "Velg minst én lydfil." });
+    const deletedIds = new Set(ids);
+    const deletedTracks = tracks.filter((track) => deletedIds.has(track.id));
+    if (deletedTracks.length !== deletedIds.size) return res.status(404).json({ error: "En eller flere lydfiler ble ikke funnet. Oppdater siden og prøv igjen." });
+    const pathnames = deletedTracks.map((track) => track.pathname).filter(Boolean);
+    if (pathnames.length) await del(pathnames);
+    await writeCollection("audio", tracks.filter((track) => !deletedIds.has(track.id)));
     const comments = await readCollection("audio-comments");
-    await writeCollection("audio-comments", comments.filter((comment) => comment.trackId !== id));
+    await writeCollection("audio-comments", comments.filter((comment) => !deletedIds.has(comment.trackId)));
     const playlists = await readCollection("audio-playlists");
     await writeCollection("audio-playlists", playlists
-      .map((playlist) => ({ ...playlist, trackIds: (playlist.trackIds || []).filter((trackId) => trackId !== id) }))
+      .map((playlist) => ({ ...playlist, trackIds: (playlist.trackIds || []).filter((trackId) => !deletedIds.has(trackId)) }))
       .filter((playlist) => playlist.trackIds.length));
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, deletedIds: ids, deletedCount: ids.length });
   }
 
   return res.status(405).json({ error: "Method not allowed" });

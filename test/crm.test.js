@@ -894,6 +894,22 @@ test("mix feedback is available in both internal and customer players", () => {
   assert.match(customerPlayer, /selectPlaylistTrack/);
 });
 
+test("project audio supports controlled multi-selection deletion", () => {
+  const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  const internalScript = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  const disclosureStyles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "disclosures.css"), "utf8");
+  assert.match(internalScript, /data-select-track/);
+  assert.match(internalScript, /data-select-all-tracks/);
+  assert.match(internalScript, /data-delete-selected-tracks/);
+  assert.match(internalScript, /JSON\.stringify\(\{ ids \}\)/);
+  assert.match(internalScript, /removeDeletedTracksFromState/);
+  assert.match(studioApi, /Array\.isArray\(req\.body\?\.ids\)/);
+  assert.match(studioApi, /maksimalt 100 lydfiler/);
+  assert.match(studioApi, /deletedIds: ids/);
+  assert.match(disclosureStyles, /\.track-selection-toolbar/);
+  assert.match(disclosureStyles, /\.track-card\.selected/);
+});
+
 test("mail defaults use TLS-compatible Domeneshop ports", () => {
   const config = mailConfig();
   assert.equal(config.imapHost, "imap.domeneshop.no");

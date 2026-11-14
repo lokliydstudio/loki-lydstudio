@@ -145,7 +145,17 @@
   .project-image-card-body { display: grid; }
 
   .track-card { display: block; padding: 0; overflow: hidden; }
+  .track-selection-toolbar { display: flex; min-height: 48px; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-subtle, #f7f4ed); }
+  .track-selection-toggle { display: flex; min-height: 44px; align-items: center; gap: 8px; color: var(--ink); font-size: 9px; font-weight: 750; cursor: pointer; }
+  .track-selection-toggle input,
+  .track-select-box { width: 18px; height: 18px; margin: 0; flex: 0 0 18px; accent-color: var(--accent, var(--violet)); cursor: pointer; }
+  .track-select-control { display: grid; width: 44px; height: 44px; margin: -8px 0 -8px -8px; place-items: center; flex: 0 0 44px; cursor: pointer; }
+  .track-selection-count { margin-right: auto; color: var(--muted); font-size: 8px; font-weight: 700; }
+  .track-selection-toolbar .tiny-button { min-height: 36px; }
+  .track-selection-toolbar .tiny-button:disabled { cursor: not-allowed; opacity: .45; }
+  .track-card.selected { border-color: var(--accent, var(--violet)); box-shadow: 0 0 0 1px var(--accent, var(--violet)); }
   .track-card > summary { min-height: 62px; }
+  .track-card > summary > span { flex: 1 1 auto; }
   .track-card > summary .track-summary-meta { display: flex; flex-wrap: wrap; gap: 6px; }
   .track-card > summary .track-summary-meta em { padding: 4px 6px; border-radius: 999px; background: var(--accent-soft, #ece8ff); color: var(--accent, var(--violet)); font-size: 7px; font-style: normal; font-weight: 750; }
   .track-card .track-main { border-top: 0; }
@@ -156,6 +166,7 @@
   html[data-theme="dark"] .studio-subdisclosure > summary:hover,
   html[data-theme="dark"] .track-card > summary:hover,
   html[data-theme="dark"] .project-image-card > summary:hover,
+  html[data-theme="dark"] .track-selection-toolbar,
   html[data-theme="dark"] .collection-toggle { background: var(--surface-subtle, #292925); }
 }
 
@@ -179,4 +190,7 @@
   .studio-subdisclosure-body,
   .project-time-section .studio-disclosure-body { padding: 12px; }
   .project-image-summary-thumb { width: 58px; height: 46px; flex-basis: 58px; }
+  .track-selection-toolbar { flex-wrap: wrap; }
+  .track-selection-count { order: 3; width: 100%; }
+  .track-selection-toolbar .tiny-button { margin-left: auto; }
 }
