@@ -10,8 +10,24 @@ android {
         applicationId 'no.lokilyd.crm'
         minSdk 26
         targetSdk 36
-        versionCode 1
-        versionName '1.0'
+        versionCode 2
+        versionName '1.1'
+    }
+
+    def releaseStore = System.getenv('LOKI_ANDROID_KEYSTORE')
+    def releaseStorePassword = System.getenv('LOKI_ANDROID_STORE_PASSWORD')
+    def releaseKeyAlias = System.getenv('LOKI_ANDROID_KEY_ALIAS') ?: 'lokicrm-upload'
+    def releaseKeyPassword = System.getenv('LOKI_ANDROID_KEY_PASSWORD') ?: releaseStorePassword
+
+    signingConfigs {
+        if (releaseStore && releaseStorePassword && file(releaseStore).isFile()) {
+            release {
+                storeFile file(releaseStore)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
+        }
     }
 
     compileOptions {
@@ -22,10 +38,12 @@ android {
     buildTypes {
         release {
             minifyEnabled false
+            if (signingConfigs.findByName('release')) signingConfig signingConfigs.release
         }
     }
 }
 
 dependencies {
+    implementation 'androidx.core:core:1.17.0'
     implementation 'com.squareup.okhttp3:okhttp:5.3.0'
 }

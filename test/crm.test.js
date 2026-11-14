@@ -1333,6 +1333,7 @@ test("native CRM shells defer to the single web navigation on phones", () => {
   const iosApp = fs.readFileSync(path.join(__dirname, "..", "ios", "LokiCRM", "App", "LokiCRMApp.swift"), "utf8");
   const iosModel = fs.readFileSync(path.join(__dirname, "..", "ios", "LokiCRM", "App", "AppModel.swift"), "utf8");
   const android = fs.readFileSync(path.join(__dirname, "..", "android", "LokiCRM", "app", "src", "main", "java", "no", "lokilyd", "crm", "MainActivity.java"), "utf8");
+  const androidManifest = fs.readFileSync(path.join(__dirname, "..", "android", "LokiCRM", "app", "src", "main", "AndroidManifest.xml"), "utf8");
   assert.match(html, /data-native-destination="tasks"/);
   assert.match(html, /data-native-destination="settings"/);
   assert.match(html, /const nativeCRM=/);
@@ -1343,6 +1344,10 @@ test("native CRM shells defer to the single web navigation on phones", () => {
   assert.match(android, /"lokicrm"\.equals\(uri\.getScheme\(\)\)/);
   assert.match(android, /masthead\.setVisibility\(webNavigationVisible \? View\.VISIBLE : View\.GONE\)/);
   assert.match(android, /nav\.setVisibility\(webNavigationVisible \? View\.VISIBLE : View\.GONE\)/);
+  assert.match(android, /MediaStore\.ACTION_IMAGE_CAPTURE/);
+  assert.match(android, /CookieManager\.getInstance\(\)\.flush\(\)/);
+  assert.match(androidManifest, /androidx\.core\.content\.FileProvider/);
+  assert.match(androidManifest, /android:exported="false" \/>/);
 });
 
 test("internal savings goals calculate bounded progress", () => {

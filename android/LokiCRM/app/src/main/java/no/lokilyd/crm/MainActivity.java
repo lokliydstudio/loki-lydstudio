@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DownloadManager;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,6 +14,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -39,6 +41,10 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.content.FileProvider;
+
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -60,6 +66,8 @@ public final class MainActivity extends Activity {
     private LinearLayout masthead;
     private LinearLayout nav;
     private ValueCallback<Uri[]> fileCallback;
+    private Uri pendingCameraUri;
+    private File pendingCameraFile;
     private String currentTab = TAB_CRM;
     private String currentEmail = "";
     private String status = "";
@@ -169,9 +177,19 @@ public final class MainActivity extends Activity {
                 fileCallback = callback;
                 try {
                     Intent picker = params.createIntent();
-                    startActivityForResult(picker, FILE_PICKER);
+                    Intent camera = createCameraIntent(params);
+                    if (camera != null && params.isCaptureEnabled()) {
+                        startActivityForResult(camera, FILE_PICKER);
+                    } else if (camera != null) {
+                        Intent chooser = Intent.createChooser(picker, "Velg fil eller ta bilde");
+                        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{camera});
+                        startActivityForResult(chooser, FILE_PICKER);
+                    } else {
+                        startActivityForResult(picker, FILE_PICKER);
+                    }
                     return true;
                 } catch (Exception error) {
+                    clearPendingCameraFile(false);
                     fileCallback = null;
                     Toast.makeText(MainActivity.this, "Filvelgeren kunne ikke åpnes.", Toast.LENGTH_SHORT).show();
                     return false;
@@ -200,13 +218,64 @@ public final class MainActivity extends Activity {
         });
     }
 
+    private Intent createCameraIntent(WebChromeClient.FileChooserParams params) {
+        if (!acceptsImages(params)) return null;
+        Intent camera = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (camera.resolveActivity(getPackageManager()) == null) return null;
+        File pictures = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        if (pictures == null) return null;
+        try {
+            pendingCameraFile = File.createTempFile("loki-crm-upload-", ".jpg", pictures);
+            pendingCameraUri = FileProvider.getUriForFile(this, getPackageName() + ".files", pendingCameraFile);
+            camera.putExtra(MediaStore.EXTRA_OUTPUT, pendingCameraUri);
+            camera.setClipData(ClipData.newRawUri("Loki CRM upload", pendingCameraUri));
+            camera.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+            return camera;
+        } catch (IOException | IllegalArgumentException error) {
+            clearPendingCameraFile(false);
+            return null;
+        }
+    }
+
+    private boolean acceptsImages(WebChromeClient.FileChooserParams params) {
+        String[] types = params.getAcceptTypes();
+        if (types == null) return false;
+        for (String type : types) {
+            if (type != null && type.toLowerCase().startsWith("image/")) return true;
+        }
+        return false;
+    }
+
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
         if (request == FILE_PICKER && fileCallback != null) {
-            fileCallback.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result, data));
+            Uri[] selected = null;
+            boolean usedCamera = false;
+            if (result == RESULT_OK) {
+                selected = WebChromeClient.FileChooserParams.parseResult(result, data);
+                if ((selected == null || selected.length == 0) && pendingCameraUri != null) {
+                    selected = new Uri[]{pendingCameraUri};
+                    usedCamera = true;
+                } else if (selected != null && pendingCameraUri != null) {
+                    for (Uri uri : selected) {
+                        if (pendingCameraUri.equals(uri)) usedCamera = true;
+                    }
+                }
+            }
+            fileCallback.onReceiveValue(selected);
             fileCallback = null;
+            clearPendingCameraFile(usedCamera);
         }
+    }
+
+    private void clearPendingCameraFile(boolean keepFile) {
+        if (!keepFile && pendingCameraFile != null && pendingCameraFile.exists()) {
+            // Only delete the temporary file created by this activity.
+            pendingCameraFile.delete();
+        }
+        pendingCameraUri = null;
+        pendingCameraFile = null;
     }
 
     private void showTab(String tab) {
@@ -476,6 +545,12 @@ public final class MainActivity extends Activity {
         if (TAB_TASKS.equals(intent.getStringExtra(EXTRA_TAB))) showTab(TAB_TASKS);
     }
 
+    @Override
+    protected void onPause() {
+        CookieManager.getInstance().flush();
+        super.onPause();
+    }
+
     @SuppressLint("GestureBackNavigation")
     @Override
     public void onBackPressed() {
@@ -492,6 +567,7 @@ public final class MainActivity extends Activity {
     protected void onDestroy() {
         if (Build.VERSION.SDK_INT >= 33 && backCallback != null) getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(backCallback);
         if (fileCallback != null) fileCallback.onReceiveValue(null);
+        clearPendingCameraFile(false);
         CookieManager.getInstance().flush();
         io.shutdown();
         super.onDestroy();
