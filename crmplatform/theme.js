@@ -4,6 +4,7 @@
   const button = document.getElementById("theme-toggle");
   const icon = document.getElementById("theme-icon");
   const label = document.getElementById("theme-label");
+  const themeColor = document.querySelector('meta[name="theme-color"]');
 
   function updateButton(theme) {
     const dark = theme === "dark";
@@ -18,6 +19,7 @@
     const next = theme === "dark" ? "dark" : "light";
     root.dataset.theme = next;
     root.style.colorScheme = next;
+    themeColor?.setAttribute("content", next === "dark" ? "#081322" : "#f4f7fb");
     if (persist) {
       try { localStorage.setItem(STORAGE_KEY, next); } catch {}
     }

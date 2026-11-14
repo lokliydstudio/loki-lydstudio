@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import UserNotifications
 
 @main
@@ -13,12 +14,15 @@ struct LokiCRMApp: App {
                 CRMWebView(webView: model.webView)
                     .tabItem { Label("CRM", systemImage: "square.grid.2x2") }
                     .tag(0)
+                    .toolbar(UIDevice.current.userInterfaceIdiom == .phone ? .hidden : .visible, for: .tabBar)
                 TasksView(model: model, openCRM: { selectedTab = 0 })
                     .tabItem { Label("Oppgaver", systemImage: "checklist") }
                     .tag(1)
+                    .toolbar(.visible, for: .tabBar)
                 SettingsView(model: model)
                     .tabItem { Label("Innstillinger", systemImage: "gearshape") }
                     .tag(2)
+                    .toolbar(.visible, for: .tabBar)
             }
             .tint(Color(red: 0.38, green: 0.25, blue: 0.78))
             .onOpenURL { url in
@@ -43,6 +47,15 @@ struct LokiCRMApp: App {
             .onReceive(NotificationCenter.default.publisher(for: .lokiPushArrived)) { _ in
                 Task { await model.refreshTasks() }
             }
+            .onReceive(NotificationCenter.default.publisher(for: .lokiSelectTab)) { notification in
+                switch notification.object as? String {
+                case "tasks":
+                    selectedTab = 1
+                    Task { await model.refreshTasks() }
+                case "settings": selectedTab = 2
+                default: selectedTab = 0
+                }
+            }
             .task {
                 await model.refreshTasks()
                 await model.refreshPushStatus()
@@ -58,6 +71,7 @@ extension Notification.Name {
     static let lokiDeviceToken = Notification.Name("loki-device-token")
     static let lokiPushTapped = Notification.Name("loki-push-tapped")
     static let lokiPushArrived = Notification.Name("loki-push-arrived")
+    static let lokiSelectTab = Notification.Name("loki-select-tab")
 }
 
 final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {

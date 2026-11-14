@@ -57,6 +57,7 @@ public final class MainActivity extends Activity {
     private final List<TaskItem> tasks = new ArrayList<>();
     private FrameLayout content;
     private WebView webView;
+    private LinearLayout masthead;
     private LinearLayout nav;
     private ValueCallback<Uri[]> fileCallback;
     private String currentTab = TAB_CRM;
@@ -100,7 +101,7 @@ public final class MainActivity extends Activity {
         });
         setContentView(root);
 
-        LinearLayout masthead = new LinearLayout(this);
+        masthead = new LinearLayout(this);
         masthead.setGravity(Gravity.CENTER_VERTICAL);
         masthead.setPadding(dp(16), dp(8), dp(16), dp(8));
         masthead.setBackgroundColor(0xFF20211F);
@@ -135,12 +136,19 @@ public final class MainActivity extends Activity {
         settings.setAllowContentAccess(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         settings.setMediaPlaybackRequiresUserGesture(true);
+        settings.setUserAgentString(settings.getUserAgentString() + " LokiCRMNative/Android");
         if (Build.VERSION.SDK_INT >= 27) settings.setSafeBrowsingEnabled(true);
         webView.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 String host = uri.getHost();
+                if ("lokicrm".equals(uri.getScheme())) {
+                    if (TAB_TASKS.equals(host)) showTab(TAB_TASKS);
+                    else if (TAB_SETTINGS.equals(host)) showTab(TAB_SETTINGS);
+                    else showTab(TAB_CRM);
+                    return true;
+                }
                 if ("https".equals(uri.getScheme()) && ("www.lokilyd.no".equals(host) || "lokilyd.no".equals(host))) return false;
                 if ("https".equals(uri.getScheme()) || "mailto".equals(uri.getScheme()) || "tel".equals(uri.getScheme())) {
                     try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); }
@@ -203,6 +211,9 @@ public final class MainActivity extends Activity {
 
     private void showTab(String tab) {
         currentTab = tab;
+        boolean webNavigationVisible = !TAB_CRM.equals(tab);
+        if (masthead != null) masthead.setVisibility(webNavigationVisible ? View.VISIBLE : View.GONE);
+        if (nav != null) nav.setVisibility(webNavigationVisible ? View.VISIBLE : View.GONE);
         content.removeAllViews();
         if (TAB_CRM.equals(tab)) {
             if (webView != null) content.addView(webView);

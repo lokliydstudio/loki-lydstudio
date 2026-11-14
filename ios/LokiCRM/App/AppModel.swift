@@ -46,6 +46,7 @@ final class AppModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
         let configuration = WKWebViewConfiguration()
         configuration.websiteDataStore = .default()
         configuration.defaultWebpagePreferences.allowsContentJavaScript = true
+        configuration.applicationNameForUserAgent = "LokiCRMNative/iOS"
         webView = WKWebView(frame: .zero, configuration: configuration)
         super.init()
         Self.current = self
@@ -67,6 +68,15 @@ final class AppModel: NSObject, ObservableObject, WKNavigationDelegate, WKUIDele
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         if let url = navigationAction.request.url { webView.load(URLRequest(url: url)) }
         return nil
+    }
+
+    func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        guard let url = navigationAction.request.url, url.scheme == "lokicrm" else {
+            decisionHandler(.allow)
+            return
+        }
+        NotificationCenter.default.post(name: .lokiSelectTab, object: url.host)
+        decisionHandler(.cancel)
     }
 
     func openCRM(path: String) {

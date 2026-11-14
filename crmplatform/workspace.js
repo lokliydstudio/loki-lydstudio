@@ -8,6 +8,8 @@
   const expandedNotes = new Set();
   let taskAssigneeFilter = "Alle";
   let taskStatusFilter = "open";
+  let workspaceLoaded = false;
+  let workspaceLoadError = false;
   const taskAssigneeFilters = ["Alle", "Leon", "Charles", "Begge"];
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
@@ -35,7 +37,11 @@
 
   function notifyWorkspaceChange() {
     window.dispatchEvent(new CustomEvent("loki-workspace-updated", {
-      detail: { tasks: tasks.map((task) => ({ ...task })) },
+      detail: {
+        tasks: tasks.map((task) => ({ ...task })),
+        loaded: workspaceLoaded,
+        error: workspaceLoadError,
+      },
     }));
   }
 
@@ -290,10 +296,17 @@
       tasks = data.tasks || [];
       notes = data.notes || [];
       goals = data.goals || [];
+      workspaceLoaded = true;
+      workspaceLoadError = false;
       renderTasks();
       renderNotes();
       renderGoals();
-    } catch (error) { toast(error.message); }
+    } catch (error) {
+      workspaceLoaded = true;
+      workspaceLoadError = true;
+      notifyWorkspaceChange();
+      toast(error.message);
+    }
   }
 
   function bindForms() {

@@ -2,7 +2,7 @@
 <html lang="nb">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Intern arbeidsflate for Loki Lydstudio">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#171714">
@@ -44,6 +44,7 @@
     <link rel="stylesheet" href="/crmplatform/receipts.css?v=20261013-receipts">
     <link rel="stylesheet" href="/crmplatform/mobile.css?v=20260922-mobile-auth-code">
     <link rel="stylesheet" href="/crmplatform/professional-ui.css?v=20261110-corporate-redesign">
+    <link rel="stylesheet" href="/crmplatform/mobile-dashboard.css?v=20261114-mobile-home">
 </head>
 <body>
   <div class="auth-gate" id="auth-gate"><section class="auth-card" role="dialog" aria-labelledby="auth-title"><div class="brand"><span class="brand-logo"><img src="/assets/brand/loki-symbol.png" alt="Loki Lydstudio"></span><span class="brand-copy"><strong>LOKI</strong><span>STUDIO</span></span></div><span class="kicker">SIKKER CRM-INNLOGGING</span><h2 id="auth-title">Logg inn sikkert</h2><p>Få en sekssifret engangskode og en innloggingslenke til din godkjente @lokilyd.no-adresse. Begge er gyldige i 15 minutter.</p><form id="auth-form"><label for="auth-email">E-postadresse</label><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="navn@lokilyd.no" required><button class="primary" type="submit">Send kode og lenke</button></form><form class="auth-code-form" id="auth-code-form" hidden><label for="auth-code">Engangskode</label><input id="auth-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" pattern="[0-9]{3} ?[0-9]{3}" placeholder="000 000" required><button class="primary" type="submit">Logg inn med kode</button><button class="auth-back" id="auth-back" type="button">Bytt e-postadresse</button></form><div class="auth-feedback" id="auth-feedback"></div></section></div>
@@ -66,9 +67,29 @@
     </aside>
 
     <section class="workspace">
-      <header class="topbar"><div><span class="eyebrow">LOKI LYDSTUDIO · FRYDENBØLIEN 17</span><h1 id="page-title">Oversikt</h1></div><div class="top-actions"><button class="push-toggle" id="push-toggle" type="button" aria-label="Aktiver pushvarsler" aria-pressed="false" title="Aktiver pushvarsler på denne enheten"><span aria-hidden="true">🔔</span><b id="push-label">Varsler</b></button><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Bytt til dark mode" aria-pressed="false"><span id="theme-icon" aria-hidden="true">☾</span><b id="theme-label">Dark mode</b></button><span class="version">HTML-VERSJON</span><button class="primary" id="new-lead">+ Nytt lead</button></div></header>
+      <header class="topbar"><div><span class="mobile-header-date" id="mobile-header-date">Henter dato …</span><span class="eyebrow">LOKI LYDSTUDIO · FRYDENBØLIEN 17</span><h1 id="page-title">Oversikt</h1></div><div class="top-actions"><button class="push-toggle" id="push-toggle" type="button" aria-label="Aktiver pushvarsler" aria-pressed="false" title="Aktiver pushvarsler på denne enheten"><span class="mobile-bell-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></span><b id="push-label">Varsler</b></button><button class="theme-toggle" id="theme-toggle" type="button" aria-label="Bytt til dark mode" aria-pressed="false"><span id="theme-icon" aria-hidden="true">☾</span><b id="theme-label">Dark mode</b></button><span class="version">HTML-VERSJON</span><button class="primary" id="new-lead">+ Nytt lead</button></div></header>
       <div class="content">
         <section class="view active" id="overview">
+          <section class="mobile-overview" aria-labelledby="mobile-overview-greeting">
+            <header class="mobile-overview-welcome"><h2 id="mobile-overview-greeting">Hei 👋</h2><p>Her er det viktigste å følge opp i dag.</p></header>
+            <section class="mobile-priority-card" id="mobile-priority-card" aria-labelledby="mobile-priority-title">
+              <span class="mobile-priority-label" id="mobile-priority-label"><i></i> PRIORITET 1</span>
+              <div class="mobile-priority-main"><strong id="mobile-overdue-count" aria-live="polite">—</strong><div><h3 id="mobile-priority-title">Forfalte kundeoppfølginger</h3><p id="mobile-priority-copy">Henter oppfølginger …</p></div></div>
+              <button class="mobile-priority-action" id="mobile-start-followup" type="button"><span>Start oppfølging</span><span aria-hidden="true">→</span></button>
+            </section>
+            <div class="mobile-section-heading"><h3>Arbeidskø</h3><button id="mobile-queue-all" type="button">Se alle <span aria-hidden="true">→</span></button></div>
+            <section class="mobile-work-queue" aria-label="Arbeidskø">
+              <button class="mobile-queue-row" id="mobile-open-forms" type="button"><strong class="mobile-queue-count urgent" id="mobile-forms-count">—</strong><span><b>Forms-henvendelser</b><small id="mobile-forms-copy">Henter henvendelser …</small></span><i aria-hidden="true">›</i></button>
+              <button class="mobile-queue-row" id="mobile-open-tasks" type="button"><strong class="mobile-queue-count" id="mobile-tasks-count">—</strong><span><b>Mine åpne oppgaver</b><small id="mobile-tasks-copy">Henter gjøremål …</small></span><i aria-hidden="true">›</i></button>
+            </section>
+            <div class="mobile-section-heading quick-heading"><h3>Hurtighandlinger</h3></div>
+            <section class="mobile-quick-actions" aria-label="Hurtighandlinger">
+              <button id="mobile-new-lead" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Nytt lead</span></button>
+              <button id="mobile-search" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><span>Søk</span></button>
+              <button id="mobile-contacts" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>Kontakter</span></button>
+            </section>
+            <p class="mobile-dashboard-status" id="mobile-dashboard-status" role="status" hidden></p>
+          </section>
           <section class="overview-welcome"><div><span class="kicker" id="overview-date">DAGENS OVERSIKT</span><h2 id="overview-greeting">Hei.</h2><p id="overview-summary">Henter det som trenger oppmerksomhet i dag …</p></div><button class="primary overview-cta" data-view-target="workspace-tools">Åpne gjøremål <span>→</span></button></section>
           <div class="metrics overview-metrics"><article class="metric"><span>MINE ÅPNE OPPGAVER</span><strong id="overview-open-tasks">0</strong><small>Leon/Charles og Begge</small></article><article class="metric"><span>FORFALT / I DAG</span><strong id="overview-due-tasks">0</strong><small id="overview-task-summary">Ingen oppgaver haster</small></article><article class="metric"><span>FORMSPREE OVER 24 T</span><strong id="overview-stale-formspree">0</strong><small>Eldste henvendelser først</small></article><article class="metric"><span>KUNDEOPPFØLGING FORFALT</span><strong id="overdue-followups">0</strong><small id="followup-summary">Ingen forsinkede</small></article></div>
           <div class="overview-grid"><section class="panel overview-panel"><div class="panel-head"><div><span class="kicker">GJØRELISTE</span><h2>Dette bør gjøres i dag</h2></div><button class="link-button" data-view-target="workspace-tools">Hele listen →</button></div><div class="overview-action-list" id="overview-tasks"></div></section><section class="panel overview-panel"><div class="panel-head"><div><span class="kicker">FORMSPREE</span><h2>Henvendelser som venter</h2></div><button class="link-button" data-view-target="inbox">Åpne innboks →</button></div><div class="overview-action-list" id="overview-formspree"></div></section></div>
@@ -90,7 +111,7 @@
             <section class="panel customer-directory"><div class="customer-directory-head"><div><span class="kicker">KONTAKTER</span><h2>Kontaktregister</h2><p>Alle kontaktprofiler dere har opprettet eller lagret. Originale e-poster og e-postemner vises ikke her.</p></div><div class="customer-directory-tools"><span class="state green" id="customer-count">0 kontakter</span><input class="search" id="customer-search" type="search" placeholder="Søk i kontakter"><input id="fiken-contact-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden><button class="secondary fiken-import-button" id="import-fiken-contacts" type="button">⇧ Importer kontakter (XLSX)</button><span class="fiken-import-status" id="fiken-import-status" role="status" aria-live="polite"></span></div></div><div class="customer-directory-grid" id="customer-directory-list" aria-live="polite"></div></section>
           </section>
           <section class="crm-subsection" id="lead-section" hidden>
-            <div class="lead-section-divider"><div><span class="kicker">LEADS OG HENVENDELSER</span><h2>Fra henvendelse til booking</h2><p>Sorter henvendelser mellom oppdrag og utleie, og flytt dem videre gjennom salgsfasene.</p></div><div class="lead-tools"><label class="lead-type-filter">Type<select id="lead-enquiry-filter"><option value="all">Alle typer</option><option value="Oppdrag">Oppdrag</option><option value="Utleie">Utleie</option><option value="unclassified">Ikke klassifisert</option></select></label><input class="search" id="lead-search" type="search" placeholder="Søk i leads og henvendelser"></div></div><div class="pipeline" id="pipeline" role="tablist" aria-label="Salgsfaser"></div><section class="panel table-panel"><div class="stage-view-bar"><span class="kicker">VALGT SALGSFASE</span><strong id="lead-stage-title">Nytt lead</strong></div><div class="crm-row crm-head"><span>Kontakt</span><span>Prosjekt / type</span><span>Status</span><span>Verdi</span><span>Neste handling</span><span></span></div><div id="lead-table" aria-live="polite"></div></section><p class="notice">Velg «Oppdrag» eller «Utleie» i kontaktprofilen. Bruk «Ikke relevant» for promomail og andre henvendelser som ikke skal følges opp.</p>
+            <div class="lead-section-divider"><div><span class="kicker">LEADS OG HENVENDELSER</span><h2>Fra henvendelse til booking</h2><p>Sorter henvendelser mellom oppdrag og utleie, og flytt dem videre gjennom salgsfasene.</p></div><div class="lead-tools"><label class="lead-type-filter">Type<select id="lead-enquiry-filter"><option value="all">Alle typer</option><option value="Oppdrag">Oppdrag</option><option value="Utleie">Utleie</option><option value="unclassified">Ikke klassifisert</option></select></label><input class="search" id="lead-search" type="search" placeholder="Søk i leads og henvendelser"></div></div><div class="lead-attention-filter" id="lead-attention-filter" hidden><span id="lead-attention-copy"></span><button id="clear-lead-attention" type="button">Fjern filter</button></div><div class="pipeline" id="pipeline" role="tablist" aria-label="Salgsfaser"></div><section class="panel table-panel"><div class="stage-view-bar"><span class="kicker">VALGT SALGSFASE</span><strong id="lead-stage-title">Nytt lead</strong></div><div class="crm-row crm-head"><span>Kontakt</span><span>Prosjekt / type</span><span>Status</span><span>Verdi</span><span>Neste handling</span><span></span></div><div id="lead-table" aria-live="polite"></div></section><p class="notice">Velg «Oppdrag» eller «Utleie» i kontaktprofilen. Bruk «Ikke relevant» for promomail og andre henvendelser som ikke skal følges opp.</p>
           </section>
           <section class="crm-subsection" id="prospect-section" hidden>
           <div class="section-intro prospect-intro"><div><span class="kicker">SALGSRADAR · BERGEN</span><h2>Cold Call Pool</h2><p>Finn og vurder fremadstormende artister og band ut fra åpne, profesjonelle kilder. Ingen melding sendes uten manuell kontroll.</p></div><div class="button-row"><span class="prospect-sync-state" id="prospect-sync-status">Klargjør pool …</span><button class="secondary" id="new-prospect">+ Legg til</button><button class="primary" id="prospect-discover">✦ Finn nye kandidater</button></div></div>
@@ -151,6 +172,36 @@
       </div>
     </section>
   </main>
+
+  <nav class="mobile-primary-nav" aria-label="Mobil hovednavigasjon">
+    <button class="active" type="button" data-mobile-nav="overview" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v11H3V10Z"/><path d="M9 21v-7h6v7"/></svg><span>Oversikt</span></button>
+    <button type="button" data-mobile-nav="inbox"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M3 13h5l2 3h4l2-3h5"/></svg><span>Innboks</span><em id="mobile-inbox-count" hidden>0</em></button>
+    <button type="button" data-mobile-nav="leads"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="4"/><path d="M2 21v-2a8 8 0 0 1 13-6M19 15v6m-3-3h6"/></svg><span>Leads</span></button>
+    <button type="button" data-mobile-nav="tasks"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 12 5 5L20 6"/></svg><span>Oppgaver</span></button>
+    <button type="button" data-mobile-nav="more" aria-expanded="false" aria-controls="mobile-more-panel"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="19" cy="12" r="1.2" fill="currentColor"/></svg><span>Mer</span></button>
+  </nav>
+
+  <div class="mobile-more-backdrop" id="mobile-more-backdrop" hidden>
+    <section class="mobile-more-panel" id="mobile-more-panel" role="dialog" aria-modal="true" aria-labelledby="mobile-more-title">
+      <header><div><span>LOKI CRM</span><h2 id="mobile-more-title">Mer</h2></div><button class="mobile-more-close" id="mobile-more-close" type="button" aria-label="Lukk mer-menyen">×</button></header>
+      <div class="mobile-more-grid">
+        <button type="button" data-mobile-more="contacts"><span aria-hidden="true">◎</span><b>Kontakter</b><small>Kontaktregister</small></button>
+        <button type="button" data-mobile-more="prospects"><span aria-hidden="true">◇</span><b>Cold Call Pool</b><small>Nye kandidater</small></button>
+        <button type="button" data-view-target="workspace-tools"><span aria-hidden="true">✓</span><b>Intern arbeidsflate</b><small>Notater og kalender</small></button>
+        <button type="button" data-view-target="operations"><span aria-hidden="true">◷</span><b>Booking og tilbud</b><small>Drift og salg</small></button>
+        <button type="button" data-view-target="projects"><span aria-hidden="true">□</span><b>Prosjekter</b><small>Studioarbeid</small></button>
+        <button type="button" data-view-target="documents"><span aria-hidden="true">▱</span><b>Dokumenter</b><small>Jottacloud</small></button>
+        <button type="button" data-view-target="economy"><span aria-hidden="true">▧</span><b>Bilag</b><small>Kvitteringer</small></button>
+      </div>
+      <div class="mobile-more-settings">
+        <button id="mobile-theme-toggle" type="button"><span aria-hidden="true">◐</span><span><b>Bytt lyst/mørkt tema</b><small>Bruk samme temavalg som på desktop</small></span></button>
+        <button id="mobile-push-settings" type="button"><span aria-hidden="true">♢</span><span><b>Varsler</b><small>Administrer pushvarsler på denne enheten</small></span></button>
+        <button class="mobile-native-only" data-native-destination="tasks" type="button"><span aria-hidden="true">✓</span><span><b>App-oppgaver</b><small>Åpne oppgavelisten i mobilappen</small></span></button>
+        <button class="mobile-native-only" data-native-destination="settings" type="button"><span aria-hidden="true">⚙</span><span><b>Appinnstillinger</b><small>Varsler og appstatus</small></span></button>
+        <button id="mobile-logout" type="button"><span aria-hidden="true">↪</span><span><b>Logg ut</b><small id="mobile-profile-email">Loki CRM</small></span></button>
+      </div>
+    </section>
+  </div>
 
   <div class="modal-backdrop" id="lead-modal">
     <section class="modal lead-profile-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -231,10 +282,14 @@
       let selectedMessage = 1;
       let mailFilter = "priority";
       let leadStageFilter = "Nytt lead";
+      let leadAttentionFilter = "all";
       let leadEnquiryFilter = "all";
       let crmSection = "customers";
       let authenticatedUser = null;
       let workspaceTasks = [];
+      let crmDataState = "loading";
+      let workspaceReady = false;
+      let workspaceError = false;
       try { const states = JSON.parse(localStorage.getItem("loki_message_states")) || {}; messages.forEach(m => { if(states[m.id]) m.state=states[m.id]; }); } catch {}
       const money = value => new Intl.NumberFormat("nb-NO",{style:"currency",currency:"NOK",maximumFractionDigits:0}).format(value);
       const esc = value => String(value).replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[char]);
@@ -250,7 +305,28 @@
       const leadSourceBadge=lead=>{const source=lead.source||"Manuelt";if(leadPriority(lead)>=100)return '<span class="lead-source-badge formspree">Formspree · Høy prioritet</span>';if(leadPriority(lead)>=50)return `<span class="lead-source-badge email">${esc(source)} · Prioritert</span>`;return `<span class="lead-source-badge">${esc(source)}</span>`};
       const localDateKey=value=>{const date=value?new Date(value):new Date();if(Number.isNaN(date.getTime()))return "";return new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Oslo",year:"numeric",month:"2-digit",day:"2-digit"}).format(date)};
       const ownerName=()=>String(authenticatedUser?.email||"").toLowerCase().startsWith("charles")?"Charles":"Leon";
-      async function loadCrmData(){try{const response=await fetch("/api/crm/leads",{credentials:"same-origin"});if(response.ok){const data=await response.json();leads=data.leads||[];irrelevantLeads=data.irrelevantLeads||[];saveLeads()}}catch{}renderAll()}
+      const compactCount=value=>Number(value)>999?"999+":String(Number(value)||0);
+      const isStaleFormspree=(lead,staleLimit=Date.now()-24*60*60*1000)=>String(lead?.category||lead?.source||"").toLowerCase()==="formspree"&&lead.stage==="Nytt lead"&&lead.relevance!=="irrelevant"&&Number.isFinite(new Date(lead.receivedAt||"").getTime())&&new Date(lead.receivedAt).getTime()<=staleLimit;
+      const isOverdueLead=(lead,today=localDateKey())=>lead?.relevance!=="irrelevant"&&!archivedStages.has(lead?.stage)&&Boolean(lead?.followUpDate)&&String(lead.followUpDate)<today;
+      const matchesLeadAttention=lead=>leadAttentionFilter==="overdue"?isOverdueLead(lead):leadAttentionFilter==="stale-formspree"?isStaleFormspree(lead):true;
+      const attentionLabel=()=>leadAttentionFilter==="overdue"?"Forfalte oppfølginger":leadAttentionFilter==="stale-formspree"?"Forms over 24 timer":"";
+      async function loadCrmData(){
+        crmDataState="loading";
+        renderOverview();
+        try{
+          const response=await fetch("/api/crm/leads",{credentials:"same-origin"});
+          if(!response.ok)throw new Error(`CRM-data svarte med ${response.status}`);
+          const data=await response.json();
+          leads=data.leads||[];
+          irrelevantLeads=data.irrelevantLeads||[];
+          saveLeads();
+          crmDataState="ready";
+        }catch(error){
+          console.error("Kunne ikke hente CRM-data",error);
+          crmDataState="error";
+        }
+        renderAll();
+      }
       async function upsertLeads(candidates){try{const response=await fetch("/api/crm/leads",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({action:"upsertMany",leads:candidates})});if(!response.ok)throw new Error();const data=await response.json();leads=data.leads||leads;irrelevantLeads=data.irrelevantLeads||irrelevantLeads;saveLeads();return true}catch{return false}}
       const toast = text => { const node=document.getElementById("toast"); node.textContent="✓ "+text; node.classList.add("show"); clearTimeout(window.toastTimer); window.toastTimer=setTimeout(()=>node.classList.remove("show"),3200); };
       function switchView(id){
@@ -258,11 +334,67 @@
         const target=document.getElementById(id)||document.getElementById("overview");
         document.querySelectorAll(".view").forEach(view=>view.classList.toggle("active",view===target));
         document.querySelectorAll(".nav [data-view-target]").forEach(button=>button.classList.toggle("active",button.dataset.viewTarget===target.id));
+        const mobileTarget={overview:"overview",inbox:"inbox",leads:"leads","workspace-tools":"tasks"}[target.id]||"more";
+        document.querySelectorAll("[data-mobile-nav]").forEach(button=>{
+          const active=button.dataset.mobileNav===mobileTarget;
+          button.classList.toggle("active",active);
+          if(active)button.setAttribute("aria-current","page");else button.removeAttribute("aria-current");
+        });
         const titles={overview:authenticatedUser?`Hei, ${ownerName()}`:"Oversikt",inbox:"Innboks",leads:"Kontakter og leads","workspace-tools":"Intern arbeidsflate",operations:"Booking og tilbud",projects:"Prosjekter",documents:"Dokumenter",economy:"Bilag"};
         document.getElementById("page-title").textContent=titles[target.id];
         history.replaceState(null,"","#"+(target.id==="leads"&&crmSection==="prospects"?"prospects":target.id));
         renderCrmSection();
+        closeMobileMore();
         window.scrollTo({top:0,behavior:"smooth"});
+      }
+      function setLeadAttentionFilter(filter){
+        leadAttentionFilter=filter;
+        crmSection="pipeline";
+        switchView("leads");
+        renderLeads(document.getElementById("lead-search").value);
+      }
+      function openOverdueFollowups(){
+        const hasOverdue=leads.some(lead=>isOverdueLead(lead));
+        if(hasOverdue)setLeadAttentionFilter("overdue");
+        else{
+          leadAttentionFilter="all";
+          leadStageFilter="Nytt lead";
+          crmSection="pipeline";
+          switchView("leads");
+          renderLeads(document.getElementById("lead-search").value);
+        }
+      }
+      function openStaleForms(){setLeadAttentionFilter("stale-formspree")}
+      function openMyTasks(){
+        switchView("workspace-tools");
+        requestAnimationFrame(()=>document.getElementById("task-list")?.scrollIntoView({block:"start",behavior:"smooth"}));
+      }
+      function openCustomerSearch(focusSearch=false){
+        leadAttentionFilter="all";
+        crmSection="customers";
+        switchView("leads");
+        renderCustomerDirectory(document.getElementById("customer-search").value);
+        requestAnimationFrame(()=>{
+          const search=document.getElementById("customer-search");
+          search?.scrollIntoView({block:"center",behavior:"smooth"});
+          if(focusSearch){search?.focus({preventScroll:true});search?.select()}
+        });
+      }
+      function openMobileMore(){
+        const backdrop=document.getElementById("mobile-more-backdrop");
+        const trigger=document.querySelector('[data-mobile-nav="more"]');
+        if(!backdrop||!trigger)return;
+        backdrop.hidden=false;
+        trigger.setAttribute("aria-expanded","true");
+        requestAnimationFrame(()=>document.getElementById("mobile-more-close")?.focus());
+      }
+      function closeMobileMore(restoreFocus=false){
+        const backdrop=document.getElementById("mobile-more-backdrop");
+        const trigger=document.querySelector('[data-mobile-nav="more"]');
+        const wasOpen=Boolean(backdrop&&!backdrop.hidden);
+        if(backdrop)backdrop.hidden=true;
+        trigger?.setAttribute("aria-expanded","false");
+        if(restoreFocus&&wasOpen)trigger?.focus();
       }
       function customerDisplayName(customer){const stored=String(customer.name||"").trim();if(stored&&!stored.includes("@"))return stored;if(customer.artistName)return customer.artistName;if(customer.company)return customer.company;const local=String(customer.email||stored).split("@")[0].replace(/[._-]+/g," ").replace(/\b\p{L}/gu,letter=>letter.toUpperCase()).trim();return local||"Kunde uten navn"}
       function renderCrmSection(){
@@ -300,9 +432,10 @@
         const dueTasks=ownerTasks.filter(task=>task.dueDate&&task.dueDate<=today);
         const overdueTasks=dueTasks.filter(task=>task.dueDate<today);
         const staleLimit=Date.now()-24*60*60*1000;
-        const staleFormspree=prioritizedLeads(leads.filter(lead=>lead.category==="formspree"&&lead.stage==="Nytt lead"&&new Date(lead.receivedAt||0).getTime()<=staleLimit))
+        const staleFormspree=prioritizedLeads(leads.filter(lead=>isStaleFormspree(lead,staleLimit)))
           .sort((left,right)=>new Date(left.receivedAt||0)-new Date(right.receivedAt||0));
-        const overdueLeads=prioritizedLeads(leads.filter(lead=>!archivedStages.has(lead.stage)&&lead.followUpDate&&lead.followUpDate<today));
+        const overdueLeads=leads.filter(lead=>isOverdueLead(lead,today))
+          .sort((left,right)=>String(left.followUpDate).localeCompare(String(right.followUpDate))||new Date(left.receivedAt||0)-new Date(right.receivedAt||0));
         const unread=messages.filter(message=>message.category!=="irrelevant"&&message.unread).length;
         const dateLabel=new Intl.DateTimeFormat("nb-NO",{timeZone:"Europe/Oslo",weekday:"long",day:"numeric",month:"long"}).format(new Date());
         document.getElementById("overview-date").textContent=dateLabel.charAt(0).toUpperCase()+dateLabel.slice(1);
@@ -314,12 +447,68 @@
         document.getElementById("overview-stale-formspree").textContent=staleFormspree.length;
         document.getElementById("overdue-followups").textContent=overdueLeads.length;
         document.getElementById("followup-summary").textContent=overdueLeads.length?"Krever handling i dag":"Ingen forsinkede";
+        document.getElementById("mobile-header-date").textContent=dateLabel.toLocaleUpperCase("nb-NO");
+        document.getElementById("mobile-overview-greeting").textContent=`Hei, ${name} 👋`;
+        const mobileCount=document.getElementById("mobile-overdue-count");
+        const mobilePriority=document.getElementById("mobile-priority-card");
+        const mobilePriorityLabel=document.getElementById("mobile-priority-label");
+        const mobilePriorityTitle=document.getElementById("mobile-priority-title");
+        const mobilePriorityCopy=document.getElementById("mobile-priority-copy");
+        const mobilePriorityAction=document.getElementById("mobile-start-followup");
+        mobileCount.classList.toggle("large",crmDataState==="ready"&&overdueLeads.length>=100);
+        mobileCount.setAttribute("aria-label",crmDataState==="ready"?`${overdueLeads.length} forfalte kundeoppfølginger`:crmDataState==="loading"?"Henter forfalte kundeoppfølginger":"Forfalte kundeoppfølginger er ikke tilgjengelige");
+        if(crmDataState==="loading"){
+          mobileCount.textContent="—";
+          mobilePriority.classList.remove("complete");
+          mobilePriorityLabel.innerHTML="<i></i> HENTER PRIORITERINGER";
+          mobilePriorityTitle.textContent="Forfalte kundeoppfølginger";
+          mobilePriorityCopy.textContent="Henter oppdaterte CRM-data …";
+          mobilePriorityAction.disabled=true;
+          mobilePriorityAction.querySelector("span").textContent="Vent litt";
+        }else if(crmDataState==="error"){
+          mobileCount.textContent="—";
+          mobilePriority.classList.remove("complete");
+          mobilePriorityLabel.innerHTML="<i></i> DATA IKKE TILGJENGELIG";
+          mobilePriorityTitle.textContent="Kunne ikke hente oppfølginger";
+          mobilePriorityCopy.textContent="Prøv igjen eller åpne leadoversikten.";
+          mobilePriorityAction.disabled=false;
+          mobilePriorityAction.querySelector("span").textContent="Åpne leads";
+        }else if(overdueLeads.length){
+          mobileCount.textContent=overdueLeads.length.toLocaleString("nb-NO");
+          mobilePriority.classList.remove("complete");
+          mobilePriorityLabel.innerHTML="<i></i> PRIORITET 1";
+          mobilePriorityTitle.textContent="Forfalte kundeoppfølginger";
+          mobilePriorityCopy.textContent="Ta de eldste først";
+          mobilePriorityAction.disabled=false;
+          mobilePriorityAction.querySelector("span").textContent="Start oppfølging";
+        }else{
+          mobileCount.textContent="0";
+          mobilePriority.classList.add("complete");
+          mobilePriorityLabel.innerHTML="<i></i> ALT FULGT OPP";
+          mobilePriorityTitle.textContent="Ingen forfalte oppfølginger";
+          mobilePriorityCopy.textContent="Kundearbeidet er ajour";
+          mobilePriorityAction.disabled=false;
+          mobilePriorityAction.querySelector("span").textContent="Åpne leadoversikt";
+        }
+        const mobileFormsCount=document.getElementById("mobile-forms-count");
+        const mobileFormsCopy=document.getElementById("mobile-forms-copy");
+        mobileFormsCount.textContent=crmDataState==="ready"?compactCount(staleFormspree.length):"—";
+        mobileFormsCount.setAttribute("aria-label",crmDataState==="ready"?`${staleFormspree.length} Forms-henvendelser eldre enn 24 timer`:"Henter Forms-henvendelser");
+        mobileFormsCopy.textContent=crmDataState==="loading"?"Henter henvendelser …":crmDataState==="error"?"Kunne ikke hente CRM-data":staleFormspree.length===1?"1 henvendelse er eldre enn 24 timer":`${staleFormspree.length} henvendelser er eldre enn 24 timer`;
+        const mobileTasksCount=document.getElementById("mobile-tasks-count");
+        const mobileTasksCopy=document.getElementById("mobile-tasks-copy");
+        mobileTasksCount.textContent=workspaceReady&&!workspaceError?compactCount(ownerTasks.length):"—";
+        mobileTasksCount.setAttribute("aria-label",workspaceError?"Åpne oppgaver er ikke tilgjengelige":workspaceReady?`${ownerTasks.length} åpne oppgaver for ${name}`:"Henter åpne oppgaver");
+        mobileTasksCopy.textContent=workspaceError?"Kunne ikke hente gjøremål":!workspaceReady?"Henter gjøremål …":ownerTasks.length===1?"1 oppgave venter på deg":`${ownerTasks.length} oppgaver venter på deg`;
+        const mobileStatus=document.getElementById("mobile-dashboard-status");
+        mobileStatus.hidden=crmDataState!=="error";
+        mobileStatus.textContent=crmDataState==="error"?"CRM-data kunne ikke oppdateres. Last siden på nytt for å prøve igjen.":"";
         document.getElementById("overview-tasks").innerHTML=ownerTasks.length?ownerTasks.slice(0,6).map(task=>{const overdue=task.dueDate&&task.dueDate<today;const dueLabel=!task.dueDate?"Ingen frist":task.dueDate===today?"I dag":overdue?`Forfalt ${formatDate(task.dueDate)}`:formatDate(task.dueDate);return `<label class="overview-task-row ${overdue?"overdue":""}"><input type="checkbox" data-overview-task="${esc(task.id)}"><span><strong>${esc(task.title)}</strong><small>${esc(task.assignee)} · ${esc(task.priority)} prioritet</small></span><time>${esc(dueLabel)}</time></label>`}).join(""):'<div class="overview-empty">Ingen åpne oppgaver for deg akkurat nå.</div>';
         document.getElementById("overview-formspree").innerHTML=staleFormspree.length?staleFormspree.slice(0,6).map(lead=>{const age=Math.max(1,Math.floor((Date.now()-new Date(lead.receivedAt).getTime())/86400000));return `<button class="overview-mail-row" type="button" data-overview-lead="${esc(lead.id)}"><span class="avatar">${esc(initials(lead.name))}</span><span><strong>${esc(lead.name)}</strong><small>${esc(lead.project)}</small></span><time>${age} d</time></button>`}).join(""):'<div class="overview-empty">Ingen Formspree-henvendelser har ventet mer enn 24 timer.</div>';
         const followupQueue=overdueLeads.length?overdueLeads:prioritizedLeads(leads.filter(lead=>!archivedStages.has(lead.stage)));
         document.getElementById("overview-leads").innerHTML=followupQueue.length?followupQueue.slice(0,4).map(lead=>`<button class="overview-lead-row" type="button" data-overview-lead="${esc(lead.id)}"><span class="avatar">${esc(initials(lead.name))}</span><span class="lead-copy"><strong>${esc(lead.name)}</strong><small>${esc(lead.project)}</small></span>${enquiryTypeBadge(lead)}<span class="state neutral">${esc(lead.stage)}</span><span class="row-arrow">→</span></button>`).join(""):'<div class="overview-empty">Ingen aktive kundeoppfølginger.</div>';
         document.querySelectorAll("[data-overview-task]").forEach(input=>input.onchange=async()=>{input.disabled=true;await window.LokiWorkspace?.setTaskCompleted(input.dataset.overviewTask,input.checked)});
-        document.querySelectorAll("[data-overview-lead]").forEach(button=>button.onclick=()=>{const lead=leads.find(item=>item.id===button.dataset.overviewLead);crmSection="pipeline";leadStageFilter=stageTabFor(lead?.stage||"Nytt lead");switchView("leads");renderLeads(document.getElementById("lead-search").value);window.lokiLeadProfile?.openLead(button.dataset.overviewLead)});
+        document.querySelectorAll("[data-overview-lead]").forEach(button=>button.onclick=()=>{const lead=leads.find(item=>item.id===button.dataset.overviewLead);leadAttentionFilter="all";crmSection="pipeline";leadStageFilter=stageTabFor(lead?.stage||"Nytt lead");switchView("leads");renderLeads(document.getElementById("lead-search").value);window.lokiLeadProfile?.openLead(button.dataset.overviewLead)});
         bindNavigation();
       }
       function renderLeads(filter=""){
@@ -328,12 +517,17 @@
         document.getElementById("lead-category-count").textContent=allLeadRecords.length;
         const searchMatches=prioritizedLeads(allLeadRecords.filter(lead=>`${lead.name} ${lead.email} ${lead.project} ${lead.artistName||""} ${lead.phone||""} ${enquiryTypeOf(lead)}`.toLowerCase().includes(needle)));
         const typeMatches=searchMatches.filter(matchesEnquiryType);
-        const visible=typeMatches.filter(lead=>matchesStageTab(lead,leadStageFilter));
+        let visible=leadAttentionFilter==="all"?typeMatches.filter(lead=>matchesStageTab(lead,leadStageFilter)):typeMatches.filter(matchesLeadAttention);
+        if(leadAttentionFilter==="overdue")visible.sort((left,right)=>String(left.followUpDate).localeCompare(String(right.followUpDate))||new Date(left.receivedAt||0)-new Date(right.receivedAt||0));
+        if(leadAttentionFilter==="stale-formspree")visible.sort((left,right)=>new Date(left.receivedAt||0)-new Date(right.receivedAt||0));
         document.getElementById("lead-enquiry-filter").value=leadEnquiryFilter;
-        document.getElementById("pipeline").innerHTML=pipelineTabs.map(tab=>`<button type="button" class="pipeline-tab ${tab===leadStageFilter?'active':''} ${tab==='Ferdig / arkiv'?'archive':tab==='Ikke relevant'?'irrelevant-tab':''}" data-lead-stage="${esc(tab)}" role="tab" aria-selected="${tab===leadStageFilter}"><span>${tab==='Ferdig / arkiv'?'▱ ':tab==='Ikke relevant'?'⊘ ':''}${esc(tab)}</span><strong>${typeMatches.filter(lead=>matchesStageTab(lead,tab)).length}</strong></button>`).join("");
-        document.getElementById("lead-stage-title").textContent=leadStageFilter;
-        document.getElementById("lead-table").innerHTML=visible.length?visible.map(lead=>{const irrelevant=lead.relevance==="irrelevant";const rowActions=irrelevant?`<button class="lead-relevance-button restore" data-lead-relevance="relevant" data-lead-id="${esc(lead.id)}">Gjenopprett</button>`:`<span class="lead-row-actions"><button class="lead-relevance-button" data-lead-relevance="irrelevant" data-lead-id="${esc(lead.id)}">Ikke relevant</button>${archivedStages.has(lead.stage)?'<span class="archive-mark" aria-label="Arkivert">✓</span>':`<button class="round" data-advance="${esc(lead.id)}" title="${lead.stage==='Booket'?'Flytt til Ferdig / arkiv':'Flytt til neste salgsfase'}" aria-label="Flytt ${esc(lead.name)} ${lead.stage==='Booket'?'til Ferdig / arkiv':'til neste salgsfase'}">→</button>`}</span>`;return `<article class="crm-row ${!irrelevant&&leadPriority(lead)>=100?'priority-lead':''} ${irrelevant?'irrelevant-lead':''}" ${irrelevant?'':`data-open-lead="${esc(lead.id)}" role="button" tabindex="0" aria-label="Åpne leadprofil for ${esc(lead.name)}"`}><div class="customer"><span class="avatar">${esc(initials(lead.name))}</span><span><strong>${esc(lead.name)}</strong><small>${esc(lead.email)}</small></span></div><span>${esc(lead.artistName||lead.project)}<small class="lead-badge-row">${enquiryTypeBadge(lead)}${leadSourceBadge(lead)}</small></span><span><em class="state ${irrelevant||archivedStages.has(lead.stage)?'neutral':'amber'}">${irrelevant?'Ikke relevant':esc(lead.stage)}</em></span><strong>${money(Number(lead.value))}</strong><span>${irrelevant?'Filtrert fra kundeoppfølging':esc(lead.nextAction)}<small>${irrelevant?'Nye meldinger fra avsenderen filtreres':`${esc(lead.assignee||'Begge')}${lead.followUpDate?` · ${esc(formatDate(lead.followUpDate))}`:''}`}</small></span>${rowActions}</article>`}).join(""):`<div class="empty">Ingen henvendelser med dette filteret i «${esc(leadStageFilter)}».</div>`;
-        document.querySelectorAll("[data-lead-stage]").forEach(button=>button.onclick=()=>{leadStageFilter=button.dataset.leadStage;renderLeads(document.getElementById("lead-search").value)});
+        document.getElementById("pipeline").innerHTML=pipelineTabs.map(tab=>`<button type="button" class="pipeline-tab ${leadAttentionFilter==='all'&&tab===leadStageFilter?'active':''} ${tab==='Ferdig / arkiv'?'archive':tab==='Ikke relevant'?'irrelevant-tab':''}" data-lead-stage="${esc(tab)}" role="tab" aria-selected="${leadAttentionFilter==='all'&&tab===leadStageFilter}"><span>${tab==='Ferdig / arkiv'?'▱ ':tab==='Ikke relevant'?'⊘ ':''}${esc(tab)}</span><strong>${typeMatches.filter(lead=>matchesStageTab(lead,tab)).length}</strong></button>`).join("");
+        const attention=document.getElementById("lead-attention-filter");
+        attention.hidden=leadAttentionFilter==="all";
+        document.getElementById("lead-attention-copy").textContent=leadAttentionFilter==="all"?"":`${attentionLabel()} · ${visible.length} ${visible.length===1?'henvendelse':'henvendelser'} · eldste først`;
+        document.getElementById("lead-stage-title").textContent=attentionLabel()||leadStageFilter;
+        document.getElementById("lead-table").innerHTML=visible.length?visible.map(lead=>{const irrelevant=lead.relevance==="irrelevant";const rowActions=irrelevant?`<button class="lead-relevance-button restore" data-lead-relevance="relevant" data-lead-id="${esc(lead.id)}">Gjenopprett</button>`:`<span class="lead-row-actions"><button class="lead-relevance-button" data-lead-relevance="irrelevant" data-lead-id="${esc(lead.id)}">Ikke relevant</button>${archivedStages.has(lead.stage)?'<span class="archive-mark" aria-label="Arkivert">✓</span>':`<button class="round" data-advance="${esc(lead.id)}" title="${lead.stage==='Booket'?'Flytt til Ferdig / arkiv':'Flytt til neste salgsfase'}" aria-label="Flytt ${esc(lead.name)} ${lead.stage==='Booket'?'til Ferdig / arkiv':'til neste salgsfase'}">→</button>`}</span>`;return `<article class="crm-row ${!irrelevant&&leadPriority(lead)>=100?'priority-lead':''} ${irrelevant?'irrelevant-lead':''}" ${irrelevant?'':`data-open-lead="${esc(lead.id)}" role="button" tabindex="0" aria-label="Åpne leadprofil for ${esc(lead.name)}"`}><div class="customer"><span class="avatar">${esc(initials(lead.name))}</span><span><strong>${esc(lead.name)}</strong><small>${esc(lead.email)}</small></span></div><span>${esc(lead.artistName||lead.project)}<small class="lead-badge-row">${enquiryTypeBadge(lead)}${leadSourceBadge(lead)}</small></span><span><em class="state ${irrelevant||archivedStages.has(lead.stage)?'neutral':'amber'}">${irrelevant?'Ikke relevant':esc(lead.stage)}</em></span><strong>${money(Number(lead.value))}</strong><span>${irrelevant?'Filtrert fra kundeoppfølging':esc(lead.nextAction)}<small>${irrelevant?'Nye meldinger fra avsenderen filtreres':`${esc(lead.assignee||'Begge')}${lead.followUpDate?` · ${esc(formatDate(lead.followUpDate))}`:''}`}</small></span>${rowActions}</article>`}).join(""):`<div class="empty">Ingen henvendelser i «${esc(attentionLabel()||leadStageFilter)}» med valgt søk og type.</div>`;
+        document.querySelectorAll("[data-lead-stage]").forEach(button=>button.onclick=()=>{leadAttentionFilter="all";leadStageFilter=button.dataset.leadStage;renderLeads(document.getElementById("lead-search").value)});
         document.querySelectorAll("[data-advance]").forEach(button=>button.onclick=()=>advanceLead(button.dataset.advance));
         document.querySelectorAll("[data-lead-relevance]").forEach(button=>button.onclick=event=>{event.stopPropagation();setLeadRelevance(button.dataset.leadId,button.dataset.leadRelevance)});
         window.lokiLeadProfile?.bindRows();
@@ -343,7 +537,11 @@
       function renderMessages(){
         const relevant=messages.filter(m=>m.category!=="irrelevant");
         const visible=mailFilter==="irrelevant"?messages.filter(m=>m.category==="irrelevant"):mailFilter==="all"?messages:relevant;
-        document.getElementById("inbox-count").textContent=relevant.filter(m=>m.unread).length;
+        const unreadCount=relevant.filter(m=>m.unread).length;
+        document.getElementById("inbox-count").textContent=unreadCount;
+        const mobileInboxCount=document.getElementById("mobile-inbox-count");
+        mobileInboxCount.textContent=unreadCount>99?"99+":unreadCount;
+        mobileInboxCount.hidden=unreadCount===0;
         document.getElementById("priority-count").textContent=relevant.length;
         document.getElementById("all-mail-count").textContent=messages.length;
         document.getElementById("irrelevant-count").textContent=messages.length-relevant.length;
@@ -386,18 +584,63 @@
       async function selectMessage(id,{markRead=true}={}){ selectedMessage=id; const selected=messages.find(m=>m.id===id); if(markRead&&selected?.unread)markMessageRead(selected);else renderMessages(); if(!selected?.live||selected.bodyLoaded)return; try{const response=await fetch(`/api/crm/mailbox?uid=${encodeURIComponent(selected.uid)}`,{credentials:"same-origin"});const data=await response.json();if(!response.ok)throw new Error(data.error);const {unread:_serverUnread,...messageDetails}=data.message||{};Object.assign(selected,messageDetails,{bodyLoaded:true});if(selected.category!=="irrelevant")selected.draft=templateDraft(selected);renderMessages();if(selected.category==="irrelevant")return;try{const ai=await fetch("/api/crm/draft",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({senderName:selected.name,subject:selected.subject,message:selected.summary})});if(ai.ok){const result=await ai.json();selected.draft=result.draft;renderMessages()}}catch{}}catch(error){toast(error.message||"Kunne ikke åpne meldingen.")}}
       async function setMailCategory(category){const selected=messages.find(m=>m.id===selectedMessage);if(!selected?.live||!selected.key)return;const sender=selected.source==="Formspree"?"":selected.transportEmail||selected.email;try{const response=await fetch("/api/crm/mailbox",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({key:selected.key,category,sender})});const data=await response.json();if(!response.ok)throw new Error(data.error);selected.category=category==="irrelevant"?"irrelevant":selected.source==="Formspree"?"formspree":"customer";selected.isLead=selected.category!=="irrelevant";selected.state=selected.category==="irrelevant"?"Ikke relevant":selected.category==="formspree"?"Nytt Formspree-lead":"Trenger svar";if(category==="irrelevant"){const moved=leads.filter(lead=>lead.messageKey===selected.key||String(lead.email||"").toLowerCase()===String(selected.email||"").toLowerCase()).map(lead=>({...lead,relevance:"irrelevant"}));leads=leads.filter(lead=>!moved.some(item=>item.id===lead.id));irrelevantLeads=[...moved,...irrelevantLeads.filter(lead=>!moved.some(item=>item.id===lead.id))];saveLeads()}else if(selected.email){await upsertLeads([{name:selected.name,email:selected.email,project:selected.subject,stage:"Nytt lead",value:0,source:selected.source||"E-post",category:selected.category,messageKey:selected.key,priority:selected.priority,receivedAt:selected.received,nextAction:selected.category==="formspree"?"Prioritert: les og svar":"Les og svar"}])}if(category!=="irrelevant"&&mailFilter==="irrelevant")mailFilter="priority";renderAll();toast(category==="irrelevant"?(sender?"E-posten og fremtidige meldinger fra avsenderen filtreres bort.":"E-posten er flyttet til «Ikke relevant»."):"E-posten er flyttet tilbake til prioritert.")}catch(error){toast(error.message||"Sorteringen kunne ikke lagres.")}}
       async function loadMailbox(){ const list=document.getElementById("message-list");list.innerHTML='<div class="loading-message">Henter og sorterer e-post sikkert …</div>';try{const response=await fetch("/api/crm/mailbox",{credentials:"same-origin"});const data=await response.json();if(response.status===401){location.replace("/crm-login.html");return}if(!response.ok)throw new Error(data.error);messages=(data.messages||[]).map(m=>({...m,draft:"",facts:[`Avsender: ${m.email}`,`Kilde: ${m.source||"post@lokilyd.no"}`,m.category==="formspree"?"Prioritert nettside-lead":m.category==="irrelevant"?`Filter: ${m.filterReason||"Ikke relevant for kundeoppfølging"}`:"Svar krever godkjenning"]}));const incoming=messages.filter(m=>m.isLead&&m.category!=="irrelevant"&&m.email).map(m=>({name:m.name,email:m.email,project:m.subject,stage:"Nytt lead",value:0,source:m.source||"E-post",category:m.category,messageKey:m.key,messageUid:m.uid,priority:m.priority,receivedAt:m.received,nextAction:m.category==="formspree"?"Prioritert: les og svar":"Les og svar"}));const persisted=await upsertLeads(incoming);if(!persisted){incoming.forEach(candidate=>{if(!leads.some(l=>l.email.toLowerCase()===candidate.email.toLowerCase()))leads.unshift({id:`mail-${Date.now()}-${Math.random()}`, ...candidate})});saveLeads()}selectedMessage=messages.find(m=>m.category!=="irrelevant")?.id||messages[0]?.id||0;document.getElementById("inbox-source").textContent="Formspree prioritert";document.getElementById("inbox-source").className="state green";document.getElementById("mail-status").textContent="IMAP er tilkoblet og sortert";document.getElementById("mail-dot").className="dot green";document.getElementById("connection-title").textContent="E-post tilkoblet";document.getElementById("connection-copy").textContent=document.getElementById("jotta-dot").classList.contains("green")?"E-post og dokumentindeks klare":"Jottacloud-bro venter";renderAll();if(selectedMessage)selectMessage(selectedMessage,{markRead:false})}catch(error){document.getElementById("inbox-source").textContent="Tilkoblingsfeil";document.getElementById("mail-status").textContent="Kunne ikke koble til IMAP";toast(error.message||"Kunne ikke hente innboksen.");renderMessages()}}
-      async function checkAuth(){let response;try{response=await fetch("/api/crm/auth-status",{credentials:"same-origin"})}catch(error){console.error("CRM session check failed",error);document.getElementById("auth-feedback").textContent="Kunne ikke kontrollere innloggingen. Prøv å laste siden på nytt.";return}if(response.status===401){location.replace("/crm-login.html");return}if(!response.ok){document.getElementById("auth-feedback").textContent="Innloggingstjenesten er midlertidig utilgjengelig. Prøv igjen om litt.";return}let data;try{data=await response.json()}catch(error){console.error("CRM session response invalid",error);document.getElementById("auth-feedback").textContent="Ugyldig svar fra innloggingstjenesten.";return}authenticatedUser=data.user;const name=ownerName();document.getElementById("auth-gate").classList.add("hidden");document.getElementById("profile-name").textContent=name;document.getElementById("profile-email").textContent=data.user.email;document.querySelector(".profile-circle").textContent=name.charAt(0);if(document.getElementById("overview").classList.contains("active"))document.getElementById("page-title").textContent=`Hei, ${name}`;renderOverview();window.dispatchEvent(new Event("loki-authenticated"));try{await Promise.all([loadCrmData(),window.LokiStudio.init({user:data.user,getContacts:()=>leads}),window.LokiWorkspace.init(),window.LokiRentals.init(),window.LokiOperations.init({getLeads:()=>leads}),window.LokiProspects.init({toast,onConverted:next=>{leads=next;saveLeads();renderAll()}}),window.LokiReceipts.init()]);await window.LokiDocuments.init();await loadMailbox()}catch(error){console.error("CRM startup failed after valid login",error);toast("Noen moduler kunne ikke lastes. Innloggingen er fortsatt gyldig.")}}
+      async function checkAuth(){let response;try{response=await fetch("/api/crm/auth-status",{credentials:"same-origin"})}catch(error){console.error("CRM session check failed",error);document.getElementById("auth-feedback").textContent="Kunne ikke kontrollere innloggingen. Prøv å laste siden på nytt.";return}if(response.status===401){location.replace("/crm-login.html");return}if(!response.ok){document.getElementById("auth-feedback").textContent="Innloggingstjenesten er midlertidig utilgjengelig. Prøv igjen om litt.";return}let data;try{data=await response.json()}catch(error){console.error("CRM session response invalid",error);document.getElementById("auth-feedback").textContent="Ugyldig svar fra innloggingstjenesten.";return}authenticatedUser=data.user;const name=ownerName();document.getElementById("auth-gate").classList.add("hidden");document.getElementById("profile-name").textContent=name;document.getElementById("profile-email").textContent=data.user.email;document.getElementById("mobile-profile-email").textContent=data.user.email;document.querySelector(".profile-circle").textContent=name.charAt(0);if(document.getElementById("overview").classList.contains("active"))document.getElementById("page-title").textContent=`Hei, ${name}`;renderOverview();window.dispatchEvent(new Event("loki-authenticated"));try{await Promise.all([loadCrmData(),window.LokiStudio.init({user:data.user,getContacts:()=>leads}),window.LokiWorkspace.init().then(()=>{workspaceTasks=window.LokiWorkspace?.getTasks?.()||workspaceTasks;renderOverview()}),window.LokiRentals.init(),window.LokiOperations.init({getLeads:()=>leads}),window.LokiProspects.init({toast,onConverted:next=>{leads=next;saveLeads();renderAll()}}),window.LokiReceipts.init()]);await window.LokiDocuments.init();await loadMailbox()}catch(error){console.error("CRM startup failed after valid login",error);toast("Noen moduler kunne ikke lastes. Innloggingen er fortsatt gyldig.")}}
       function bindNavigation(){ document.querySelectorAll("[data-view-target]").forEach(b=>b.onclick=()=>switchView(b.dataset.viewTarget)); }
+      function bindMobileNavigation(){
+        const nativeCRM=/LokiCRMNative\//.test(navigator.userAgent);
+        document.body.classList.toggle("native-crm",nativeCRM);
+        document.querySelectorAll("[data-mobile-nav]").forEach(button=>button.onclick=()=>{
+          const destination=button.dataset.mobileNav;
+          if(destination==="more"){openMobileMore();return}
+          if(destination==="overview"||destination==="inbox"){switchView(destination);return}
+          if(destination==="leads"){
+            leadAttentionFilter="all";
+            crmSection="pipeline";
+            switchView("leads");
+            renderLeads(document.getElementById("lead-search").value);
+            return;
+          }
+          if(destination==="tasks")openMyTasks();
+        });
+        document.getElementById("mobile-start-followup").onclick=openOverdueFollowups;
+        document.getElementById("mobile-open-forms").onclick=openStaleForms;
+        document.getElementById("mobile-open-tasks").onclick=openMyTasks;
+        document.getElementById("mobile-queue-all").onclick=()=>leads.some(lead=>isStaleFormspree(lead))?openStaleForms():openMyTasks();
+        document.getElementById("mobile-new-lead").onclick=()=>document.getElementById("new-lead").click();
+        document.getElementById("mobile-search").onclick=()=>openCustomerSearch(true);
+        document.getElementById("mobile-contacts").onclick=()=>openCustomerSearch(false);
+        document.getElementById("clear-lead-attention").onclick=()=>{leadAttentionFilter="all";renderLeads(document.getElementById("lead-search").value)};
+        document.getElementById("mobile-more-close").onclick=()=>closeMobileMore(true);
+        document.getElementById("mobile-more-backdrop").onclick=event=>{if(event.target===event.currentTarget)closeMobileMore(true)};
+        document.querySelector('[data-mobile-more="contacts"]').onclick=()=>openCustomerSearch(false);
+        document.querySelector('[data-mobile-more="prospects"]').onclick=()=>{leadAttentionFilter="all";crmSection="prospects";switchView("leads")};
+        document.getElementById("mobile-theme-toggle").onclick=()=>document.getElementById("theme-toggle").click();
+        document.getElementById("mobile-push-settings").onclick=()=>document.getElementById("push-toggle").click();
+        document.getElementById("mobile-logout").onclick=()=>document.getElementById("logout").click();
+        document.querySelectorAll("[data-native-destination]").forEach(button=>button.onclick=()=>{if(nativeCRM)location.href=`lokicrm://${button.dataset.nativeDestination}`});
+        document.addEventListener("keydown",event=>{
+          const backdrop=document.getElementById("mobile-more-backdrop");
+          if(backdrop.hidden)return;
+          if(event.key==="Escape"){event.preventDefault();closeMobileMore(true);return}
+          if(event.key!=="Tab")return;
+          const focusable=[...document.querySelectorAll('#mobile-more-panel button:not([disabled])')].filter(node=>node.getBoundingClientRect().height>0);
+          if(!focusable.length)return;
+          const first=focusable[0];
+          const last=focusable[focusable.length-1];
+          if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+          else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+        });
+      }
       function renderAll(){ workspaceTasks=window.LokiWorkspace?.getTasks?.()||workspaceTasks; renderOverview(); renderCustomerDirectory(document.getElementById("customer-search").value); renderLeads(document.getElementById("lead-search").value); renderMessages(); renderCrmSection(); }
-      const modal=document.getElementById("lead-modal"); document.getElementById("new-lead").onclick=()=>modal.classList.add("open"); const closeModal=()=>modal.classList.remove("open"); document.getElementById("close-modal").onclick=closeModal; document.getElementById("cancel-modal").onclick=closeModal; document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()}); document.getElementById("lead-form").onsubmit=async e=>{e.preventDefault();const form=e.currentTarget;const f=new FormData(form);const candidate={name:String(f.get("name")),email:String(f.get("email")),project:String(f.get("project")),enquiryType:String(f.get("enquiryType")||""),stage:"Nytt lead",value:Number(f.get("value")||0),source:"Manuelt",nextAction:"Ta første kontakt"};if(await upsertLeads([candidate])){form.reset();closeModal();crmSection="customers";renderAll();switchView("leads");toast("Kontakten er lagret under «Kontakter».")}else{toast("Kontakten kunne ikke lagres.")}}; document.querySelectorAll("[data-crm-section]").forEach(button=>button.onclick=()=>{crmSection=button.dataset.crmSection;renderCrmSection();history.replaceState(null,"","#"+(crmSection==="prospects"?"prospects":"leads"))}); document.getElementById("lead-search").oninput=e=>renderLeads(e.target.value); document.getElementById("lead-enquiry-filter").onchange=e=>{leadEnquiryFilter=e.target.value;renderLeads(document.getElementById("lead-search").value)}; document.getElementById("customer-search").oninput=e=>renderCustomerDirectory(e.target.value); document.getElementById("approve-draft").onclick=async()=>{const m=messages.find(x=>x.id===selectedMessage);if(!m?.live)return;if(!confirm(`Send dette svaret til ${m.email}?`))return;const button=document.getElementById("approve-draft");button.disabled=true;button.textContent="Sender …";try{const response=await fetch("/api/crm/send",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({to:m.email,subject:m.subject,text:document.getElementById("draft-text").value,inReplyTo:m.messageId})});const data=await response.json();if(!response.ok)throw new Error(data.error);m.state="Sendt";const linkedLead=leads.find(lead=>String(lead.email||"").toLowerCase()===String(m.email||"").toLowerCase());if(linkedLead?.stage==="Nytt lead"){linkedLead.stage="Kontaktet";linkedLead.nextAction="Følg opp svar fra kunden";const followup=new Date();followup.setDate(followup.getDate()+3);linkedLead.followUpDate=followup.toISOString().slice(0,10);saveLeads()}renderAll();toast("E-posten ble sendt. Et nytt lead flyttes automatisk til «Kontaktet».")}catch(error){button.disabled=false;button.textContent="Send svar";toast(error.message||"E-posten kunne ikke sendes.")}}; document.getElementById("save-draft").onclick=()=>{messages.find(x=>x.id===selectedMessage).draft=document.getElementById("draft-text").value;toast("Utkast lagret for denne økten.")}; document.getElementById("refresh-mail").onclick=loadMailbox;
+      const modal=document.getElementById("lead-modal"); document.getElementById("new-lead").onclick=()=>modal.classList.add("open"); const closeModal=()=>modal.classList.remove("open"); document.getElementById("close-modal").onclick=closeModal; document.getElementById("cancel-modal").onclick=closeModal; document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()}); document.getElementById("lead-form").onsubmit=async e=>{e.preventDefault();const form=e.currentTarget;const f=new FormData(form);const candidate={name:String(f.get("name")),email:String(f.get("email")),project:String(f.get("project")),enquiryType:String(f.get("enquiryType")||""),stage:"Nytt lead",value:Number(f.get("value")||0),source:"Manuelt",nextAction:"Ta første kontakt"};if(await upsertLeads([candidate])){form.reset();closeModal();crmSection="customers";renderAll();switchView("leads");toast("Kontakten er lagret under «Kontakter».")}else{toast("Kontakten kunne ikke lagres.")}}; document.querySelectorAll("[data-crm-section]").forEach(button=>button.onclick=()=>{leadAttentionFilter="all";crmSection=button.dataset.crmSection;renderCrmSection();if(crmSection==="pipeline")renderLeads(document.getElementById("lead-search").value);history.replaceState(null,"","#"+(crmSection==="prospects"?"prospects":"leads"))}); document.getElementById("lead-search").oninput=e=>renderLeads(e.target.value); document.getElementById("lead-enquiry-filter").onchange=e=>{leadEnquiryFilter=e.target.value;renderLeads(document.getElementById("lead-search").value)}; document.getElementById("customer-search").oninput=e=>renderCustomerDirectory(e.target.value); document.getElementById("approve-draft").onclick=async()=>{const m=messages.find(x=>x.id===selectedMessage);if(!m?.live)return;if(!confirm(`Send dette svaret til ${m.email}?`))return;const button=document.getElementById("approve-draft");button.disabled=true;button.textContent="Sender …";try{const response=await fetch("/api/crm/send",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({to:m.email,subject:m.subject,text:document.getElementById("draft-text").value,inReplyTo:m.messageId})});const data=await response.json();if(!response.ok)throw new Error(data.error);m.state="Sendt";const linkedLead=leads.find(lead=>String(lead.email||"").toLowerCase()===String(m.email||"").toLowerCase());if(linkedLead?.stage==="Nytt lead"){linkedLead.stage="Kontaktet";linkedLead.nextAction="Følg opp svar fra kunden";const followup=new Date();followup.setDate(followup.getDate()+3);linkedLead.followUpDate=followup.toISOString().slice(0,10);saveLeads()}renderAll();toast("E-posten ble sendt. Et nytt lead flyttes automatisk til «Kontaktet».")}catch(error){button.disabled=false;button.textContent="Send svar";toast(error.message||"E-posten kunne ikke sendes.")}}; document.getElementById("save-draft").onclick=()=>{messages.find(x=>x.id===selectedMessage).draft=document.getElementById("draft-text").value;toast("Utkast lagret for denne økten.")}; document.getElementById("refresh-mail").onclick=loadMailbox;
       const authForm=document.getElementById("auth-form");const authCodeForm=document.getElementById("auth-code-form");const authEmail=document.getElementById("auth-email");const authCode=document.getElementById("auth-code");const authFeedback=document.getElementById("auth-feedback");authForm.onsubmit=async e=>{e.preventDefault();authFeedback.textContent="Sender kode og sikker lenke …";try{const response=await fetch("/api/crm/auth-request",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({email:authEmail.value})});const data=await response.json();if(!response.ok)throw new Error(data.error);authForm.hidden=true;authCodeForm.hidden=false;authFeedback.textContent="Sjekk e-posten din. Koden og lenken er gyldige i 15 minutter.";authCode.focus()}catch(error){authFeedback.textContent=error.message||"Kunne ikke sende innloggingskoden."}};authCode.oninput=()=>{const digits=authCode.value.replace(/\D/g,"").slice(0,6);authCode.value=digits.length>3?`${digits.slice(0,3)} ${digits.slice(3)}`:digits};authCodeForm.onsubmit=async e=>{e.preventDefault();authFeedback.textContent="Kontrollerer engangskoden …";try{const response=await fetch("/api/crm/auth-request",{method:"POST",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify({email:authEmail.value,code:authCode.value})});const data=await response.json();if(!response.ok)throw new Error(data.error);location.replace("/crmplatform/")}catch(error){authFeedback.textContent=error.message||"Koden kunne ikke bekreftes.";authCode.select()}};document.getElementById("auth-back").onclick=()=>{authCodeForm.hidden=true;authForm.hidden=false;authFeedback.textContent="";authEmail.focus()};document.getElementById("logout").onclick=async()=>{await fetch("/api/crm/auth-status",{method:"POST",credentials:"same-origin"});location.replace("/crm-login.html")};document.querySelectorAll("[data-demo-action]").forEach(b=>b.onclick=()=>toast(b.dataset.demoAction));
       document.querySelectorAll("[data-mail-filter]").forEach(button=>button.onclick=()=>{mailFilter=button.dataset.mailFilter;renderMessages()});
       document.getElementById("mark-irrelevant").onclick=()=>setMailCategory("irrelevant");
       document.getElementById("restore-mail").onclick=()=>setMailCategory("inbox");
       document.getElementById("toggle-mail-reader").onclick=()=>{const reader=document.querySelector(".mail-reader");const expanded=reader.classList.toggle("expanded");document.getElementById("toggle-mail-reader").textContent=expanded?"Vis kompakt":"Utvid e-post"};
       window.lokiLeadProfile=window.LokiLeadProfile.init({getLeads:()=>leads,setLeads:next=>{leads=prioritizedLeads(next);saveLeads()},renderAll,toast,onStageChange:stage=>{leadStageFilter=stageTabFor(stage)},onCustomerSaved:()=>{crmSection="customers"}});
-      window.addEventListener("loki-workspace-updated",event=>{workspaceTasks=Array.isArray(event.detail?.tasks)?event.detail.tasks:[];renderOverview()});
-      bindNavigation(); renderAll(); switchView(location.hash.slice(1)||"overview"); checkAuth();
+      window.addEventListener("loki-workspace-updated",event=>{workspaceReady=event.detail?.loaded===true;workspaceError=Boolean(event.detail?.error);workspaceTasks=Array.isArray(event.detail?.tasks)?event.detail.tasks:[];renderOverview()});
+      bindNavigation(); bindMobileNavigation(); renderAll(); switchView(location.hash.slice(1)||"overview"); checkAuth();
     })();
   </script>
 </body>

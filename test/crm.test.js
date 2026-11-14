@@ -111,7 +111,8 @@ test("CRM overview is personalized and prioritizes owner tasks and stale Formspr
   assert.match(html, /id="overview-tasks"/);
   assert.match(html, /id="overview-formspree"/);
   assert.match(html, /const ownerName=.*charles.*Charles.*Leon/);
-  assert.match(html, /lead\.category==="formspree"&&lead\.stage==="Nytt lead"/);
+  assert.match(html, /const isStaleFormspree=.*formspree.*lead\.stage==="Nytt lead"/);
+  assert.match(html, /const isOverdueLead=.*followUpDate.*today/);
   assert.match(html, /24\*60\*60\*1000/);
   assert.match(workspace, /loki-workspace-updated/);
   assert.match(workspace, /getTasks:/);
@@ -220,6 +221,34 @@ test("CRM has a dedicated touch-safe mobile layout", () => {
   assert.match(mobile, /\.crm-category-switch[\s\S]*overflow-x: auto/);
   assert.match(mobile, /\.google-calendar-grid \{ min-width: 650px/);
   assert.match(mobile, /font-size: 16px !important/);
+});
+
+test("CRM mobile dashboard uses live state, one five-item navigation and real actions", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "mobile-dashboard.css"), "utf8");
+  assert.match(html, /mobile-dashboard\.css/);
+  assert.match(html, /viewport-fit=cover/);
+  assert.match(html, /id="mobile-overdue-count"/);
+  assert.match(html, /id="mobile-forms-count"/);
+  assert.match(html, /id="mobile-tasks-count"/);
+  assert.equal((html.match(/<button[^>]+data-mobile-nav=/g) || []).length, 5);
+  for (const label of ["Oversikt", "Innboks", "Leads", "Oppgaver", "Mer"]) {
+    assert.match(html, new RegExp(`<span>${label}<\\/span>`));
+  }
+  assert.match(html, /openOverdueFollowups/);
+  assert.match(html, /openStaleForms/);
+  assert.match(html, /openMyTasks/);
+  assert.match(html, /openCustomerSearch\(true\)/);
+  assert.match(html, /leadAttentionFilter==="overdue"/);
+  assert.match(html, /String\(left\.followUpDate\)\.localeCompare/);
+  assert.match(html, /mobileInboxCount\.hidden=unreadCount===0/);
+  assert.match(styles, /@media screen and \(max-width: 767px\)/);
+  assert.match(styles, /\.sidebar\s*\{\s*display: none !important/s);
+  assert.match(styles, /\.mobile-primary-nav\s*\{[^}]*position: fixed/s);
+  assert.match(styles, /grid-template-columns: repeat\(5, minmax\(0, 1fr\)\)/);
+  assert.match(styles, /safe-area-inset-bottom/);
+  assert.match(styles, /overflow-x: clip/);
+  assert.match(styles, /min-height: 44px/);
 });
 
 test("customer listening tokens are scoped and expire independently of owner access", () => {
@@ -1286,6 +1315,23 @@ test("CRM is installable and exposes user-activated iPhone and Android push", ()
   assert.match(studio, /taskNotification/);
   assert.equal(manifest.display, "standalone");
   assert.equal(manifest.scope, "/crmplatform/");
+});
+
+test("native CRM shells defer to the single web navigation on phones", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const iosApp = fs.readFileSync(path.join(__dirname, "..", "ios", "LokiCRM", "App", "LokiCRMApp.swift"), "utf8");
+  const iosModel = fs.readFileSync(path.join(__dirname, "..", "ios", "LokiCRM", "App", "AppModel.swift"), "utf8");
+  const android = fs.readFileSync(path.join(__dirname, "..", "android", "LokiCRM", "app", "src", "main", "java", "no", "lokilyd", "crm", "MainActivity.java"), "utf8");
+  assert.match(html, /data-native-destination="tasks"/);
+  assert.match(html, /data-native-destination="settings"/);
+  assert.match(html, /const nativeCRM=/);
+  assert.match(iosApp, /\.toolbar\(UIDevice\.current\.userInterfaceIdiom == \.phone \? \.hidden : \.visible, for: \.tabBar\)/);
+  assert.match(iosModel, /applicationNameForUserAgent = "LokiCRMNative\/iOS"/);
+  assert.match(iosModel, /url\.scheme == "lokicrm"/);
+  assert.match(android, /LokiCRMNative\/Android/);
+  assert.match(android, /"lokicrm"\.equals\(uri\.getScheme\(\)\)/);
+  assert.match(android, /masthead\.setVisibility\(webNavigationVisible \? View\.VISIBLE : View\.GONE\)/);
+  assert.match(android, /nav\.setVisibility\(webNavigationVisible \? View\.VISIBLE : View\.GONE\)/);
 });
 
 test("internal savings goals calculate bounded progress", () => {
