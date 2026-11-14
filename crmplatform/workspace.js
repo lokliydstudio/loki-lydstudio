@@ -6,6 +6,7 @@
   let editingGoalId = null;
   const expandedTasks = new Set();
   const expandedNotes = new Set();
+  let showAllNotes = false;
   let taskAssigneeFilter = "Alle";
   let taskStatusFilter = "open";
   let workspaceLoaded = false;
@@ -112,7 +113,11 @@
 
   function renderNotes() {
     const list = document.getElementById("note-list");
-    list.innerHTML = notes.length ? notes.map((note) => {
+    const ordered = [...notes].sort((left, right) => String(right.updatedAt || right.createdAt || right.date || "").localeCompare(String(left.updatedAt || left.createdAt || left.date || "")));
+    const visibleNotes = showAllNotes ? ordered : ordered.slice(0, 6);
+    const count = document.getElementById("note-count");
+    if (count) count.textContent = `${notes.length} ${notes.length === 1 ? "notat" : "notater"}`;
+    list.innerHTML = visibleNotes.length ? visibleNotes.map((note) => {
       const expanded = expandedNotes.has(note.id);
       const attachments = Array.isArray(note.attachments) ? note.attachments : [];
       const attachmentLabel = attachments.length === 1 ? "1 vedlegg" : `${attachments.length} vedlegg`;
@@ -134,6 +139,13 @@
     document.querySelectorAll("[data-note-attachment-remove]").forEach((button) => {
       button.onclick = () => removeNoteAttachment(button.dataset.noteId, button.dataset.noteAttachmentRemove);
     });
+    const toggle = document.getElementById("note-list-toggle");
+    if (toggle) {
+      toggle.hidden = notes.length <= 6;
+      toggle.setAttribute("aria-expanded", String(showAllNotes));
+      toggle.textContent = showAllNotes ? "− Vis bare de 6 nyeste" : `+ Vis alle ${notes.length} notater`;
+      toggle.onclick = () => { showAllNotes = !showAllNotes; renderNotes(); };
+    }
   }
 
   function renderGoals() {
@@ -245,6 +257,8 @@
       catch (error) { toast(`Notatet er ikke lagret: ${error.message}`); return; }
     }
     editingNoteId = id;
+    const disclosure = document.getElementById("note-create-disclosure");
+    if (disclosure) disclosure.open = true;
     const form = document.getElementById("note-form");
     Object.entries(note).forEach(([key, value]) => { if (form.elements[key]) form.elements[key].value = value || ""; });
     document.getElementById("note-submit").textContent = "Lagre detaljer";
@@ -263,6 +277,8 @@
     document.getElementById("note-submit").textContent = "Lagre notat";
     document.getElementById("note-cancel").hidden = true;
     updateMeetingFields();
+    const disclosure = document.getElementById("note-create-disclosure");
+    if (disclosure) disclosure.open = false;
   }
 
   function editGoal(id) {

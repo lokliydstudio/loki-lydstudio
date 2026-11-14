@@ -69,6 +69,7 @@
     try { savedStudio = localStorage.getItem("loki_booking_studio") || ""; } catch {}
     setActiveStudio(user.canSwitchStudios && ["Studio C", "Studio D"].includes(savedStudio) ? savedStudio : user.studio);
     $("booking-email-alerts").checked = user.emailOnNewBooking === true;
+    $("booking-email-summary").textContent = user.emailOnNewBooking === true ? "E-postvarsler er på" : "E-postvarsler er av";
     $("booking-email-description").textContent = user.canSwitchStudios
       ? "Send meg e-post når noen oppretter en ny booking i Studio C eller Studio D."
       : `Send meg e-post når noen oppretter en ny booking i ${user.studio}.`;
@@ -126,6 +127,10 @@
     const today = localDate();
     const visible = bookings.filter((booking) => booking.date >= today).sort((a, b) => `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`));
     $("booking-total").textContent = `${visible.length} ${visible.length === 1 ? "booking" : "bookinger"}`;
+    const next = visible[0];
+    $("booking-next-summary").textContent = next
+      ? `Neste: ${dateLabel(next.date)} kl. ${next.startTime}–${next.endTime} · ${next.title}`
+      : "Ingen kommende bookinger";
     $("agenda").innerHTML = visible.length ? visible.map((booking) => {
       const date = shortDate(booking.date);
       return `<button class="agenda-item${booking.editable ? " own-booking" : ""}" type="button" data-view-booking="${esc(booking.id)}" aria-label="${esc(booking.title)}, ${esc(dateLabel(booking.date))} klokken ${esc(booking.startTime)} til ${esc(booking.endTime)}"><span class="agenda-date"><strong>${esc(date.day)}</strong><span>${esc(date.month)}</span></span><span class="agenda-copy"><strong>${esc(booking.title)}</strong><span>${esc(booking.startTime)}–${esc(booking.endTime)} · ${esc(booking.createdByName)}</span></span><span class="agenda-side">${booking.editable ? "Din booking · Rediger eller slett" : booking.deletable ? "Åpne · Kan slettes" : "Vis detaljer"}</span></button>`;
@@ -336,6 +341,7 @@
       const data = await api("preferences", { method: "PATCH", body: JSON.stringify({ emailOnNewBooking: enabled }) });
       user = data.user;
       checkbox.checked = user.emailOnNewBooking === true;
+      $("booking-email-summary").textContent = user.emailOnNewBooking === true ? "E-postvarsler er på" : "E-postvarsler er av";
       status.textContent = enabled ? "E-postvarsler er på." : "E-postvarsler er av.";
     } catch (error) {
       checkbox.checked = !enabled;

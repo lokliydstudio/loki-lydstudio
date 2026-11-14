@@ -323,6 +323,8 @@ test("project workspace exposes per-project time logging and backup", () => {
   assert.match(studio, /Innspilling/);
   assert.match(studio, /Editering/);
   assert.match(studio, /data-delete-time/);
+  assert.match(studio, /data-project-disclosure="time"/);
+  assert.match(studio, /Registrer timer og vis timelogg/);
   assert.match(studio, /timelogg\.csv/);
   assert.match(studio, /timeTotals\(project\)\.total/);
 });
@@ -338,6 +340,8 @@ test("project workspace stores private outboard photos with mobile camera captur
   assert.match(studio, /action=project-image-stream/);
   assert.match(studio, /data-save-project-image/);
   assert.match(studio, /data-delete-project-image/);
+  assert.match(studio, /data-project-disclosure="outboard"/);
+  assert.match(studio, /data-project-image-disclosure/);
   assert.match(css, /@media\(max-width:620px\)/);
 });
 
@@ -879,6 +883,10 @@ test("mix feedback is available in both internal and customer players", () => {
   assert.match(studioApi, /action === "audio-playlists"/);
   assert.match(studioApi, /action === "public-playlist-comments"/);
   assert.match(internalScript, /Lag én lenke med flere låter/);
+  assert.match(internalScript, /data-project-disclosure="audio-playlists"/);
+  assert.match(internalScript, /data-project-disclosure="audio-tracks"/);
+  assert.match(internalScript, /data-delete-track/);
+  assert.match(internalScript, /Slett lydfil/);
   assert.match(internalScript, /Opprett og kopier lenke/);
   assert.match(internalScript, /operation: "update"/);
   assert.match(internalScript, /Den eksisterende kundelenken viser nå de nye låtene/);
@@ -1216,6 +1224,9 @@ test("workspace exposes bulk task cleanup and collapsed notes", () => {
   assert.match(workspace, /data-note-toggle/);
   assert.match(workspace, /aria-expanded=/);
   assert.match(workspace, /note-detail[^>]+hidden/);
+  assert.match(html, /id="note-create-disclosure"/);
+  assert.match(html, /id="note-list-toggle"/);
+  assert.match(workspace, /ordered\.slice\(0, 6\)/);
 });
 
 test("workspace notes accept private document attachments", () => {
@@ -1787,6 +1798,9 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(portal, /Studio D/);
   assert.match(portal, /Du kan endre dine egne kommende bookinger/);
   assert.match(portal, /id="booking-email-alerts" type="checkbox"/);
+  assert.match(portal, /portal-disclosure booking-preferences-disclosure/);
+  assert.match(portal, /id="booking-next-summary"/);
+  assert.match(client, /Neste:.*startTime.*endTime/);
   assert.doesNotMatch(client, /crm-login|crmplatform/);
   assert.match(client, /tenant-\$\{action\}/);
   assert.match(api, /requireUser\(req, res\)/);
@@ -1814,6 +1828,7 @@ test("external booking portal is isolated from CRM and exposes approval administ
   assert.match(crmOperations, /data-tenant-booking-edit/);
   assert.match(crmOperations, /method: "PATCH"/);
   assert.match(crm, /Åpne bookingportalen/);
+  assert.match(crm, /class="admin-disclosure"/);
 });
 
 test("project customer email fields suggest saved CRM contacts", () => {

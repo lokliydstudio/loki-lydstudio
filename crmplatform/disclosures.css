@@ -1,0 +1,182 @@
+@media screen {
+  .workspace-disclosure,
+  .admin-disclosure,
+  .studio-disclosure,
+  .studio-subdisclosure,
+  .track-card,
+  .project-image-card {
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: var(--panel);
+  }
+
+  .workspace-disclosure > summary,
+  .admin-disclosure > summary,
+  .studio-disclosure > summary,
+  .studio-subdisclosure > summary,
+  .track-card > summary,
+  .project-image-card > summary {
+    display: flex;
+    min-height: 52px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 13px 15px;
+    color: var(--ink);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .workspace-disclosure > summary::-webkit-details-marker,
+  .admin-disclosure > summary::-webkit-details-marker,
+  .studio-disclosure > summary::-webkit-details-marker,
+  .studio-subdisclosure > summary::-webkit-details-marker,
+  .track-card > summary::-webkit-details-marker,
+  .project-image-card > summary::-webkit-details-marker { display: none; }
+
+  .workspace-disclosure > summary > span,
+  .admin-disclosure > summary > span,
+  .studio-disclosure > summary > span,
+  .studio-subdisclosure > summary > span,
+  .track-card > summary > span { display: grid; min-width: 0; gap: 4px; }
+
+  .workspace-disclosure > summary strong,
+  .admin-disclosure > summary strong,
+  .studio-disclosure > summary strong,
+  .studio-subdisclosure > summary strong,
+  .track-card > summary strong { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+
+  .workspace-disclosure > summary small,
+  .admin-disclosure > summary small,
+  .studio-disclosure > summary small,
+  .studio-subdisclosure > summary small,
+  .track-card > summary small { overflow: hidden; color: var(--muted); font-size: 8px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+
+  .workspace-disclosure > summary > i,
+  .admin-disclosure > summary > i,
+  .studio-disclosure > summary > i,
+  .studio-subdisclosure > summary > i,
+  .track-card > summary > i,
+  .project-image-card > summary > i {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    place-items: center;
+    flex: 0 0 30px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: var(--surface-subtle, #f3f0e8);
+    color: var(--accent, var(--violet));
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+  }
+
+  .workspace-disclosure > summary > i::before,
+  .admin-disclosure > summary > i::before,
+  .studio-disclosure > summary > i::before,
+  .studio-subdisclosure > summary > i::before,
+  .track-card > summary > i::before,
+  .project-image-card > summary > i::before { content: "+"; }
+
+  .workspace-disclosure[open] > summary > i::before,
+  .admin-disclosure[open] > summary > i::before,
+  .studio-disclosure[open] > summary > i::before,
+  .studio-subdisclosure[open] > summary > i::before,
+  .track-card[open] > summary > i::before,
+  .project-image-card[open] > summary > i::before { content: "−"; }
+
+  .workspace-disclosure > summary:hover,
+  .admin-disclosure > summary:hover,
+  .studio-disclosure > summary:hover,
+  .studio-subdisclosure > summary:hover,
+  .track-card > summary:hover,
+  .project-image-card > summary:hover { background: var(--surface-subtle, #f7f4ed); }
+
+  .workspace-disclosure[open] > summary,
+  .admin-disclosure[open] > summary,
+  .studio-disclosure[open] > summary,
+  .studio-subdisclosure[open] > summary,
+  .track-card[open] > summary,
+  .project-image-card[open] > summary { border-bottom: 1px solid var(--line); }
+
+  .workspace-disclosure { margin-bottom: 13px; overflow: hidden; }
+  .workspace-disclosure .note-form { margin: 0; border: 0; border-radius: 0; }
+
+  .collection-toggle {
+    width: 100%;
+    min-height: 43px;
+    margin-top: 10px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: var(--surface-subtle, #f7f4ed);
+    color: var(--accent, var(--violet));
+    font-size: 9px;
+    font-weight: 750;
+    cursor: pointer;
+  }
+
+  .admin-disclosure { margin-top: 15px; overflow: hidden; }
+  .admin-disclosure-body { padding: 0 15px 15px; }
+
+  .studio-disclosure { overflow: hidden; }
+  .studio-disclosure-body { padding: 15px; }
+  .studio-disclosure-body.flush { padding: 0; }
+  .studio-subdisclosure { overflow: hidden; }
+  .studio-subdisclosure + .studio-subdisclosure { margin-top: 10px; }
+  .studio-subdisclosure-body { padding: 14px; }
+  .studio-subdisclosure .delivery-playlist-builder { margin: 0; padding: 0; border: 0; background: transparent; }
+  .studio-subdisclosure .audio-list { margin-top: 0; }
+
+  .project-time-section .time-summary { margin-bottom: 12px; }
+  .project-time-section .studio-disclosure-body { padding: 14px; }
+  .project-time-section .time-entry-form { margin: 0; }
+
+  .project-image-card { display: block; overflow: hidden; }
+  .project-image-card > summary { padding: 9px; }
+  .project-image-summary-thumb { width: 72px; height: 50px; flex: 0 0 72px; overflow: hidden; border-radius: 8px; background: #23231f; }
+  .project-image-summary-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .project-image-summary-copy { display: grid; min-width: 0; flex: 1 1 auto; gap: 4px; }
+  .project-image-summary-copy strong,
+  .project-image-summary-copy small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .project-image-summary-copy strong { font-size: 10px; }
+  .project-image-summary-copy small { color: var(--muted); font-size: 8px; }
+  .project-image-card-body { display: grid; }
+
+  .track-card { display: block; padding: 0; overflow: hidden; }
+  .track-card > summary { min-height: 62px; }
+  .track-card > summary .track-summary-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+  .track-card > summary .track-summary-meta em { padding: 4px 6px; border-radius: 999px; background: var(--accent-soft, #ece8ff); color: var(--accent, var(--violet)); font-size: 7px; font-style: normal; font-weight: 750; }
+  .track-card .track-main { border-top: 0; }
+
+  html[data-theme="dark"] .workspace-disclosure > summary:hover,
+  html[data-theme="dark"] .admin-disclosure > summary:hover,
+  html[data-theme="dark"] .studio-disclosure > summary:hover,
+  html[data-theme="dark"] .studio-subdisclosure > summary:hover,
+  html[data-theme="dark"] .track-card > summary:hover,
+  html[data-theme="dark"] .project-image-card > summary:hover,
+  html[data-theme="dark"] .collection-toggle { background: var(--surface-subtle, #292925); }
+}
+
+@media screen and (max-width: 640px) {
+  .workspace-disclosure > summary,
+  .admin-disclosure > summary,
+  .studio-disclosure > summary,
+  .studio-subdisclosure > summary,
+  .track-card > summary { min-height: 58px; padding: 12px; }
+  .workspace-disclosure > summary strong,
+  .admin-disclosure > summary strong,
+  .studio-disclosure > summary strong,
+  .studio-subdisclosure > summary strong,
+  .track-card > summary strong { font-size: 11px; }
+  .workspace-disclosure > summary small,
+  .admin-disclosure > summary small,
+  .studio-disclosure > summary small,
+  .studio-subdisclosure > summary small,
+  .track-card > summary small { white-space: normal; }
+  .studio-disclosure-body,
+  .studio-subdisclosure-body,
+  .project-time-section .studio-disclosure-body { padding: 12px; }
+  .project-image-summary-thumb { width: 58px; height: 46px; flex-basis: 58px; }
+}
