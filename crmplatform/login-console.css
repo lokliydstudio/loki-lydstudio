@@ -1,0 +1,172 @@
+:root {
+  --login-bg: #0d100c;
+  --login-panel: #171b16;
+  --login-line: #394034;
+  --login-muted: #929a8e;
+  --login-accent: #c7ee5d;
+}
+
+html,
+body {
+  background: var(--login-bg) !important;
+}
+
+body {
+  position: relative;
+  overflow: hidden auto;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.026) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.026) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, #000, transparent 76%);
+}
+
+main {
+  position: relative;
+  width: min(430px, 100%);
+  padding: 34px;
+  border: 1px solid var(--login-line);
+  border-radius: 3px;
+  background: var(--login-panel);
+  box-shadow: 0 24px 70px rgba(0,0,0,.34);
+}
+
+.brand {
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #30362d;
+}
+
+.brand-copy strong {
+  font-size: 15px;
+  font-weight: 760;
+  letter-spacing: .19em;
+}
+
+.brand-copy span {
+  color: #778074;
+  font-size: 7px;
+  letter-spacing: .3em;
+}
+
+.kicker {
+  color: var(--login-accent);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 7px;
+  letter-spacing: .12em;
+}
+
+h1 {
+  margin: 8px 0 11px;
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -.045em;
+}
+
+p {
+  color: var(--login-muted);
+  font-size: 11px;
+}
+
+.owner-grid {
+  gap: 1px;
+  border: 1px solid var(--login-line);
+  background: var(--login-line);
+}
+
+button,
+input {
+  border-radius: 2px;
+  box-shadow: none;
+  font-family: inherit;
+}
+
+.owner-button {
+  position: relative;
+  min-height: 78px;
+  border: 0;
+  background: #1c211a;
+  color: #f2f4ef;
+}
+
+.owner-button::after {
+  content: "→";
+  position: absolute;
+  right: 15px;
+  color: #657060;
+}
+
+.owner-button:hover {
+  background: #252c22;
+}
+
+.owner-button:hover::after {
+  color: var(--login-accent);
+}
+
+.owner-button strong {
+  font-size: 14px;
+}
+
+.owner-button span {
+  color: #8e978a;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 7px;
+}
+
+input {
+  border-color: var(--login-line);
+  background: #10130f;
+}
+
+input:focus {
+  border-color: #8eaf35;
+  outline: 2px solid rgba(199,238,93,.16);
+}
+
+#code-form button[type="submit"] {
+  border: 1px solid #8eaf35;
+  background: var(--login-accent);
+  color: #17200d;
+}
+
+.text-button {
+  border-color: var(--login-line);
+  border-radius: 2px;
+  color: #d9ddd5;
+}
+
+.feedback {
+  color: var(--login-accent);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 9px;
+}
+
+.privacy {
+  border-color: #30362d;
+  color: #6f786b;
+  font-size: 8px;
+}
+
+@media (max-width: 520px) {
+  body {
+    place-items: center;
+  }
+
+  main {
+    margin: 0;
+    padding: 25px 19px;
+    border-radius: 2px;
+  }
+
+  .owner-grid {
+    grid-template-columns: 1fr;
+  }
+}

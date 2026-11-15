@@ -1,0 +1,163 @@
+:root {
+  color-scheme: light;
+  --ink: #1b211b;
+  --muted: #687067;
+  --paper: #eceee9;
+  --panel: #f9faf6;
+  --line: #cdd2c9;
+  --surface: #f1f3ee;
+  --accent: #b9e54a;
+}
+
+* {
+  border-radius: 0;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body,
+button,
+input,
+select {
+  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.shell {
+  width: min(720px, 100%);
+  padding-inline: max(15px, env(safe-area-inset-left));
+}
+
+.topbar {
+  padding-block: max(13px, env(safe-area-inset-top)) 11px;
+  border-bottom: 1px solid #aeb6aa;
+}
+
+.brand {
+  letter-spacing: .16em;
+}
+
+.brand img {
+  border-radius: 0;
+}
+
+.crm-link {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.intro {
+  padding: 25px 0 18px;
+}
+
+.eyebrow {
+  color: #496d42;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 7px;
+  letter-spacing: .12em;
+}
+
+.intro h1,
+h2 {
+  font-family: inherit;
+  font-weight: 650;
+  letter-spacing: -.04em;
+}
+
+.intro h1 {
+  font-size: 34px;
+}
+
+.card {
+  margin-bottom: 10px;
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--panel);
+  box-shadow: none;
+}
+
+input,
+select,
+.add,
+.refresh,
+.filters button,
+.task {
+  border-radius: 2px;
+}
+
+input,
+select {
+  border-color: var(--line);
+  background: var(--panel);
+}
+
+.add {
+  border: 1px solid #8eaf35;
+  background: var(--accent);
+  color: #1d280f;
+}
+
+.filters {
+  gap: 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.filters button {
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+}
+
+.filters button.active {
+  border-bottom-color: #76922f;
+  background: transparent;
+  color: var(--ink);
+}
+
+.tasks {
+  gap: 1px;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+
+.task {
+  border: 0;
+  background: var(--panel);
+}
+
+.task:hover {
+  background: var(--surface);
+}
+
+.task input {
+  accent-color: #76922f;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --ink: #eef1e9;
+    --muted: #9da59a;
+    --paper: #10130f;
+    --panel: #181c17;
+    --line: #333a31;
+    --surface: #1d221c;
+    --accent: #c7ee5d;
+  }
+
+  .crm-link,
+  input,
+  select,
+  .refresh {
+    background: var(--panel);
+    color: var(--ink);
+  }
+}

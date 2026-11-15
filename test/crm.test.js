@@ -93,15 +93,23 @@ test("CRM shell includes an accessible persistent theme switcher", () => {
   assert.equal(html.indexOf('class="panel rental-workbook"') < html.indexOf('class="panel goals-panel"'), true);
 });
 
-test("CRM uses the professional light and dark design system with discreet navigation counts", () => {
+test("CRM uses the Loki Studio Console design system across desktop, mobile and login", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
-  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "professional-ui.css"), "utf8");
-  assert.match(html, /professional-ui\.css/);
-  assert.match(styles, /--accent:\s*#315fce/);
+  const login = fs.readFileSync(path.join(__dirname, "..", "crm-login.html"), "utf8");
+  const tasks = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.html"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio-console.css"), "utf8");
+  assert.match(html, /studio-console\.css/);
+  assert.ok(html.indexOf("mobile-dashboard.css") < html.indexOf("studio-console.css"));
+  assert.match(login, /login-console\.css/);
+  assert.match(tasks, /tasks-console\.css/);
+  assert.match(styles, /--accent:\s*#b9e54a/);
+  assert.match(styles, /--radius:\s*3px/);
   assert.match(styles, /html\[data-theme="dark"\]/);
   assert.match(styles, /\.nav \.count\s*\{[^}]*background:\s*transparent/s);
-  assert.match(styles, /\.nav \.count\s*\{[^}]*border-radius:\s*0/s);
-  assert.match(styles, /@media screen and \(max-width: 760px\)/);
+  assert.match(styles, /\.overview-welcome\s*\{[^}]*background:\s*transparent/s);
+  assert.match(styles, /\.pipeline \.pipeline-tab\.active\s*\{[^}]*box-shadow:\s*inset 0 -3px var\(--accent\)/s);
+  assert.match(styles, /@media screen and \(max-width: 767px\)/);
+  assert.match(styles, /\.mobile-primary-nav button\.active\s*\{[^}]*border-top-color:\s*#76922f/s);
 });
 
 test("CRM overview is personalized and prioritizes owner tasks and stale Formspree enquiries", () => {
