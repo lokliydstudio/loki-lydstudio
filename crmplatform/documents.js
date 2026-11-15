@@ -21,6 +21,8 @@
   let initialized = false;
   let documents = [];
   let uploadTargetId = null;
+  const pageSize = 100;
+  let renderLimit = pageSize;
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
@@ -28,7 +30,7 @@
 
   function toast(text) {
     const node = document.getElementById("toast");
-    node.textContent = `✓ ${text}`;
+    node.textContent = text;
     node.classList.add("show");
     clearTimeout(window.documentToastTimer);
     window.documentToastTimer = setTimeout(() => node.classList.remove("show"), 4200);
@@ -107,9 +109,10 @@
   function render() {
     const list = document.getElementById("document-list");
     const needle = String(document.getElementById("document-search")?.value || "").trim().toLowerCase();
-    const visible = documents.filter((item) => `${item.name} ${item.path} ${item.type}`.toLowerCase().includes(needle)).sort(recentFirst);
-    document.getElementById("document-count").textContent = `${documents.filter((item) => item.downloadable).length} av ${documents.length} kan lastes ned direkte · sist åpnet øverst`;
-    if (!visible.length) {
+    const matches = documents.filter((item) => `${item.name} ${item.path} ${item.type}`.toLowerCase().includes(needle)).sort(recentFirst);
+    const visible = matches.slice(0, renderLimit);
+    document.getElementById("document-count").textContent = `${documents.filter((item) => item.downloadable).length} av ${documents.length} kan lastes ned · viser ${visible.length} av ${matches.length}`;
+    if (!matches.length) {
       list.innerHTML = `<div class="empty">${documents.length ? "Ingen dokumenter matcher søket." : "Ingen dokumenter er indeksert ennå."}</div>`;
       updateConnectionStatus();
       return;
@@ -125,7 +128,11 @@
       const stateLabel = item.downloadable ? item.syncStatus === "pending" ? "CRM · synk venter" : item.syncStatus === "error" ? "CRM · synk feilet" : item.importPending ? "CRM · oppdateres" : "CRM + Jottacloud" : item.importPending ? "Hentes til CRM" : item.jottacloudUrl ? "Jottacloud" : "Kun indeks";
       const lastOpened = dateValue(item.lastOpenedAt) ? ` · Sist åpnet ${new Date(item.lastOpenedAt).toLocaleString("nb-NO", { dateStyle: "short", timeStyle: "short" })}` : "";
       return `<article class="doc-row"><div class="document-name"><span class="doc-icon" aria-hidden="true">FIL</span><span><strong>${esc(item.name)}</strong><small title="${esc(item.path)}">${esc(item.path)} · ${formatBytes(item.size)}${lastOpened}</small></span></div><span>${esc(item.type)}</span><span><em class="state ${item.available ? "green" : "neutral"}">${stateLabel}</em></span><p>${esc(item.note)}</p>${actions}</article>`;
-    }).join("");
+    }).join("") + (visible.length < matches.length ? `<div class="document-list-footer"><button class="secondary" id="document-load-more" type="button">Vis ${Math.min(pageSize, matches.length - visible.length)} til</button><span>${visible.length} av ${matches.length} dokumenter</span></div>` : "");
+    document.getElementById("document-load-more")?.addEventListener("click", () => {
+      renderLimit += pageSize;
+      render();
+    });
     document.querySelectorAll("[data-connect-document]").forEach((button) => {
       button.onclick = () => chooseFiles(button.dataset.connectDocument);
     });
@@ -290,7 +297,7 @@
     initialized = true;
     document.getElementById("document-upload-button").onclick = () => chooseFiles();
     document.getElementById("document-upload-input").onchange = uploadSelected;
-    document.getElementById("document-search").oninput = render;
+    document.getElementById("document-search").oninput = () => { renderLimit = pageSize; render(); };
     document.getElementById("document-refresh-button").onclick = () => load().catch((error) => toast(error.message || "Kunne ikke oppdatere dokumentene."));
     window.setInterval(() => {
       if (document.getElementById("documents")?.classList.contains("active")) load().catch(() => {});

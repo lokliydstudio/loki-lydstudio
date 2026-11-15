@@ -19,7 +19,7 @@
   };
   const toast = (message) => {
     const node = document.getElementById("toast");
-    node.textContent = `✓ ${message}`;
+    node.textContent = message;
     node.classList.add("show");
     clearTimeout(window.rentalToastTimer);
     window.rentalToastTimer = setTimeout(() => node.classList.remove("show"), 3200);

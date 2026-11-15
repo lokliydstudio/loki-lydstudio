@@ -12,7 +12,7 @@
 
   function toast(text) {
     const node = document.getElementById("toast");
-    node.textContent = `✓ ${text}`;
+    node.textContent = text;
     node.classList.add("show");
     clearTimeout(window.receiptToastTimer);
     window.receiptToastTimer = setTimeout(() => node.classList.remove("show"), 4500);

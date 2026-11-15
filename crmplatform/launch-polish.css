@@ -713,3 +713,275 @@ input[type="radio"] {
   }
 }
 
+/* Independent product-design audit · November 2026
+ * These rules address the remaining systemic issues found in production:
+ * duplicated hierarchy, unreadable microcopy, noisy action states and
+ * module-specific legacy styling. They intentionally avoid decorative effects.
+ */
+
+.eyebrow,
+.kicker,
+.metric > span,
+.ops-metrics article > span,
+.prospect-metrics article > span,
+.fiken-metric > span {
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+.state,
+.message-badge,
+.enquiry-type-badge,
+.lead-source-badge,
+.time-category {
+  font-size: 10px !important;
+  letter-spacing: .035em;
+}
+
+.metric small,
+.doc-row,
+.doc-row p,
+.document-name small,
+.customer-directory-card small,
+.crm-row small {
+  font-size: 11px;
+}
+
+.doc-head,
+.crm-head,
+.invoice-head,
+.prospect-list-head,
+.stage-view-bar,
+.patch-table th,
+.rental-sheet th,
+.message time,
+.activity-row time,
+.project-card small,
+.automation small,
+.overview-system-note,
+.tenant-subhead span,
+.prospect-contact-grid small {
+  font-size: 10px !important;
+}
+
+.message small,
+.message em,
+.booking-copy span,
+.quote-copy span,
+.google-calendar-agenda-copy span,
+.google-calendar-detail p,
+.tenant-user-copy span,
+.tenant-booking-copy span,
+.delivery-playlist-card small,
+.delivery-track-choice small,
+.project-image-card footer > span,
+.time-entry-row small,
+.note-card small {
+  font-size: 11px !important;
+}
+
+/* The page header names the workspace; the personalized greeting appears once. */
+@media screen and (min-width: 768px) {
+  #overview > .overview-welcome {
+    min-height: 92px;
+    padding-block: 4px 17px;
+  }
+
+  #overview .overview-welcome h2 {
+    font-size: clamp(28px, 2.3vw, 36px);
+  }
+
+  #overview .overview-panel {
+    min-height: 0;
+  }
+
+  #overview .overview-action-list:empty {
+    min-height: 54px;
+  }
+
+  #overview > .overview-followups {
+    min-height: 0;
+  }
+}
+
+/* Sidebar counters represent actionable work only; calendar volume lives inside the module. */
+.nav #booking-count {
+  display: none;
+}
+
+.nav .count {
+  min-width: auto;
+  padding-inline: 3px;
+  font-size: 9px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pipeline controls read as one toolbar and priority is signalled without tinting every row. */
+.lead-section-divider {
+  align-items: flex-end;
+}
+
+.lead-tools {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.lead-type-filter {
+  min-width: 150px;
+  gap: 5px;
+}
+
+.lead-tools .search {
+  width: min(340px, 34vw);
+}
+
+.crm-row.priority-lead,
+.crm-row.priority-lead:hover,
+.crm-row.priority-lead:focus-visible {
+  background: transparent !important;
+  box-shadow: inset 2px 0 var(--accent-line) !important;
+}
+
+.crm-row[data-open-lead]:hover,
+.crm-row[data-open-lead]:focus-visible {
+  background: var(--surface-subtle) !important;
+}
+
+/* Large document collections render in batches and keep actions aligned. */
+.document-list-footer {
+  min-height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--surface-subtle);
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.document-list-footer .secondary {
+  min-width: 112px;
+}
+
+#documents .doc-head {
+  top: 72px;
+}
+
+/* Remove residual campaign-like styling from deep project/workspace modules. */
+.delivery-playlist-builder,
+.project-time-section,
+.project-image-section,
+.goal-progress i,
+.audio-form,
+.time-entry-form {
+  background-image: none !important;
+}
+
+.delivery-playlist-builder,
+.goal-card,
+.note-card,
+.tenant-admin-grid > section,
+.google-calendar-agenda-item,
+.booking-card,
+.quote-card {
+  border-radius: 5px !important;
+  box-shadow: none !important;
+}
+
+.goal-progress,
+.goal-progress i,
+.progress,
+.progress i {
+  border-radius: 1px !important;
+}
+
+/* Feedback is text-first. A colored edge communicates state without decorative glyphs. */
+.toast {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .16);
+}
+
+.google-calendar-weekdays span,
+.google-calendar-event-chip time,
+.google-calendar-event-chip span,
+.google-calendar-more,
+.google-calendar-day-head span {
+  font-size: 10px;
+}
+
+@media screen and (max-width: 767px) {
+  /* The mobile shell keeps the same product identity instead of becoming a
+     separate blue, gradient-heavy interface. */
+  :root,
+  html[data-theme="dark"] {
+    --mobile-bg: var(--paper);
+    --mobile-surface: var(--panel);
+    --mobile-surface-strong: var(--surface-muted);
+    --mobile-border: var(--line);
+    --mobile-text: var(--ink);
+    --mobile-muted: var(--muted);
+    --mobile-accent: var(--accent);
+    --mobile-accent-text: var(--accent-ink);
+    --mobile-priority-from: var(--accent-soft);
+    --mobile-priority-to: var(--accent-soft);
+    --mobile-priority-border: var(--accent-line);
+    --mobile-action-bg: var(--panel);
+    --mobile-action-text: var(--ink);
+    --mobile-nav-bg: var(--panel);
+  }
+
+  .mobile-priority-card,
+  .mobile-priority-card.complete {
+    border-radius: 6px;
+    background: var(--accent-soft);
+    box-shadow: none;
+  }
+
+  .mobile-work-queue,
+  .mobile-quick-actions button,
+  .topbar .push-toggle,
+  .topbar #new-lead,
+  .mobile-queue-count,
+  .mobile-more-panel,
+  .mobile-more-grid button,
+  .mobile-more-settings button,
+  .mobile-more-close,
+  .lead-attention-filter:not([hidden]),
+  .lead-attention-filter button {
+    border-radius: 5px;
+    box-shadow: none;
+  }
+
+  .mobile-more-backdrop:not([hidden]) {
+    backdrop-filter: none;
+  }
+
+  .mobile-header-date,
+  .mobile-primary-nav button,
+  .mobile-more-panel > header span,
+  .mobile-more-grid small,
+  .mobile-more-settings small,
+  .lead-attention-filter button {
+    font-size: 10px;
+  }
+
+  .lead-section-divider,
+  .lead-tools {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .lead-type-filter,
+  .lead-tools .search {
+    width: 100%;
+  }
+
+  .document-list-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+

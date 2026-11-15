@@ -151,6 +151,38 @@ test("CRM launch polish standardizes controls, feedback states and iconography",
   assert.doesNotMatch(receipts, /▧/);
 });
 
+test("independent design audit removes duplicated hierarchy and scales dense collections", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "launch-polish.css"), "utf8");
+  const documents = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "documents.js"), "utf8");
+  const operations = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "operations.js"), "utf8");
+  assert.match(html, /const titles=\{overview:"Oversikt"/);
+  assert.doesNotMatch(html, /page-title"\)\.textContent=`Hei,/);
+  assert.match(html, /scrollTo\(\{top:0,left:0,behavior:"auto"\}\)/);
+  assert.match(styles, /#overview \.overview-panel\s*\{[^}]*min-height:\s*0/s);
+  assert.match(styles, /\.nav #booking-count\s*\{[^}]*display:\s*none/s);
+  assert.match(styles, /\.crm-row\.priority-lead[\s\S]*?background:\s*transparent\s*!important/);
+  assert.match(documents, /const pageSize = 100/);
+  assert.match(documents, /id="document-load-more"/);
+  assert.match(documents, /matches\.slice\(0, renderLimit\)/);
+  assert.match(operations, /Extended_Pictographic/);
+});
+
+test("external booking portal shares the restrained Loki product identity", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
+  const script = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "booking", "booking-polish.css"), "utf8");
+  assert.match(html, /booking-polish\.css/);
+  assert.match(html, /data-theme-icon[^>]*>[\s\S]*?<svg/);
+  assert.doesNotMatch(html, />☾</);
+  assert.match(script, /data-theme-icon.*innerHTML/s);
+  assert.match(styles, /--accent:\s*#365f55/);
+  assert.match(styles, /\.auth-card\s*\{[^}]*border-radius:\s*6px[^}]*box-shadow:\s*none/s);
+  assert.match(styles, /\.calendar-card,[\s\S]*?border-radius:\s*6px/);
+  assert.match(styles, /\.day-booking\.staff/);
+  assert.match(styles, /env\(safe-area-inset-bottom\)/);
+});
+
 test("CRM overview is personalized and prioritizes owner tasks and stale Formspree enquiries", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");

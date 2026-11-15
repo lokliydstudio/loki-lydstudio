@@ -17,7 +17,7 @@
 
   function toast(message) {
     const node = document.getElementById("toast");
-    node.textContent = `✓ ${message}`;
+    node.textContent = message;
     node.classList.add("show");
     clearTimeout(window.operationsToastTimer);
     window.operationsToastTimer = setTimeout(() => node.classList.remove("show"), 3500);
@@ -109,7 +109,12 @@
     const grid = document.getElementById("google-calendar-grid");
     const agenda = document.getElementById("google-calendar-agenda");
     if (!grid || !agenda) return;
-    document.getElementById("google-calendar-name").textContent = googleCalendar.calendarName || "Loki-kalender";
+    const calendarName = String(googleCalendar.calendarName || "Loki-kalender")
+      .replace(/\p{Extended_Pictographic}/gu, "")
+      .replace(/\uFE0F/g, "")
+      .replace(/\s{2,}/g, " ")
+      .trim();
+    document.getElementById("google-calendar-name").textContent = calendarName || "Loki-kalender";
     document.getElementById("calendar-month-title").textContent = calendarMonthLabel();
     const state = document.getElementById("google-calendar-state");
     state.textContent = googleCalendar.configured ? "Tilkoblet · skrivebeskyttet" : "Ikke konfigurert";

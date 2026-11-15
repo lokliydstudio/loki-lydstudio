@@ -1,0 +1,561 @@
+/* Loki Booking · aligned product identity
+ * The portal stays operationally separate from CRM while sharing its visual
+ * grammar: restrained Nordic surfaces, compact controls and semantic color.
+ */
+
+:root {
+  color-scheme: light;
+  --ink: #202421;
+  --muted: #676d69;
+  --line: #d5d8d3;
+  --line-strong: #b9beb8;
+  --paper: #f2f2ef;
+  --panel: #fbfbf9;
+  --surface: #f5f5f2;
+  --surface-muted: #e9ebe7;
+  --accent: #365f55;
+  --accent-hover: #294b43;
+  --accent-soft: #e3ece8;
+  --accent-line: #527d72;
+  --danger: #a64b3f;
+  --sidebar: #171c19;
+}
+
+html[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #edf0ed;
+  --muted: #9ca49f;
+  --line: #353b37;
+  --line-strong: #4c5550;
+  --paper: #121614;
+  --panel: #191e1b;
+  --surface: #1e2421;
+  --surface-muted: #252c28;
+  --accent: #91b8ad;
+  --accent-hover: #a8cbc2;
+  --accent-soft: #213731;
+  --accent-line: #6f9d91;
+  --danger: #e9897d;
+  --sidebar: #0d110f;
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body,
+button,
+input,
+select,
+textarea {
+  font-family: Inter, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+h1,
+h2,
+h3 {
+  font-family: inherit;
+  font-weight: 650;
+  letter-spacing: -.035em;
+}
+
+.kicker {
+  color: var(--accent);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .11em;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  transition: color 120ms ease-out, background-color 120ms ease-out, border-color 120ms ease-out;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent-line);
+  outline-offset: 2px;
+}
+
+.primary,
+.secondary,
+.danger,
+.theme-toggle,
+.round-button {
+  min-height: 40px;
+  border-radius: 4px;
+  box-shadow: none;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.primary:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+html[data-theme="dark"] .primary {
+  color: #10201c;
+}
+
+.secondary,
+.theme-toggle,
+.round-button {
+  border-color: var(--line-strong);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.secondary:hover:not(:disabled),
+.theme-toggle:hover,
+.round-button:hover {
+  border-color: var(--accent-line);
+  background: var(--surface);
+}
+
+.danger {
+  border-color: color-mix(in srgb, var(--danger) 52%, var(--line));
+  background: transparent;
+  color: var(--danger);
+}
+
+.theme-toggle [data-theme-icon] {
+  display: inline-grid;
+  place-items: center;
+}
+
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.auth-shell {
+  grid-template-columns: minmax(320px, .82fr) minmax(460px, 1.18fr);
+  background: var(--sidebar);
+}
+
+.auth-brand {
+  max-width: 650px;
+  padding: clamp(42px, 7vw, 104px);
+}
+
+.auth-brand img {
+  width: min(190px, 65%);
+  margin-bottom: 34px;
+}
+
+.auth-brand strong {
+  font-size: 24px;
+  font-weight: 650;
+}
+
+.auth-brand span {
+  color: #8f9892;
+  font-size: 9px;
+}
+
+.auth-brand p {
+  max-width: 360px;
+  margin-top: 24px;
+  color: #9ca49f;
+  font-size: 12px;
+}
+
+.auth-card {
+  width: min(480px, calc(100% - 48px));
+  margin: 32px clamp(24px, 6vw, 88px);
+  padding: 38px 40px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: none;
+}
+
+.auth-actions {
+  margin-bottom: 18px;
+}
+
+.auth-card h1 {
+  margin: 8px 0 10px;
+  font-size: 32px;
+}
+
+.intro {
+  margin-bottom: 23px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.auth-card label,
+.modal label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .07em;
+}
+
+.auth-card input,
+.auth-card select,
+.modal input,
+.modal select,
+.modal textarea,
+.studio-switch select {
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: none;
+  font-size: 14px;
+}
+
+.text-button {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.privacy-note {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.portal-header {
+  height: 68px;
+  padding: 0 clamp(18px, 4vw, 54px);
+  border-color: #2b302d;
+  background: var(--sidebar);
+}
+
+.portal-brand img {
+  width: 36px;
+  height: 36px;
+}
+
+.portal-brand strong {
+  font-size: 15px;
+}
+
+.portal-brand small {
+  color: #89918c;
+  font-size: 9px;
+}
+
+.user-box span {
+  color: #9fc2b8;
+}
+
+.portal-header .theme-toggle,
+html[data-theme="dark"] .portal-header .theme-toggle {
+  border-color: #46504a;
+  background: transparent;
+  color: #edf0ed;
+}
+
+.portal-content {
+  width: min(1460px, calc(100% - 48px));
+  padding: 30px 0 58px;
+}
+
+.portal-intro {
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--line-strong);
+}
+
+.portal-intro h1 {
+  margin: 5px 0;
+  font-size: 28px;
+}
+
+.portal-intro p {
+  font-size: 11px;
+}
+
+.calendar-card,
+.agenda-card,
+.portal-disclosure,
+.rules {
+  border-color: var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: none;
+}
+
+.calendar-nav {
+  min-height: 60px;
+  padding: 10px 14px;
+  background: var(--surface-muted);
+}
+
+.calendar-nav h2 {
+  font-size: 18px;
+}
+
+.round-button {
+  width: 40px;
+  height: 40px;
+}
+
+.weekdays span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.day {
+  min-height: 108px;
+  background: var(--panel);
+}
+
+.day.outside {
+  background: var(--surface);
+  color: var(--muted);
+}
+
+.day.today {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.day.today .day-number span {
+  border-radius: 3px;
+  background: var(--accent);
+  color: #fff;
+}
+
+.day-add {
+  border-radius: 3px;
+  color: var(--accent);
+}
+
+.day-create:not(:disabled):hover .day-add {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.day-booking {
+  border-left-color: var(--accent-line);
+  border-radius: 2px;
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.day-booking:hover,
+.day-booking:focus-visible,
+.day-booking.own,
+.day-booking.own:hover,
+.day-booking.own:focus-visible {
+  background: color-mix(in srgb, var(--accent-soft) 74%, var(--panel));
+  color: var(--ink);
+}
+
+.day-booking.own {
+  border-left-color: var(--accent);
+}
+
+.day-booking.staff,
+.day-booking.staff.own {
+  border-left-color: #c46b22;
+  background: color-mix(in srgb, #c46b22 12%, var(--panel));
+  color: var(--ink);
+}
+
+.calendar-legend {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.portal-disclosure > summary {
+  min-height: 58px;
+  padding: 13px 16px;
+}
+
+.portal-disclosure > summary strong {
+  font-size: 13px;
+}
+
+.portal-disclosure > summary > i {
+  width: 30px;
+  height: 30px;
+  flex-basis: 30px;
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--accent);
+}
+
+.portal-disclosure > summary:hover {
+  background: var(--surface);
+}
+
+.agenda-item {
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.agenda-date {
+  border-radius: 3px;
+  background: var(--sidebar);
+}
+
+.agenda-date span,
+.agenda-item > span,
+.agenda-side > span {
+  color: var(--accent);
+}
+
+.booking-preferences {
+  border-radius: 4px;
+  background: var(--panel);
+}
+
+.booking-mail-choice input {
+  accent-color: var(--accent);
+}
+
+.modal {
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, .22);
+}
+
+.modal-head h2 {
+  font-size: 24px;
+}
+
+.close {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.toast {
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .18);
+}
+
+html[data-theme="dark"] .auth-card input,
+html[data-theme="dark"] .auth-card select,
+html[data-theme="dark"] .modal input,
+html[data-theme="dark"] .modal textarea,
+html[data-theme="dark"] .secondary,
+html[data-theme="dark"] .round-button,
+html[data-theme="dark"] .calendar-nav,
+html[data-theme="dark"] .day.outside,
+html[data-theme="dark"] .close,
+html[data-theme="dark"] .portal-disclosure > summary > i {
+  border-color: var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .portal-header .theme-toggle {
+  border-color: #46504a;
+  background: transparent;
+  color: #edf0ed;
+}
+
+html[data-theme="dark"] .day-booking,
+html[data-theme="dark"] .day-booking:hover,
+html[data-theme="dark"] .day-booking:focus-visible,
+html[data-theme="dark"] .day-booking.own,
+html[data-theme="dark"] .day-booking.own:hover,
+html[data-theme="dark"] .day-booking.own:focus-visible {
+  border-left-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+html[data-theme="dark"] .day-booking.staff,
+html[data-theme="dark"] .day-booking.staff.own,
+html[data-theme="dark"] .day-booking.staff:hover,
+html[data-theme="dark"] .day-booking.staff:focus-visible {
+  border-left-color: #e18a43;
+  background: color-mix(in srgb, #e18a43 16%, var(--panel));
+  color: var(--ink);
+}
+
+@media (max-width: 780px) {
+  .auth-shell {
+    background: var(--paper);
+  }
+
+  .auth-card {
+    width: calc(100% - 24px);
+    margin: 12px auto;
+    padding: 28px 22px;
+  }
+
+  .auth-card h1 {
+    font-size: 28px;
+  }
+
+  .portal-header {
+    height: 64px;
+    padding-inline: max(12px, env(safe-area-inset-left));
+  }
+
+  .portal-content {
+    width: calc(100% - 24px);
+    padding: 22px 0 calc(42px + env(safe-area-inset-bottom));
+  }
+
+  .portal-intro h1 {
+    font-size: 25px;
+  }
+
+  .primary,
+  .secondary,
+  .danger,
+  .theme-toggle,
+  .round-button,
+  input,
+  select {
+    min-height: 44px;
+  }
+
+  .calendar-card {
+    border-radius: 4px;
+  }
+
+  .modal {
+    padding: 21px 17px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: .01ms !important;
+  }
+}

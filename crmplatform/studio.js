@@ -154,7 +154,7 @@
 
   function toast(text) {
     const node = document.getElementById("toast");
-    node.textContent = `✓ ${text}`;
+    node.textContent = text;
     node.classList.add("show");
     clearTimeout(window.studioToastTimer);
     window.studioToastTimer = setTimeout(() => node.classList.remove("show"), 3600);
