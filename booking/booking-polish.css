@@ -506,6 +506,7 @@ html[data-theme="dark"] .day-booking.staff:focus-visible {
 
 @media (max-width: 780px) {
   .auth-shell {
+    grid-template-columns: minmax(0, 1fr);
     background: var(--paper);
   }
 
@@ -538,6 +539,10 @@ html[data-theme="dark"] .day-booking.staff:focus-visible {
   .danger,
   .theme-toggle,
   .round-button,
+  .auth-card input,
+  .auth-card select,
+  .modal input,
+  .modal select,
   input,
   select {
     min-height: 44px;
