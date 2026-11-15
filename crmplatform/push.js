@@ -39,6 +39,7 @@
     const active = Boolean(state.active);
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
+    button.setAttribute("aria-label", active ? "Pushvarsler er aktivert" : "Aktiver pushvarsler");
     label.textContent = active ? "Varsler på" : "Varsler";
     button.title = state.message || (active ? "Pushvarsler er aktivert på denne enheten" : "Aktiver pushvarsler på denne enheten");
     button.disabled = Boolean(state.disabled);

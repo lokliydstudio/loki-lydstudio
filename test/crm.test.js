@@ -198,6 +198,9 @@ test("CRM sidebar is compact, task grouped and keeps system details in settings"
   assert.match(styles, /--sidebar-width:\s*260px/);
   assert.match(styles, /\.nav-section button\s*\{[^}]*min-height:\s*42px/s);
   assert.match(styles, /@media screen and \(max-width: 767px\)/);
+  assert.match(styles, /\.topbar \.push-toggle\s*\{[^}]*width:\s*42px/s);
+  assert.match(styles, /\.topbar \.mobile-bell-icon svg\s*\{[^}]*stroke:\s*currentColor/s);
+  assert.doesNotMatch(html, /class="primary overview-cta"/);
 });
 
 test("external booking portal shares the restrained Loki product identity", () => {
@@ -1449,6 +1452,7 @@ test("CRM is installable and exposes user-activated iPhone and Android push", ()
   assert.match(client, /Notification\.requestPermission/);
   assert.match(client, /registration\.pushManager\.subscribe/);
   assert.match(client, /Legg til på Hjem-skjermen/);
+  assert.match(client, /aria-label", active \? "Pushvarsler er aktivert" : "Aktiver pushvarsler"/);
   assert.match(worker, /showNotification/);
   assert.match(worker, /notificationclick/);
   assert.match(studio, /action === "push"/);

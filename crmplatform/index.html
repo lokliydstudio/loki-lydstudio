@@ -49,7 +49,7 @@
     <link rel="stylesheet" href="/crmplatform/studio-console.css?v=20261115-nordic-v2">
     <link rel="stylesheet" href="/crmplatform/ux-layout.css?v=20261115-note-spacing-v3">
     <link rel="stylesheet" href="/crmplatform/launch-polish.css?v=20261115-independent-audit-v4">
-    <link rel="stylesheet" href="/crmplatform/sidebar-redesign.css?v=20261115-sidebar-v1">
+    <link rel="stylesheet" href="/crmplatform/sidebar-redesign.css?v=20261115-header-actions-v2">
 </head>
 <body>
   <div class="auth-gate" id="auth-gate"><section class="auth-card" role="dialog" aria-labelledby="auth-title"><div class="brand"><span class="brand-logo"><img src="/assets/brand/loki-symbol.png" alt="Loki Lydstudio"></span><span class="brand-copy"><strong>LOKI</strong><span>STUDIO</span></span></div><span class="kicker">SIKKER CRM-INNLOGGING</span><h2 id="auth-title">Logg inn sikkert</h2><form id="auth-form"><label for="auth-email">E-postadresse</label><input id="auth-email" name="email" type="email" autocomplete="email" placeholder="navn@lokilyd.no" required><button class="primary" type="submit">Send kode og lenke</button></form><form class="auth-code-form" id="auth-code-form" hidden><label for="auth-code">Engangskode</label><input id="auth-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="7" pattern="[0-9]{3} ?[0-9]{3}" placeholder="000 000" required><button class="primary" type="submit">Logg inn med kode</button><button class="auth-back" id="auth-back" type="button">Bytt e-postadresse</button></form><div class="auth-feedback" id="auth-feedback"></div></section></div>
@@ -90,7 +90,7 @@
             </section>
             <p class="mobile-dashboard-status" id="mobile-dashboard-status" role="status" hidden></p>
           </section>
-          <section class="overview-welcome"><div><span class="kicker" id="overview-date">DAGENS OVERSIKT</span><h2 id="overview-greeting">Hei.</h2><p id="overview-summary">Henter det som trenger oppmerksomhet i dag …</p></div><button class="primary overview-cta" data-view-target="workspace-tools">Åpne gjøremål <span>→</span></button></section>
+          <section class="overview-welcome"><div><span class="kicker" id="overview-date">DAGENS OVERSIKT</span><h2 id="overview-greeting">Hei.</h2><p id="overview-summary">Henter det som trenger oppmerksomhet i dag …</p></div></section>
           <div class="metrics overview-metrics"><article class="metric"><span>MINE ÅPNE OPPGAVER</span><strong id="overview-open-tasks">0</strong><small>Leon/Charles og Begge</small></article><article class="metric"><span>FORFALT / I DAG</span><strong id="overview-due-tasks">0</strong><small id="overview-task-summary">Ingen oppgaver haster</small></article><article class="metric"><span>FORMSPREE OVER 24 T</span><strong id="overview-stale-formspree">0</strong><small>Eldste henvendelser først</small></article><article class="metric"><span>KUNDEOPPFØLGING FORFALT</span><strong id="overdue-followups">0</strong><small id="followup-summary">Ingen forsinkede</small></article></div>
           <div class="overview-grid"><section class="panel overview-panel"><div class="panel-head"><div><span class="kicker">GJØRELISTE</span><h2>Dette bør gjøres i dag</h2></div><button class="link-button" data-view-target="workspace-tools">Hele listen →</button></div><div class="overview-action-list" id="overview-tasks"></div></section><section class="panel overview-panel"><div class="panel-head"><div><span class="kicker">FORMSPREE</span><h2>Henvendelser som venter</h2></div><button class="link-button" data-view-target="inbox">Åpne innboks →</button></div><div class="overview-action-list" id="overview-formspree"></div></section></div>
           <section class="panel overview-followups"><div class="panel-head"><div><span class="kicker">SALG</span><h2>Kunder som bør følges opp</h2></div><button class="link-button" data-view-target="leads">Se alle →</button></div><div id="overview-leads"></div></section>
@@ -292,7 +292,7 @@
   <script src="/crmplatform/prospects.js"></script>
   <script src="/crmplatform/theme.js"></script>
   <script src="/crmplatform/presence.js?v=20260915-last-login"></script>
-  <script src="/crmplatform/push.js?v=20260922-web-push"></script>
+  <script src="/crmplatform/push.js?v=20261115-bell-control"></script>
   <script>
     (() => {
       const stages = ["Nytt lead", "Kontaktet", "Tilbud sendt", "Booket", "Ferdig"];

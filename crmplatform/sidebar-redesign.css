@@ -14,6 +14,51 @@
     overflow: hidden;
   }
 
+  .topbar .push-toggle {
+    position: relative;
+    width: 42px;
+    min-width: 42px;
+    height: 42px;
+    min-height: 42px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    border-color: var(--line-strong);
+    background: var(--panel);
+    color: var(--muted);
+  }
+
+  .topbar .push-toggle b {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .topbar .mobile-bell-icon,
+  .topbar .mobile-bell-icon svg {
+    width: 19px;
+    height: 19px;
+    display: block;
+  }
+
+  .topbar .mobile-bell-icon svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.8;
+  }
+
+  .topbar .push-toggle.active {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
   .sidebar .brand {
     min-height: 62px;
     flex: 0 0 auto;
