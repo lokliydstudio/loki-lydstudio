@@ -184,7 +184,8 @@ test("mobile tasks shortcut uses the private CRM workspace and its own start URL
   const script = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.js"), "utf8");
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "crm-tasks.webmanifest"), "utf8"));
   assert.equal(manifest.start_url, "/crmplatform/tasks.html");
-  assert.match(html, /Legg til på Hjem-skjerm/);
+  assert.match(html, /rel="manifest" href="\/crm-tasks\.webmanifest"/);
+  assert.match(html, /apple-mobile-web-app-title/);
   assert.match(script, /\/api\/crm\/auth-status/);
   assert.match(script, /\/api\/studio\?action=workspace/);
   assert.match(script, /method: "PATCH"/);
@@ -298,7 +299,8 @@ test("project workspace can add and remove patch channels up to 32", () => {
   assert.match(html, /patch-dynamic\.css/);
   assert.match(studio, /id="add-patch-channel"/);
   assert.match(studio, /data-remove-channel/);
-  assert.match(studio, /Maks 32 kanaler/);
+  assert.match(studio, /rows\.length >= 32/);
+  assert.match(studio, /Array\.from\(\{ length: 32 \}/);
   assert.match(studio, /removeEmptyPatchChannels/);
 });
 
@@ -1866,4 +1868,21 @@ test("project customer email fields suggest saved CRM contacts", () => {
   assert.match(studio, /nameInput\.value = contact\.artistName \|\| contact\.name \|\| contact\.company/);
   assert.match(studio, /data-contact-suggestions="project-contact-suggestions-editor"/);
   assert.match(studio, /data-contact-email=/);
+});
+
+test("CRM keeps operational copy concise without instructional tip panels", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  const tasks = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "tasks.html"), "utf8");
+  const receipts = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "receipts.js"), "utf8");
+
+  assert.doesNotMatch(html, /Cold storage:/i);
+  assert.doesNotMatch(html, /class="backup-note"/);
+  assert.doesNotMatch(html, /class="guardrails"/);
+  assert.doesNotMatch(html, /class="prospect-guard"/);
+  assert.doesNotMatch(studio, /class="storage-note"/);
+  assert.doesNotMatch(studio, /class="time-help"/);
+  assert.doesNotMatch(studio, /COLD STORAGE-BACKUP/);
+  assert.doesNotMatch(tasks, /class="install-note"/);
+  assert.doesNotMatch(receipts, /Kontroller alltid originalen/);
 });

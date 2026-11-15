@@ -1133,3 +1133,13 @@
     padding: 16px;
   }
 }
+
+/* Keep forms focused on the actions and data users need. */
+.safe-note,
+#tenant-modal .modal-head p,
+#prospect-modal .modal-head p,
+#note-create-disclosure > summary small,
+.note-form label > small,
+.note-file-field > small {
+  display: none !important;
+}

@@ -88,7 +88,7 @@
     if (!node) return;
     const event = googleEvents.find((item) => item.id === selectedGoogleEvent);
     if (!event) {
-      node.innerHTML = "<p>Velg en kalenderhendelse for å se detaljer.</p>";
+      node.innerHTML = "";
       return;
     }
     const badges = [calendarEventLabel(event), event.location, event.recurring ? "Gjentakende" : ""].filter(Boolean);

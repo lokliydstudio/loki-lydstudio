@@ -299,7 +299,7 @@
     const rows = Array.isArray(project.patch) ? project.patch : [];
     return rows.length
       ? rows.map(patchRow).join("")
-      : '<tr class="patch-empty-row"><td colspan="9">Ingen kanaler i patchelisten. Legg til kanaler når du trenger dem.</td></tr>';
+      : '<tr class="patch-empty-row"><td colspan="9">Ingen kanaler i patchelisten.</td></tr>';
   }
 
   function localDateValue(date = new Date()) {
@@ -410,7 +410,6 @@
         <div class="track-main">
           <div class="track-copy">
             <strong>Avspilling og levering</strong>
-            <span>Åpne spilleren, del kundelenke eller slett lydfilen permanent.</span>
           </div>
           <audio controls preload="metadata" data-track-player="${esc(track.id)}" src="/api/studio?action=internal-stream&amp;id=${encodeURIComponent(track.id)}">Nettleseren støtter ikke lydavspilling.</audio>
           <div class="track-actions">
@@ -433,7 +432,7 @@
 
   function projectImageCards() {
     const visible = currentProjectImages();
-    if (!visible.length) return '<div class="project-image-empty">Ingen tekniske bilder i prosjektet ennå. Ta bilde av frontpanelet før dere endrer innstillingene.</div>';
+    if (!visible.length) return '<div class="project-image-empty">Ingen tekniske bilder.</div>';
     return visible.map((image) => `
       <details class="project-image-card" data-project-image-card="${esc(image.id)}" data-project-image-disclosure="${esc(image.id)}"${expandedProjectImages.has(image.id) ? " open" : ""}>
         <summary><span class="project-image-summary-thumb"><img src="/api/studio?action=project-image-stream&amp;id=${encodeURIComponent(image.id)}" alt="" loading="lazy"></span><span class="project-image-summary-copy"><strong>${esc(image.gear || image.filename)}</strong><small>${esc(image.chainPosition || "Ingen plassering i chain")} · ${formatBytes(image.size)}</small></span><i aria-hidden="true"></i></summary>
@@ -453,7 +452,7 @@
 
   function playlistBuilderTracks() {
     const visible = projectTracks();
-    if (!visible.length) return '<p class="delivery-playlist-empty">Last opp minst én miks eller demo før du lager en spilleliste.</p>';
+    if (!visible.length) return '<p class="delivery-playlist-empty">Ingen lydfiler tilgjengelig.</p>';
     return visible.map((track) => `
       <label class="delivery-track-choice">
         <input type="checkbox" name="trackIds" value="${esc(track.id)}" checked>
@@ -469,7 +468,7 @@
       ...selectedIds.map((id) => byId.get(id)),
       ...projectTracks().filter((track) => !selected.has(track.id)),
     ];
-    if (!ordered.length) return '<p class="delivery-playlist-empty">Last opp en miks eller demo før du redigerer spillelisten.</p>';
+    if (!ordered.length) return '<p class="delivery-playlist-empty">Ingen lydfiler tilgjengelig.</p>';
     return ordered.map((track, index) => `
       <div class="delivery-playlist-edit-track" data-playlist-track-row>
         <label>
@@ -498,7 +497,7 @@
           <form class="delivery-playlist-editor" data-edit-playlist="${esc(playlist.id)}" hidden>
             <label class="delivery-playlist-edit-title">Navn på spillelisten<input name="title" maxlength="160" value="${esc(playlist.title)}" required></label>
             <div class="delivery-playlist-edit-tracks">${playlistEditorTracks(playlist)}</div>
-            <div class="delivery-playlist-edit-actions"><span>Velg nye versjoner, fjern gamle og bruk pilene for å endre rekkefølgen. Den eksisterende kundelenken oppdateres automatisk.</span><button class="primary" type="submit">Lagre endringer</button></div>
+            <div class="delivery-playlist-edit-actions"><button class="primary" type="submit">Lagre endringer</button></div>
           </form>
         </article>`;
     }).join("");
@@ -513,13 +512,13 @@
       <div class="project-fields">
         <label class="field">Prosjektnavn<input id="project-name" value="${esc(project.name)}"></label>
         <label class="field">Kunde / artist<input id="project-client" value="${esc(project.clientName)}"></label>
-        <label class="field">Kundens e-post<span class="contact-lookup-control"><input id="project-email" type="email" autocomplete="off" aria-autocomplete="list" aria-controls="project-contact-suggestions-editor" data-contact-suggestions="project-contact-suggestions-editor" placeholder="Skriv navn eller e-post" value="${esc(project.clientEmail)}"><span class="contact-suggestion-list" id="project-contact-suggestions-editor" role="listbox" hidden></span></span><small class="contact-lookup-hint">Forslag fra kontaktregisteret</small></label>
+        <label class="field">Kundens e-post<span class="contact-lookup-control"><input id="project-email" type="email" autocomplete="off" aria-autocomplete="list" aria-controls="project-contact-suggestions-editor" data-contact-suggestions="project-contact-suggestions-editor" placeholder="Skriv navn eller e-post" value="${esc(project.clientEmail)}"><span class="contact-suggestion-list" id="project-contact-suggestions-editor" role="listbox" hidden></span></span></label>
         <label class="field">Status<select id="project-status">${statuses.map((status) => `<option ${status === project.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
         <label class="field">Dato<input id="project-date" type="date" value="${esc(project.sessionDate)}"></label>
         <label class="field field-wide">Prosjektnotater<textarea id="project-notes" placeholder="Leveranse, referanser, tidsplan og andre avtaler …">${esc(project.notes)}</textarea></label>
       </div>
       <section class="studio-section project-time-section">
-        <div class="studio-section-head"><div><span class="kicker">TIMEFØRING</span><h3>Timer på prosjektet</h3><p>Registrer fakturerbart arbeid og se fordelingen mellom innspilling, editering og miks.</p></div><span class="state violet">Fakturagrunnlag</span></div>
+        <div class="studio-section-head"><div><span class="kicker">TIMEFØRING</span><h3>Timer på prosjektet</h3></div><span class="state violet">Fakturagrunnlag</span></div>
         <div class="time-summary" id="time-summary">${timeSummary(project)}</div>
         <details class="studio-disclosure" data-project-disclosure="time"${projectSectionOpen("time")}><summary><span><strong>Registrer timer og vis timelogg</strong><small>${(project.timeEntries || []).length} ${project.timeEntries?.length === 1 ? "registrering" : "registreringer"} · ${formatHours(timeTotals(project).total)} totalt</small></span><i aria-hidden="true"></i></summary><div class="studio-disclosure-body">
           <form class="time-entry-form" id="time-entry-form">
@@ -531,11 +530,10 @@
             <button class="primary" type="submit">+ Registrer timer</button>
           </form>
           <div class="time-entry-list" id="time-entry-list">${timeEntryRows(project)}</div>
-          <p class="time-help">Timer føres per arbeidsøkt og lagres direkte på prosjektet. Timeloggen følger med i ZIP-backupen.</p>
         </div></details>
       </section>
       <section class="studio-section">
-        <div class="studio-section-head"><div><span class="kicker">LYTTEREFERANSER</span><h3>Referanselåter</h3><p>Koble Spotify-spillelister, album eller låter direkte til prosjektet.</p></div><span class="state green">Spotify</span></div>
+        <div class="studio-section-head"><div><span class="kicker">LYTTEREFERANSER</span><h3>Referanselåter</h3></div><span class="state green">Spotify</span></div>
         <form class="spotify-reference-form" id="spotify-reference-form">
           <label>Spotify-lenke<input id="spotify-reference-url" type="url" inputmode="url" placeholder="https://open.spotify.com/playlist/…" required></label>
           <label>Navn<input id="spotify-reference-title" maxlength="120" placeholder="F.eks. sound og retning"></label>
@@ -543,16 +541,14 @@
           <button class="primary" type="submit">+ Legg til</button>
         </form>
         <div class="spotify-reference-list" id="spotify-reference-list">${spotifyReferenceCards(project)}</div>
-        <p class="spotify-reference-note">Referansene lagres på prosjektet og følger med i prosjektets ZIP-backup.</p>
       </section>
       <section class="studio-section">
-        <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>Patcheliste</h3><p>Bruk bare kanalene økten trenger. Fysisk input → mikrofon / DI → preamp → lydkortets input.</p></div><div class="button-row patch-actions"><button class="secondary" id="remove-empty-patch" type="button">Fjern tomme</button><button class="secondary" id="add-patch-channel" type="button">+ Legg til kanal</button><button class="secondary" id="print-patch" type="button">⎙ Skriv ut</button><span class="state green" id="patch-channel-count">${project.patch.length} / 32</span></div></div>
+        <div class="studio-section-head"><div><span class="kicker">SIGNALFLYT</span><h3>Patcheliste</h3></div><div class="button-row patch-actions"><button class="secondary" id="remove-empty-patch" type="button">Fjern tomme</button><button class="secondary" id="add-patch-channel" type="button">+ Legg til kanal</button><button class="secondary" id="print-patch" type="button">⎙ Skriv ut</button><span class="state green" id="patch-channel-count">${project.patch.length} / 32</span></div></div>
         <div class="patch-wrap"><table class="patch-table"><thead><tr><th>CH</th><th>KILDE</th><th>FYSISK INPUT</th><th>MIK / DI</th><th>PREAMP</th><th>ROUTING</th><th>+48V</th><th>NOTAT</th><th>FJERN</th></tr></thead><tbody id="patch-body">${patchRows(project)}</tbody></table></div>
-        <p class="patch-help">Maks 32 kanaler. Fjernede kanaler blir borte når prosjektet lagres.</p>
       </section>
       <section class="studio-section project-image-section">
-        <div class="studio-section-head"><div><span class="kicker">TEKNISK DOKUMENTASJON</span><h3>Outboard og chain-bilder</h3><p>Ta vare på kompressor-, EQ- og rackinnstillinger slik at miksen kan gjenskapes senere.</p></div><span class="state green">Privat · ${currentProjectImages().length} bilder</span></div>
-        <details class="studio-disclosure" data-project-disclosure="outboard"${projectSectionOpen("outboard")}><summary><span><strong>Vis bilder og opplasting</strong><small>${currentProjectImages().length} ${currentProjectImages().length === 1 ? "bilde" : "bilder"} lagret · hvert bilde åpnes separat</small></span><i aria-hidden="true"></i></summary><div class="studio-disclosure-body"><div class="project-image-uploader">
+        <div class="studio-section-head"><div><span class="kicker">TEKNISK DOKUMENTASJON</span><h3>Outboard og chain-bilder</h3></div><span class="state green">Privat · ${currentProjectImages().length} bilder</span></div>
+        <details class="studio-disclosure" data-project-disclosure="outboard"${projectSectionOpen("outboard")}><summary><span><strong>Bilder og opplasting</strong><small>${currentProjectImages().length} ${currentProjectImages().length === 1 ? "bilde" : "bilder"}</small></span><i aria-hidden="true"></i></summary><div class="studio-disclosure-body"><div class="project-image-uploader">
           <div class="project-image-upload-fields">
             <label>Utstyr / enhet<input id="project-image-gear" maxlength="160" placeholder="F.eks. 1176, LA-2A eller SSL G-Bus"></label>
             <label>Plass i chain<input id="project-image-position" maxlength="160" placeholder="F.eks. Vokal insert – steg 3"></label>
@@ -569,10 +565,10 @@
           <div class="project-image-progress" id="project-image-progress" hidden><i></i><span>Laster opp …</span></div>
         </div>
         <div class="project-image-gallery" id="project-image-gallery">${projectImageCards()}</div>
-        <p class="storage-note"><span>●</span><span>Bildene lagres privat, er bare tilgjengelige for innloggede brukere og følger med i prosjektets ZIP-backup.</span></p></div></details>
+        </div></details>
       </section>
       <section class="studio-section">
-        <div class="studio-section-head"><div><span class="kicker">LYDLEVERANSER</span><h3>Mikser og demoer</h3><p>Last opp privat, lytt her og kopier en tidsbegrenset kundelenke.</p></div><span class="state violet">Privat lagring</span></div>
+        <div class="studio-section-head"><div><span class="kicker">LYDLEVERANSER</span><h3>Mikser og demoer</h3></div><span class="state violet">Privat lagring</span></div>
         <details class="studio-subdisclosure" data-project-disclosure="audio-upload"${projectSectionOpen("audio-upload")}><summary><span><strong>Last opp en ny låt eller miks</strong><small>WAV, MP3, FLAC, AIFF, M4A, AAC, OGG eller WebM</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body"><form class="audio-form" id="audio-upload-form">
             <label>Lydfil<input id="audio-file" type="file" accept=".wav,.mp3,.flac,.aif,.aiff,.m4a,.aac,.ogg,.weba,.webm,audio/*" required></label>
             <label>Tittel<input id="audio-title" placeholder="Låttittel"></label>
@@ -584,12 +580,12 @@
             <form id="delivery-playlist-form">
               <div class="delivery-playlist-fields"><label>Navn på spillelisten<input id="delivery-playlist-title" maxlength="160" value="${esc(`${project.name} – mikser og demoer`)}" required></label><label>Lenken varer<select id="delivery-playlist-days"><option value="7">7 dager</option><option value="14" selected>14 dager</option><option value="30">30 dager</option><option value="60">60 dager</option><option value="90">90 dager</option></select></label></div>
               <div class="delivery-track-choices">${playlistBuilderTracks()}</div>
-              <div class="delivery-playlist-create"><span>En slettet spilleliste trekker tilbake alle lenkene til den.</span><button class="primary" type="submit" ${projectTracks().length ? "" : "disabled"}>Opprett og kopier lenke</button></div>
+              <div class="delivery-playlist-create"><button class="primary" type="submit" ${projectTracks().length ? "" : "disabled"}>Opprett og kopier lenke</button></div>
             </form>
             <div class="delivery-playlist-list">${deliveryPlaylistCards()}</div>
           </section></div></details>
-        <details class="studio-subdisclosure" data-project-disclosure="audio-tracks"${projectSectionOpen("audio-tracks")}><summary><span><strong>Opplastede låter og mikser</strong><small>${projectTracks().length} ${projectTracks().length === 1 ? "lydfil" : "lydfiler"} · marker flere for massesletting eller åpne én for avspilling og kommentarer</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body">${trackSelectionToolbar()}<div class="audio-list" id="audio-list">${trackCards()}</div>
-          <p class="storage-note"><span>●</span><span><b>Sikker levering:</b> Avspillingen går gjennom Loki-plattformen fra privat Blob-lagring. Kundelenker er signert og varer i 14 dager. Jottacloud-broen speiler filene til studioets eget arkiv når den kjører på Mac-en.</span></p></div></details>
+        <details class="studio-subdisclosure" data-project-disclosure="audio-tracks"${projectSectionOpen("audio-tracks")}><summary><span><strong>Opplastede låter og mikser</strong><small>${projectTracks().length} ${projectTracks().length === 1 ? "lydfil" : "lydfiler"}</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body">${trackSelectionToolbar()}<div class="audio-list" id="audio-list">${trackCards()}</div>
+          </div></details>
       </section>`;
   }
 
@@ -606,7 +602,7 @@
       </button>`).join("") : '<div class="project-empty">Ingen prosjekter ennå.</div>';
 
     const project = projects.find((item) => item.id === selectedProjectId);
-    workspace.innerHTML = project ? editorMarkup(project) : '<div class="project-empty">Opprett et prosjekt for å sette opp patchelisten og laste opp lyd.</div>';
+    workspace.innerHTML = project ? editorMarkup(project) : '<div class="project-empty">Ingen prosjekt valgt.</div>';
     const exportAll = document.getElementById("export-all-projects");
     if (exportAll) exportAll.disabled = projects.length === 0;
     bindRenderedControls();
@@ -789,7 +785,7 @@
     const body = document.getElementById("patch-body");
     if (!body) return;
     const rows = [...body.querySelectorAll("tr[data-channel]")];
-    if (!rows.length) body.innerHTML = '<tr class="patch-empty-row"><td colspan="9">Ingen kanaler i patchelisten. Legg til kanaler når du trenger dem.</td></tr>';
+    if (!rows.length) body.innerHTML = '<tr class="patch-empty-row"><td colspan="9">Ingen kanaler i patchelisten.</td></tr>';
     const count = document.getElementById("patch-channel-count");
     if (count) count.textContent = `${rows.length} / 32`;
     const add = document.getElementById("add-patch-channel");
@@ -1134,7 +1130,7 @@
     const encoder = new TextEncoder();
     const textEntry = (name, input) => ({ name, input, size: encoder.encode(input).byteLength });
     const readme = [
-      "LOKI LYDSTUDIO – COLD STORAGE-BACKUP",
+      "LOKI LYDSTUDIO – PROSJEKTBACKUP",
       "",
       `Eksportert: ${new Date(manifest.exportedAt).toLocaleString("nb-NO")}`,
       `Omfang: ${manifest.scope === "project" ? "Ett prosjekt" : "Alle prosjekter"}`,
@@ -1142,9 +1138,7 @@
       `Antall lydfiler: ${manifest.files.length}`,
       `Antall tekniske bilder: ${(manifest.imageFiles || []).length}`,
       "",
-      "Hver prosjektmappe inneholder prosjekt.json med Spotify-referanser, kundespillelister og teknisk bildedata, patcheliste.csv, timelogg.csv og mappene Lydfiler og Tekniske-bilder.",
-      "Arkivet inneholder kundeopplysninger og kan inneholde upublisert lyd. Oppbevar det sikkert og kryptert.",
-      "Lydfilene lagres uten ekstra ZIP-komprimering for effektiv eksport og tapsfri bevaring.",
+      "Innhold: prosjektdata, patcheliste, timelogg, lydfiler og tekniske bilder.",
       "",
     ].join("\r\n");
     const entries = [textEntry("README.txt", readme)];

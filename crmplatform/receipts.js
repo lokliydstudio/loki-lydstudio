@@ -139,7 +139,7 @@
     const root = document.getElementById("receipt-detail");
     const item = selectedReceipt();
     if (!item) {
-      root.innerHTML = '<div class="receipt-detail-empty"><span>▧</span><strong>Velg et bilag</strong><p>Her kan dere kontrollere det som ble lest fra kvitteringen.</p></div>';
+      root.innerHTML = '<div class="receipt-detail-empty"><span>▧</span><strong>Velg et bilag</strong></div>';
       return;
     }
     const fileUrl = `/api/crm/receipts?action=download&id=${encodeURIComponent(item.id)}`;
@@ -164,7 +164,7 @@
         <label><span>Status</span><select name="status"><option ${item.status !== "Godkjent" ? "selected" : ""}>Til kontroll</option><option ${item.status === "Godkjent" ? "selected" : ""}>Godkjent</option></select></label>
         ${item.scanWarnings?.length ? `<div class="receipt-warning"><strong>Kontroller spesielt</strong>${item.scanWarnings.map((warning) => `<span>• ${esc(warning)}</span>`).join("")}</div>` : ""}
         ${item.scanError ? `<div class="receipt-warning error"><strong>Skanning feilet</strong><span>${esc(item.scanError)}</span></div>` : ""}
-        <p class="receipt-scan-meta">${item.scannedAt ? `AI-avlest ${esc(new Date(item.scannedAt).toLocaleString("nb-NO"))} · sikkerhet ${esc(item.scanConfidence)} %.` : "Ikke AI-avlest ennå."} Kontroller alltid originalen før godkjenning.</p>
+        <p class="receipt-scan-meta">${item.scannedAt ? `AI-avlest ${esc(new Date(item.scannedAt).toLocaleString("nb-NO"))} · ${esc(item.scanConfidence)} %` : "Ikke AI-avlest"}</p>
         <div class="receipt-detail-actions"><button class="primary" type="submit">Lagre bilag</button><button class="secondary" id="receipt-scan" type="button">Skann på nytt</button><a class="secondary receipt-link-button" href="${fileUrl}&download=1">Last ned</a><button class="receipt-delete" id="receipt-delete" type="button">Slett</button></div>
       </form>`;
     document.getElementById("receipt-close").onclick = () => { selectedId = ""; render(); };
