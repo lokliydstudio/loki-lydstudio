@@ -558,11 +558,18 @@ input[type="radio"] {
   min-height: 248px;
 }
 
-.receipt-detail-empty > span,
-.receipt-empty > span {
+.receipt-detail-empty > span {
   color: var(--muted);
   font-family: var(--font-data);
   font-size: 18px;
+}
+
+.receipt-empty > span {
+  max-width: 300px;
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  line-height: 1.5;
 }
 
 /* Time tracking uses hierarchy, not a rainbow. */
