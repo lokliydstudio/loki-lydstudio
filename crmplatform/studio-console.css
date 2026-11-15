@@ -378,7 +378,7 @@
   }
 
   .primary:hover {
-    border-color: #78952d;
+    border-color: var(--accent-line);
     background: var(--accent-hover);
   }
 
@@ -425,7 +425,7 @@
   }
 
   .push-toggle.active {
-    border-color: #78952d;
+    border-color: var(--accent-line);
     background: var(--accent-soft);
     color: var(--green);
   }
@@ -471,7 +471,7 @@
   input:not([type="checkbox"]):not([type="radio"]):focus,
   select:focus,
   textarea:focus {
-    border-color: #7d9b31 !important;
+    border-color: var(--accent-line) !important;
   }
 
   input::placeholder,
@@ -481,7 +481,7 @@
 
   input[type="checkbox"],
   input[type="radio"] {
-    accent-color: #75952d;
+    accent-color: var(--accent);
   }
 
   .search {
@@ -664,7 +664,7 @@
   .goal-progress i,
   .prospect-score i::after {
     border-radius: 0 !important;
-    background: #7d9d31 !important;
+    background: var(--accent) !important;
   }
 
   /* Dashboard: hierarchy first, decoration last */
@@ -777,7 +777,7 @@
 
   .overview-panel {
     min-height: 300px;
-    border-top: 2px solid #77806f;
+    border-top: 2px solid var(--accent-line);
   }
 
   .overview-panel:nth-child(2) {
@@ -878,11 +878,11 @@
   .message.selected {
     border-radius: 0;
     background: var(--accent-soft);
-    box-shadow: inset 2px 0 #76922f;
+    box-shadow: inset 2px 0 var(--accent);
   }
 
   .message.unread .message-sender::after {
-    background: #76922f;
+    background: var(--accent);
   }
 
   .message em {
@@ -947,7 +947,7 @@
   }
 
   .crm-category-tab.active {
-    border-color: #76922f;
+    border-color: var(--accent);
     background: transparent;
     color: var(--ink);
     box-shadow: none;
@@ -995,7 +995,7 @@
   .customer-directory-card:focus-visible {
     transform: none;
     background: var(--surface-subtle);
-    box-shadow: inset 2px 0 #76922f !important;
+    box-shadow: inset 2px 0 var(--accent) !important;
   }
 
   .customer-directory-copy > span em {
@@ -1058,7 +1058,7 @@
   .crm-row.priority-lead:hover,
   .crm-row.priority-lead:focus-visible {
     background: var(--accent-soft);
-    box-shadow: inset 2px 0 #76922f;
+    box-shadow: inset 2px 0 var(--accent);
   }
 
   /* Shared workspace */
@@ -1223,7 +1223,7 @@
   .project-list button.active {
     border-color: var(--line);
     background: var(--accent-soft);
-    box-shadow: inset 2px 0 #76922f;
+    box-shadow: inset 2px 0 var(--accent);
   }
 
   .project-toolbar {
@@ -1298,7 +1298,7 @@
 
   .track-card[open],
   .project-image-card[open] {
-    box-shadow: inset 2px 0 #76922f !important;
+    box-shadow: inset 2px 0 var(--accent) !important;
   }
 
   .delivery-playlist-builder,
@@ -1362,7 +1362,7 @@
 
   .receipt-row.selected {
     background: var(--accent-soft);
-    box-shadow: inset 2px 0 #76922f;
+    box-shadow: inset 2px 0 var(--accent);
   }
 
   .receipt-detail {
@@ -1493,7 +1493,7 @@
   }
 
   .google-calendar-day.today {
-    box-shadow: inset 0 0 0 2px #76922f;
+    box-shadow: inset 0 0 0 2px var(--accent);
   }
 
   .google-calendar-day.today .google-calendar-day-head strong {
@@ -1515,7 +1515,7 @@
   }
 
   .google-calendar-detail {
-    border-left-color: #76922f;
+    border-left-color: var(--accent);
     border-radius: 1px;
     background: var(--surface-muted);
   }
@@ -1537,18 +1537,18 @@
   }
 
   .prospect-tab.active {
-    border-color: #76922f;
+    border-color: var(--accent);
     background: transparent;
     color: var(--ink);
   }
 
   .prospect-card.active {
     background: var(--accent-soft);
-    box-shadow: inset 2px 0 #76922f;
+    box-shadow: inset 2px 0 var(--accent);
   }
 
   .prospect-score-ring {
-    border-color: #76922f;
+    border-color: var(--accent);
     border-radius: 2px;
     font-family: var(--font-data);
   }
@@ -1767,7 +1767,7 @@
     --mobile-border: var(--line);
     --mobile-text: var(--ink);
     --mobile-muted: var(--muted);
-    --mobile-accent: #76922f;
+    --mobile-accent: var(--accent);
     --mobile-accent-text: #ffffff;
     --mobile-priority-from: var(--panel);
     --mobile-priority-to: var(--panel);
@@ -1830,7 +1830,7 @@
 
   .topbar #new-lead {
     padding: 8px 12px;
-    border-color: #78952d;
+    border-color: var(--accent);
     background: var(--accent);
     color: var(--accent-ink);
     font-size: 10px;
@@ -1860,7 +1860,7 @@
     margin: 14px 0 20px;
     padding: 17px;
     border: 1px solid var(--line-strong);
-    border-left: 3px solid #76922f;
+    border-left: 3px solid var(--accent-line);
     border-radius: 2px;
     background: var(--panel);
     background-image: none;
@@ -1875,7 +1875,7 @@
 
   .mobile-priority-label i {
     border-radius: 0;
-    background: #76922f;
+    background: var(--accent);
     box-shadow: none;
   }
 
@@ -2004,7 +2004,7 @@
   }
 
   .mobile-primary-nav button.active {
-    border-top-color: #76922f;
+    border-top-color: var(--accent);
     background: var(--surface-subtle);
     color: var(--ink);
   }
@@ -2117,7 +2117,7 @@
   }
 
   .project-list button.active {
-    box-shadow: inset 0 -2px #76922f;
+    box-shadow: inset 0 -2px var(--accent);
   }
 
   .project-toolbar,
@@ -2386,6 +2386,24 @@
 }
 
 @media screen and (max-width: 767px) {
+  html[data-theme="light"],
+  html[data-theme="dark"] {
+    --mobile-bg: var(--paper);
+    --mobile-surface: var(--panel);
+    --mobile-surface-strong: var(--surface-muted);
+    --mobile-border: var(--line);
+    --mobile-text: var(--ink);
+    --mobile-muted: var(--muted);
+    --mobile-accent: var(--accent);
+    --mobile-accent-text: var(--accent-ink);
+    --mobile-priority-from: var(--panel);
+    --mobile-priority-to: var(--panel);
+    --mobile-priority-border: var(--accent-line);
+    --mobile-action-bg: var(--ink);
+    --mobile-action-text: var(--paper);
+    --mobile-nav-bg: var(--panel);
+  }
+
   :root {
     --mobile-accent: var(--accent);
   }
@@ -2431,6 +2449,22 @@
 
   .mobile-primary-nav button.active {
     border-top-color: var(--accent);
+  }
+
+  .mobile-priority-label i {
+    background: var(--accent);
+  }
+
+  .mobile-more-close {
+    border-color: var(--line);
+    border-radius: 5px;
+    background: var(--surface-muted);
+    color: var(--ink);
+  }
+
+  .mobile-more-grid button > span,
+  .mobile-more-settings button > span:first-child {
+    color: var(--accent);
   }
 
   .project-list button.active {
