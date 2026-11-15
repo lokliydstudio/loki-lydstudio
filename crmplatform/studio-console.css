@@ -120,6 +120,12 @@
     color: var(--accent-ink);
   }
 
+  a,
+  a:visited {
+    color: var(--green);
+    text-underline-offset: 3px;
+  }
+
   /* Product shell */
   .app {
     min-height: 100dvh;
@@ -985,8 +991,21 @@
 
   .customer-directory-card:hover,
   .customer-directory-card:focus-visible {
+    transform: none;
     background: var(--surface-subtle);
     box-shadow: inset 2px 0 #76922f !important;
+  }
+
+  .customer-directory-copy > span em {
+    padding: 3px 5px;
+    border: 1px solid var(--line);
+    border-radius: 1px;
+    background: var(--surface-subtle);
+    color: var(--muted);
+    font-family: var(--font-data);
+    font-size: 6px;
+    font-style: normal;
+    font-weight: 650;
   }
 
   .pipeline {
@@ -1544,6 +1563,12 @@
     color: var(--ink);
   }
 
+  .lead-source-badge.formspree {
+    border-color: #b5c996;
+    background: #edf4df;
+    color: #49652d;
+  }
+
   /* Modals and feedback */
   .modal-backdrop {
     background: rgba(9, 12, 9, .72);
@@ -1620,7 +1645,8 @@
 
   html[data-theme="dark"] .state.green,
   html[data-theme="dark"] .enquiry-type-badge.utleie,
-  html[data-theme="dark"] .message-badge.formspree {
+  html[data-theme="dark"] .message-badge.formspree,
+  html[data-theme="dark"] .lead-source-badge.formspree {
     border-color: #536b36;
     background: #28361d;
     color: #bddb8c;
@@ -1810,6 +1836,7 @@
 
   .content {
     padding: 0 13px calc(18px + env(safe-area-inset-bottom));
+    background: var(--paper) !important;
   }
 
   .mobile-overview {

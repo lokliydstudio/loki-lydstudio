@@ -73,7 +73,7 @@
       <div class="content">
         <section class="view active" id="overview">
           <section class="mobile-overview" aria-labelledby="mobile-overview-greeting">
-            <header class="mobile-overview-welcome"><h2 id="mobile-overview-greeting">Hei 👋</h2></header>
+            <header class="mobile-overview-welcome"><h2 id="mobile-overview-greeting">Hei.</h2></header>
             <section class="mobile-priority-card" id="mobile-priority-card" aria-labelledby="mobile-priority-title">
               <span class="mobile-priority-label" id="mobile-priority-label"><i></i> PRIORITET 1</span>
               <div class="mobile-priority-main"><strong id="mobile-overdue-count" aria-live="polite">—</strong><div><h3 id="mobile-priority-title">Forfalte kundeoppfølginger</h3><p id="mobile-priority-copy">Henter oppfølginger …</p></div></div>
@@ -447,7 +447,7 @@
         document.getElementById("overdue-followups").textContent=overdueLeads.length;
         document.getElementById("followup-summary").textContent=overdueLeads.length?"Krever handling i dag":"Ingen forsinkede";
         document.getElementById("mobile-header-date").textContent=dateLabel.toLocaleUpperCase("nb-NO");
-        document.getElementById("mobile-overview-greeting").textContent=`Hei, ${name} 👋`;
+        document.getElementById("mobile-overview-greeting").textContent=`Hei, ${name}.`;
         const mobileCount=document.getElementById("mobile-overdue-count");
         const mobilePriority=document.getElementById("mobile-priority-card");
         const mobilePriorityLabel=document.getElementById("mobile-priority-label");
