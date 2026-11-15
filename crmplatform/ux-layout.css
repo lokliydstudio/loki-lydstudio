@@ -82,6 +82,43 @@
     min-height: 100%;
   }
 
+  #overview .overview-followups .overview-lead-row {
+    grid-template-columns: 36px minmax(0, 1fr) auto;
+    grid-template-rows: auto auto;
+    gap: 4px 10px;
+    align-items: center;
+  }
+
+  #overview .overview-followups .avatar {
+    grid-row: 1 / 3;
+  }
+
+  #overview .overview-followups .lead-copy {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  #overview .overview-followups .lead-copy strong,
+  #overview .overview-followups .lead-copy small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  #overview .overview-followups .enquiry-type-badge {
+    display: none;
+  }
+
+  #overview .overview-followups .state {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  #overview .overview-followups .row-arrow {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+
   #overview .overview-panel,
   #overview .overview-followups {
     padding: 18px 20px;
@@ -215,6 +252,7 @@
   }
 
   .customer-directory-card {
+    width: 100%;
     grid-template-columns: 38px minmax(220px, 1.4fr) minmax(210px, 1fr) minmax(150px, .72fr) 32px;
     min-height: 62px;
     gap: 12px;
