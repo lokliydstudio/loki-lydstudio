@@ -788,6 +788,19 @@ input[type="radio"] {
   font-size: 11px !important;
 }
 
+.view small {
+  font-size: 11px !important;
+}
+
+#google-calendar-updated,
+.tenant-studio-tabs span,
+.tenant-user-row span,
+.tenant-booking-row span,
+.booking-date span,
+.quote-line-head {
+  font-size: 10px !important;
+}
+
 .message small,
 .message em,
 .booking-copy span,
