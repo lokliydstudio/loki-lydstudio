@@ -122,7 +122,7 @@
       return;
     }
     list.innerHTML = visible.map((item) => `<button class="receipt-row ${item.id === selectedId ? "selected" : ""}" data-receipt-id="${esc(item.id)}" type="button">
-      <span class="receipt-file-icon">${item.previewable ? "▧" : "PDF"}</span>
+      <span class="receipt-file-icon">${item.previewable ? "IMG" : "PDF"}</span>
       <span class="receipt-row-copy"><strong>${esc(item.supplier || "Ukjent leverandør")}</strong><small>${esc(formatDate(item.receiptDate))} · ${esc(item.category || "Annet")}</small><small title="${esc(item.name)}">${esc(item.name)}</small></span>
       <span class="receipt-row-value"><strong>${esc(moneyFromOre(item.totalOre, item.currency))}</strong><em class="state ${item.status === "Godkjent" ? "green" : item.status === "Skanning feilet" ? "red" : "amber"}">${esc(item.status)}</em></span>
     </button>`).join("");
@@ -139,7 +139,7 @@
     const root = document.getElementById("receipt-detail");
     const item = selectedReceipt();
     if (!item) {
-      root.innerHTML = '<div class="receipt-detail-empty"><span>▧</span><strong>Velg et bilag</strong></div>';
+      root.innerHTML = '<div class="receipt-detail-empty"><span aria-hidden="true">—</span><strong>Velg et bilag</strong></div>';
       return;
     }
     const fileUrl = `/api/crm/receipts?action=download&id=${encodeURIComponent(item.id)}`;

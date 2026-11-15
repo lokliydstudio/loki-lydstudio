@@ -1,0 +1,708 @@
+/*
+ * Loki CRM · commercial launch polish
+ * Final component-level QA layer. It removes legacy prototype styling and
+ * establishes exact proportions for controls, status, feedback and data rows.
+ */
+
+:root {
+  --control-height: 38px;
+  --control-radius: 4px;
+  --compact-radius: 3px;
+  --motion-fast: 120ms ease-out;
+}
+
+body {
+  line-height: 1.45;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  text-wrap: balance;
+}
+
+h1,
+#page-title {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+}
+
+.section-intro h2,
+.panel-head h2,
+.customer-directory-head h2,
+.lead-section-divider h2 {
+  font-weight: 650;
+  letter-spacing: -.02em;
+  line-height: 1.22;
+}
+
+.eyebrow,
+.kicker,
+.metric > span,
+.ops-metrics article > span,
+.prospect-metrics article > span,
+.fiken-metric > span {
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: .11em;
+}
+
+p,
+small {
+  line-height: 1.45;
+}
+
+/* Exact, quiet interaction grammar. */
+button,
+a,
+input,
+select,
+textarea,
+summary {
+  transition: color var(--motion-fast), background-color var(--motion-fast), border-color var(--motion-fast), opacity var(--motion-fast);
+}
+
+button {
+  letter-spacing: 0;
+}
+
+.primary,
+.secondary,
+.dark-button,
+.tiny-button,
+.danger-button,
+.google-calendar-link,
+.tenant-portal-link,
+.receipt-upload-button {
+  min-height: var(--control-height);
+  padding: 0 13px;
+  border-radius: var(--control-radius) !important;
+  box-shadow: none !important;
+  font-size: 10px;
+  font-weight: 650;
+  line-height: 1;
+}
+
+.primary {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.primary:hover:not(:disabled) {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+.secondary,
+.google-calendar-link,
+.tenant-portal-link {
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.secondary:hover:not(:disabled),
+.google-calendar-link:hover,
+.tenant-portal-link:hover {
+  border-color: var(--accent-line);
+  background: var(--surface-subtle);
+}
+
+.danger-button {
+  border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+  background: transparent;
+  color: var(--danger);
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"] {
+  opacity: .48;
+  cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-line) !important;
+  outline-offset: 2px;
+  box-shadow: none !important;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+select,
+textarea,
+.search {
+  min-height: var(--control-height);
+  border: 1px solid var(--line-strong) !important;
+  border-radius: var(--control-radius) !important;
+  background: var(--panel) !important;
+  color: var(--ink) !important;
+  box-shadow: none !important;
+  font-size: 11px;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: color-mix(in srgb, var(--muted) 78%, transparent);
+  opacity: 1;
+}
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--accent-line) !important;
+}
+
+textarea {
+  line-height: 1.55;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+/* One icon language: 1.7px outlined SVG, never emoji or glowing glyphs. */
+.nav-icon,
+.button-icon,
+.receipt-camera-icon svg,
+.theme-toggle svg,
+.mobile-more-grid button > span svg,
+.mobile-more-settings button > span:first-child svg {
+  display: inline-grid;
+  place-items: center;
+  color: currentColor;
+}
+
+.nav-icon svg {
+  width: 17px;
+  height: 17px;
+}
+
+.button-icon {
+  width: 15px;
+  height: 15px;
+  margin-right: 7px;
+}
+
+.nav-icon svg,
+.button-icon,
+.receipt-camera-icon svg,
+.theme-toggle svg,
+.mobile-more-grid svg,
+.mobile-more-settings svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.theme-toggle svg,
+.mobile-more-grid button > span svg,
+.mobile-more-settings button > span:first-child svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Sidebar: compact, predictable and visibly selected without a glow. */
+.nav {
+  gap: 2px;
+}
+
+.nav button {
+  min-height: 41px;
+  padding: 0 10px;
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 520;
+}
+
+.nav button:hover {
+  background: color-mix(in srgb, white 5%, transparent);
+  color: #f3f5f3;
+}
+
+.nav button.active {
+  border-left-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  box-shadow: none;
+  color: #fff;
+  font-weight: 650;
+}
+
+.nav button.active .nav-icon {
+  color: var(--accent);
+}
+
+.nav .count {
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 4px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: currentColor;
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 550;
+}
+
+.connection,
+.presence-card {
+  border-radius: 4px;
+}
+
+/* Status has semantic tone, but never takes over its row. */
+.state,
+.message-badge,
+.enquiry-type-badge,
+.lead-source-badge,
+.time-category,
+.deadline,
+.prospect-tags span,
+.receipt-warning,
+.tenant-edit-status {
+  border-radius: var(--compact-radius) !important;
+}
+
+.state,
+.message-badge,
+.enquiry-type-badge,
+.lead-source-badge,
+.time-category {
+  width: max-content;
+  max-width: 100%;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px !important;
+  font-style: normal;
+  font-weight: 650;
+  letter-spacing: .05em;
+  line-height: 1.15;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.state.green,
+.message-badge.formspree,
+.lead-source-badge.formspree {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.state.amber,
+.deadline,
+.time-category.editering {
+  border-color: color-mix(in srgb, var(--amber) 55%, var(--line));
+  background: color-mix(in srgb, var(--amber) 11%, var(--panel)) !important;
+  color: var(--amber) !important;
+}
+
+.state.red,
+.state.danger,
+.followup-overdue {
+  border-color: color-mix(in srgb, var(--danger) 58%, var(--line));
+  background: color-mix(in srgb, var(--danger) 9%, var(--panel));
+  color: var(--danger) !important;
+}
+
+.state.violet,
+.state.blue,
+.time-category,
+.time-category.innspilling {
+  border-color: var(--line-strong);
+  background: var(--surface-muted) !important;
+  color: var(--ink) !important;
+}
+
+.draft-head .state {
+  align-self: flex-start;
+  flex: 0 0 auto;
+}
+
+/* Data surfaces: exact heights, aligned cells, no card-like rows. */
+.crm-row,
+.doc-row,
+.invoice-row,
+.time-entry-row,
+.receipt-row,
+.prospect-card {
+  border-color: var(--line);
+}
+
+.doc-row {
+  min-height: 54px;
+  padding-block: 9px;
+}
+
+.doc-head,
+.crm-head,
+.invoice-head,
+.prospect-list-head {
+  min-height: 34px;
+  background: var(--surface-muted) !important;
+  color: var(--muted) !important;
+  font-family: var(--font-data);
+  font-size: 8px;
+  font-weight: 650;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+#documents .doc-head {
+  position: sticky;
+  z-index: 3;
+  top: 70px;
+}
+
+.crm-row[data-open-lead]:hover,
+.customer-directory-card:hover,
+.doc-row:not(.doc-head):hover,
+.receipt-row:hover,
+.prospect-card:hover {
+  background: var(--surface-subtle);
+}
+
+.round,
+.icon-button,
+.close,
+.receipt-close {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--control-radius) !important;
+  background: var(--panel);
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.round:hover,
+.icon-button:hover,
+.close:hover,
+.receipt-close:hover {
+  border-color: var(--accent-line);
+  color: var(--ink);
+}
+
+/* Feedback states look intentional and communicate what is happening. */
+.empty,
+.project-empty,
+.prospect-empty,
+.time-empty,
+.receipt-empty,
+.receipt-detail-empty {
+  min-height: 154px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 24px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px;
+  background: transparent !important;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.empty strong,
+.project-empty strong,
+.prospect-empty strong,
+.receipt-empty strong,
+.receipt-detail-empty strong {
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.loading-message {
+  min-height: 112px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 10px;
+  text-align: center;
+}
+
+.loading-message::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  flex: 0 0 auto;
+  border: 1.5px solid var(--line-strong);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: loki-loading-spin .72s linear infinite;
+}
+
+@keyframes loki-loading-spin {
+  to { transform: rotate(360deg); }
+}
+
+.toast {
+  max-width: min(380px, calc(100vw - 32px));
+  padding: 12px 15px;
+  border: 1px solid var(--line-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, .2);
+  font-size: 10px;
+}
+
+.auth-feedback,
+.mobile-dashboard-status,
+.tenant-edit-status,
+.document-upload-status,
+.prospect-sync-state,
+.save-state {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+/* Receipts: remove the last generic blue/gradient motif. */
+.receipt-capture {
+  border-top: 2px solid var(--accent);
+  background: var(--panel) !important;
+}
+
+.receipt-camera-icon {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 auto;
+  border: 1px solid var(--accent-line);
+  border-radius: 4px;
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.receipt-camera-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.receipt-capture h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.receipt-file-icon {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+  font-weight: 650;
+  letter-spacing: .06em;
+}
+
+.doc-icon {
+  border-radius: 3px;
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 7px;
+  font-weight: 650;
+  letter-spacing: .06em;
+}
+
+.receipt-progress > div {
+  height: 4px;
+  border-radius: 0;
+}
+
+.receipt-progress i {
+  border-radius: 0;
+  background: var(--accent);
+}
+
+.receipt-toolbar select {
+  border-radius: var(--control-radius);
+}
+
+.receipt-detail,
+.receipt-list-panel {
+  min-height: 248px;
+}
+
+.receipt-detail-empty > span,
+.receipt-empty > span {
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 18px;
+}
+
+/* Time tracking uses hierarchy, not a rainbow. */
+.project-time-section {
+  background: transparent;
+}
+
+.time-metric {
+  min-height: 84px;
+  padding: 14px 15px;
+  border-radius: 5px;
+  background: var(--panel);
+}
+
+.time-metric::before,
+.time-metric.recording::before,
+.time-metric.editing::before,
+.time-metric.mixing::before {
+  width: 2px;
+  background: var(--line-strong);
+}
+
+.time-metric.total::before {
+  width: 3px;
+  background: var(--accent);
+}
+
+.time-metric strong {
+  font-family: var(--font-data);
+  font-size: 21px;
+  font-weight: 560;
+}
+
+.time-entry-form,
+.audio-form,
+.quote-lines,
+.compact-form,
+.note-form,
+.goal-form {
+  border-radius: 4px !important;
+  background: var(--surface-subtle) !important;
+}
+
+/* Prospecting inherits the CRM accent instead of purple marketing chips. */
+.prospect-score-ring {
+  border-color: var(--accent);
+  border-radius: 4px;
+  font-family: var(--font-data);
+  font-weight: 560;
+}
+
+.prospect-score i {
+  height: 3px;
+  border-radius: 0;
+  background: var(--surface-muted);
+}
+
+.prospect-score i::after {
+  background: var(--accent);
+}
+
+.prospect-tags span {
+  border: 1px solid var(--line);
+  background: var(--surface-muted);
+  color: var(--ink);
+  font-size: 8px;
+  font-weight: 600;
+}
+
+.prospect-tab {
+  min-height: 32px;
+  padding: 6px 9px;
+  border-radius: 3px;
+  font-size: 8px;
+}
+
+.prospect-tab.active {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.prospect-evidence,
+.prospect-contact,
+.prospect-contact-grid > span {
+  border-radius: 4px;
+  background: var(--surface-subtle);
+}
+
+/* Motion is informative only. */
+@media (prefers-reduced-motion: reduce) {
+  .loading-message::before {
+    animation: none;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  :root {
+    --control-height: 44px;
+  }
+
+  .primary,
+  .secondary,
+  .dark-button,
+  .tiny-button,
+  .danger-button {
+    min-height: 44px;
+  }
+
+  .round,
+  .icon-button,
+  .close,
+  .receipt-close {
+    min-width: 44px;
+    width: 44px;
+    min-height: 44px;
+    height: 44px;
+  }
+
+  .nav-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .receipt-capture {
+    border-top-width: 2px;
+  }
+
+  .receipt-camera-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .empty,
+  .project-empty,
+  .prospect-empty,
+  .time-empty,
+  .receipt-empty,
+  .receipt-detail-empty {
+    min-height: 132px;
+  }
+}
+

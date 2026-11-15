@@ -134,6 +134,23 @@ test("CRM core workspaces use task-shaped layouts without changing their workflo
   assert.match(workspace, /due-today/);
 });
 
+test("CRM launch polish standardizes controls, feedback states and iconography", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "launch-polish.css"), "utf8");
+  const receipts = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "receipts.js"), "utf8");
+  assert.match(html, /launch-polish\.css/);
+  assert.ok(html.indexOf("ux-layout.css") < html.indexOf("launch-polish.css"));
+  assert.match(html, /class="nav-icon"[^>]*>[\s\S]*?<svg/);
+  assert.match(html, /data-mobile-more="contacts"[\s\S]*?<svg/);
+  assert.doesNotMatch(html, /📷|⚙|◐|▧|▱|◇|◎|◷/);
+  assert.match(styles, /--control-height:\s*38px/);
+  assert.match(styles, /\.draft-head \.state\s*\{[^}]*flex:\s*0 0 auto/s);
+  assert.match(styles, /\.loading-message::before\s*\{/);
+  assert.match(styles, /\.receipt-capture\s*\{[^}]*background:\s*var\(--panel\)/s);
+  assert.match(styles, /\.time-metric\.total::before\s*\{[^}]*background:\s*var\(--accent\)/s);
+  assert.doesNotMatch(receipts, /▧/);
+});
+
 test("CRM overview is personalized and prioritizes owner tasks and stale Formspree enquiries", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
@@ -596,7 +613,7 @@ test("Bilag replaces the visible Fiken module with an iPhone camera flow", () =>
   const styles = fs.readFileSync(path.join(root, "crmplatform", "receipts.css"), "utf8");
   const workspace = fs.readFileSync(path.join(root, "crmplatform", "workspace.js"), "utf8");
   const api = fs.readFileSync(path.join(root, "api", "crm", "receipts.js"), "utf8");
-  assert.match(html, /data-view-target="economy"><span class="nav-icon">▧<\/span>Bilag/);
+  assert.match(html, /data-view-target="economy"><span class="nav-icon"[^>]*><svg[\s\S]*?<\/svg><\/span>Bilag/);
   assert.match(html, /id="receipt-camera-button"[^>]+for="receipt-camera-input"/);
   assert.match(html, /id="receipt-camera-input"[^>]+accept="image\/\*"[^>]+capture="environment"/);
   assert.match(html, /id="receipt-file-input"[^>]+application\/pdf/);

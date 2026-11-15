@@ -507,7 +507,7 @@
     return `
       <div class="project-toolbar">
         <div><span class="kicker">STUDIOPROSJEKT</span><h2>${esc(project.name)}</h2></div>
-        <div class="button-row"><span class="save-state" id="project-save-state">Lagret ${new Date(project.updatedAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span><button class="secondary" id="export-project" title="Eksporter sist lagrede versjon">⇩ Eksporter ZIP</button><button class="secondary danger-button" id="delete-project">Slett prosjekt</button><button class="primary" id="save-project">Lagre prosjekt</button><span class="export-progress" id="project-export-state" hidden></span></div>
+        <div class="button-row"><span class="save-state" id="project-save-state">Lagret ${new Date(project.updatedAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span><button class="secondary" id="export-project" title="Eksporter sist lagrede versjon">Eksporter ZIP</button><button class="secondary danger-button" id="delete-project">Slett prosjekt</button><button class="primary" id="save-project">Lagre prosjekt</button><span class="export-progress" id="project-export-state" hidden></span></div>
       </div>
       <div class="project-fields">
         <label class="field">Prosjektnavn<input id="project-name" value="${esc(project.name)}"></label>

@@ -64,7 +64,7 @@
     } catch (error) {
       setStatus(error?.message || "Fiken-kontaktene kunne ikke importeres.", "error");
       button.disabled = false;
-      button.textContent = "⇧ Importer Fiken XLSX";
+      button.textContent = "Importer XLSX";
     }
   });
 })();

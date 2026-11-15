@@ -124,7 +124,7 @@
       }
       const stateLabel = item.downloadable ? item.syncStatus === "pending" ? "CRM · synk venter" : item.syncStatus === "error" ? "CRM · synk feilet" : item.importPending ? "CRM · oppdateres" : "CRM + Jottacloud" : item.importPending ? "Hentes til CRM" : item.jottacloudUrl ? "Jottacloud" : "Kun indeks";
       const lastOpened = dateValue(item.lastOpenedAt) ? ` · Sist åpnet ${new Date(item.lastOpenedAt).toLocaleString("nb-NO", { dateStyle: "short", timeStyle: "short" })}` : "";
-      return `<article class="doc-row"><div class="document-name"><span class="doc-icon">▱</span><span><strong>${esc(item.name)}</strong><small title="${esc(item.path)}">${esc(item.path)} · ${formatBytes(item.size)}${lastOpened}</small></span></div><span>${esc(item.type)}</span><span><em class="state ${item.available ? "green" : "neutral"}">${stateLabel}</em></span><p>${esc(item.note)}</p>${actions}</article>`;
+      return `<article class="doc-row"><div class="document-name"><span class="doc-icon" aria-hidden="true">FIL</span><span><strong>${esc(item.name)}</strong><small title="${esc(item.path)}">${esc(item.path)} · ${formatBytes(item.size)}${lastOpened}</small></span></div><span>${esc(item.type)}</span><span><em class="state ${item.available ? "green" : "neutral"}">${stateLabel}</em></span><p>${esc(item.note)}</p>${actions}</article>`;
     }).join("");
     document.querySelectorAll("[data-connect-document]").forEach((button) => {
       button.onclick = () => chooseFiles(button.dataset.connectDocument);

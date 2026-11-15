@@ -596,7 +596,7 @@
       setTimeout(() => URL.revokeObjectURL(url), 60_000);
       toast("Full CRM-backup er lastet ned som ZIP.");
     } catch (error) { toast(error.message); }
-    finally { button.disabled = false; button.textContent = "⇩ Full CRM-backup"; }
+    finally { button.disabled = false; button.textContent = "Last ned CRM-backup"; }
   }
 
   async function createFollowupTask(lead) {
