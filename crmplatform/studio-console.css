@@ -1204,6 +1204,52 @@
     padding: 8px;
   }
 
+  .project-view-tabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 0 8px;
+    border: 1px solid var(--line);
+    background: var(--surface-subtle);
+  }
+
+  .project-view-tabs button {
+    min-width: 0;
+    min-height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    padding: 0 9px;
+    border: 0;
+    border-right: 1px solid var(--line);
+    background: transparent;
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 650;
+    text-align: left;
+  }
+
+  .project-view-tabs button:last-child {
+    border-right: 0;
+  }
+
+  .project-view-tabs button:hover {
+    background: var(--surface-muted);
+    color: var(--ink);
+  }
+
+  .project-view-tabs button.active {
+    background: var(--panel);
+    color: var(--ink);
+    box-shadow: inset 0 -2px var(--accent);
+  }
+
+  .project-view-tabs span {
+    color: var(--muted);
+    font-family: var(--font-data);
+    font-size: 8px;
+  }
+
   .project-list {
     gap: 0;
   }

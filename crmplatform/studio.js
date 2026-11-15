@@ -27,6 +27,7 @@
   let audioPlaylists = [];
   let projectImages = [];
   let selectedProjectId = null;
+  let projectView = "active";
   let activeOwner = "Leon";
   let getContacts = () => [];
   let contactDirectory = [];
@@ -38,6 +39,9 @@
     { name: "Leon Frick", email: "leon@lokilyd.no", role: "Grunnlegger" },
     { name: "Charles Wise", email: "charles@lokilyd.no", role: "Grunnlegger" },
   ];
+
+  const projectArchived = (project) => Boolean(project?.archivedAt);
+  const projectsInView = () => projects.filter((project) => projectView === "archived" ? projectArchived(project) : !projectArchived(project));
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;",
@@ -504,10 +508,11 @@
   }
 
   function editorMarkup(project) {
+    const archived = projectArchived(project);
     return `
       <div class="project-toolbar">
-        <div><span class="kicker">STUDIOPROSJEKT</span><h2>${esc(project.name)}</h2></div>
-        <div class="button-row"><span class="save-state" id="project-save-state">Lagret ${new Date(project.updatedAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span><button class="secondary" id="export-project" title="Eksporter sist lagrede versjon">Eksporter ZIP</button><button class="secondary danger-button" id="delete-project">Slett prosjekt</button><button class="primary" id="save-project">Lagre prosjekt</button><span class="export-progress" id="project-export-state" hidden></span></div>
+        <div><span class="kicker">${archived ? "FERDIG PROSJEKT" : "STUDIOPROSJEKT"}</span><h2>${esc(project.name)}</h2></div>
+        <div class="button-row"><span class="save-state" id="project-save-state">Lagret ${new Date(project.updatedAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</span><button class="secondary" id="export-project" title="Eksporter sist lagrede versjon">Eksporter ZIP</button><button class="secondary" id="archive-project">${archived ? "Gjenåpne prosjekt" : "Arkiver prosjekt"}</button><button class="secondary danger-button" id="delete-project">Slett prosjekt</button><button class="primary" id="save-project">Lagre prosjekt</button><span class="export-progress" id="project-export-state" hidden></span></div>
       </div>
       <div class="project-fields">
         <label class="field">Prosjektnavn<input id="project-name" value="${esc(project.name)}"></label>
@@ -595,11 +600,22 @@
     const count = document.getElementById("project-count");
     const list = document.getElementById("project-list");
     const workspace = document.getElementById("project-workspace");
+    const activeProjects = projects.filter((project) => !projectArchived(project));
+    const archivedProjects = projects.filter(projectArchived);
+    const visibleProjects = projectsInView();
+    if (!visibleProjects.some((project) => project.id === selectedProjectId)) selectedProjectId = visibleProjects[0]?.id || null;
     count.textContent = String(projects.length);
-    list.innerHTML = projects.length ? projects.map((project) => `
+    document.getElementById("active-project-count").textContent = String(activeProjects.length);
+    document.getElementById("archived-project-count").textContent = String(archivedProjects.length);
+    document.querySelectorAll("[data-project-view]").forEach((button) => {
+      const active = button.dataset.projectView === projectView;
+      button.classList.toggle("active", active);
+      button.setAttribute("aria-selected", String(active));
+    });
+    list.innerHTML = visibleProjects.length ? visibleProjects.map((project) => `
       <button class="${project.id === selectedProjectId ? "active" : ""}" data-project-id="${esc(project.id)}">
         <strong>${esc(project.name)}</strong><span>${esc(project.clientName || "Ingen kunde")} · ${esc(project.status)} · ${formatHours(timeTotals(project).total)}</span>
-      </button>`).join("") : '<div class="project-empty">Ingen prosjekter ennå.</div>';
+      </button>`).join("") : `<div class="project-empty">${projectView === "archived" ? "Ingen ferdige prosjekter i arkivet." : "Ingen pågående prosjekter."}</div>`;
 
     const project = projects.find((item) => item.id === selectedProjectId);
     workspace.innerHTML = project ? editorMarkup(project) : '<div class="project-empty">Ingen prosjekt valgt.</div>';
@@ -609,6 +625,14 @@
   }
 
   function bindRenderedControls() {
+    document.querySelectorAll("[data-project-view]").forEach((button) => {
+      button.onclick = () => {
+        projectView = button.dataset.projectView;
+        selectedTrackIds.clear();
+        selectedProjectId = projectsInView()[0]?.id || null;
+        render();
+      };
+    });
     document.querySelectorAll("[data-project-id]").forEach((button) => {
       button.onclick = () => {
         if (selectedProjectId !== button.dataset.projectId) selectedTrackIds.clear();
@@ -620,6 +644,8 @@
     if (save) save.onclick = saveProject;
     const exportProject = document.getElementById("export-project");
     if (exportProject) exportProject.onclick = () => exportProjects(selectedProjectId, exportProject);
+    const archiveProject = document.getElementById("archive-project");
+    if (archiveProject) archiveProject.onclick = toggleProjectArchive;
     const printPatch = document.getElementById("print-patch");
     if (printPatch) printPatch.onclick = printPatchList;
     const addPatch = document.getElementById("add-patch-channel");
@@ -1082,6 +1108,40 @@
       button.disabled = false;
       button.textContent = "Lagre prosjekt";
       toast(error.message || "Prosjektet kunne ikke lagres.");
+    }
+  }
+
+  async function toggleProjectArchive() {
+    const project = projects.find((item) => item.id === selectedProjectId);
+    if (!project) return;
+    const archiving = !projectArchived(project);
+    if (document.getElementById("project-save-state")?.textContent === "Ulagrede endringer") {
+      toast(`Lagre endringene før du ${archiving ? "arkiverer" : "gjenåpner"} prosjektet.`);
+      return;
+    }
+    const question = archiving
+      ? `Arkiver «${project.name}» som ferdig prosjekt?\n\nProsjektdata, lydfiler, timer og bilder blir beholdt i arkivet.`
+      : `Flytt «${project.name}» tilbake til pågående prosjekter?`;
+    if (!confirm(question)) return;
+    const button = document.getElementById("archive-project");
+    button.disabled = true;
+    button.textContent = archiving ? "Arkiverer …" : "Gjenåpner …";
+    try {
+      const data = await request("/api/studio?action=projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: project.id, changes: { archivedAt: archiving ? new Date().toISOString() : "" } }),
+      });
+      projects = projects.map((item) => item.id === data.project.id ? data.project : item);
+      projectView = "active";
+      selectedTrackIds.clear();
+      selectedProjectId = archiving ? projects.find((item) => !projectArchived(item))?.id || null : data.project.id;
+      render();
+      toast(archiving ? "Prosjektet er flyttet til Ferdige." : "Prosjektet er flyttet tilbake til Pågående.");
+    } catch (error) {
+      button.disabled = false;
+      button.textContent = archiving ? "Arkiver prosjekt" : "Gjenåpne prosjekt";
+      toast(error.message || "Prosjektarkivet kunne ikke oppdateres.");
     }
   }
 
@@ -1713,6 +1773,7 @@
           body: JSON.stringify({ project: Object.fromEntries(values) }),
         });
         projects.unshift(data.project);
+        projectView = "active";
         selectedTrackIds.clear();
         selectedProjectId = data.project.id;
         form.reset();
@@ -1748,7 +1809,7 @@
       audioPlaylists = playlistData.playlists || [];
       projectImages = projectImageData.images || [];
       contactDirectory = contactData.leads || [];
-      selectedProjectId = projects[0]?.id || null;
+      selectedProjectId = projects.find((project) => !projectArchived(project))?.id || null;
       render();
     } catch (error) {
       initialized = false;

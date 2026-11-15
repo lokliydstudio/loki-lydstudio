@@ -407,6 +407,36 @@ test("projects sanitize status, email and patch data", () => {
   assert.deepEqual(sanitizeProject({ patch: [] }, project).patch, []);
 });
 
+test("projects can be archived and restored without losing their studio data", () => {
+  const original = sanitizeProject({
+    name: "Ferdig singel",
+    notes: "Behold miksnotater",
+    patch: [{ channel: 1, source: "Vokal" }],
+    timeEntries: [{ id: "time-one", date: "2026-11-15", category: "Miks", hours: 2, worker: "Leon" }],
+  });
+  const archived = sanitizeProject({ archivedAt: "2026-11-15T14:00:00.000Z" }, original);
+  assert.equal(archived.archivedAt, "2026-11-15T14:00:00.000Z");
+  assert.equal(archived.notes, "Behold miksnotater");
+  assert.equal(archived.patch[0].source, "Vokal");
+  assert.equal(archived.timeEntries[0].hours, 2);
+  assert.equal(sanitizeProject({ notes: "Oppdatert" }, archived).archivedAt, archived.archivedAt);
+  assert.equal(sanitizeProject({ archivedAt: "" }, archived).archivedAt, "");
+  assert.equal(sanitizeProject({ archivedAt: "ugyldig" }, original).archivedAt, "");
+});
+
+test("project workspace separates ongoing and finished projects", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio-console.css"), "utf8");
+  assert.match(html, /data-project-view="active"[^>]*>Pågående/);
+  assert.match(html, /data-project-view="archived"[^>]*>Ferdige/);
+  assert.match(studio, /const projectArchived = \(project\) => Boolean\(project\?\.archivedAt\)/);
+  assert.match(studio, /id="archive-project"/);
+  assert.match(studio, /async function toggleProjectArchive/);
+  assert.match(studio, /changes: \{ archivedAt: archiving \? new Date\(\)\.toISOString\(\) : "" \}/);
+  assert.match(styles, /\.project-view-tabs\s*\{[^}]*grid-template-columns:\s*repeat\(2/s);
+});
+
 test("project workspace can add and remove patch channels up to 32", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
