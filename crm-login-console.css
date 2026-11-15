@@ -1,0 +1,179 @@
+/* Loki CRM · public authentication shell
+ * This file sits outside /crmplatform so the owner-only middleware can serve
+ * the visual system before a CRM session exists.
+ */
+:root {
+  --login-bg: #101512;
+  --login-panel: #191f1c;
+  --login-line: #39423d;
+  --login-muted: #9ba39e;
+  --login-accent: #91b8ad;
+}
+
+html,
+body {
+  background: var(--login-bg) !important;
+}
+
+body {
+  position: relative;
+  overflow: hidden auto;
+  font-family: Inter, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
+}
+
+main {
+  position: relative;
+  width: min(430px, 100%);
+  padding: 34px;
+  border: 1px solid var(--login-line);
+  border-radius: 6px;
+  background: var(--login-panel);
+  box-shadow: none;
+}
+
+.brand {
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #30362d;
+}
+
+.brand-copy strong {
+  font-size: 15px;
+  font-weight: 760;
+  letter-spacing: .19em;
+}
+
+.brand-copy span {
+  color: #778074;
+  font-size: 9px;
+  letter-spacing: .3em;
+}
+
+.kicker {
+  color: var(--login-accent);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+}
+
+h1 {
+  margin: 8px 0 11px;
+  font-family: Inter, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -.045em;
+}
+
+p {
+  color: var(--login-muted);
+  font-size: 12px;
+}
+
+.owner-grid {
+  gap: 1px;
+  border: 1px solid var(--login-line);
+  background: var(--login-line);
+}
+
+button,
+input {
+  border-radius: 4px;
+  box-shadow: none;
+  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  border-color: var(--login-accent);
+  outline: 2px solid var(--login-accent);
+  outline-offset: 2px;
+}
+
+.owner-button {
+  position: relative;
+  min-height: 78px;
+  border: 0;
+  background: #1c211a;
+  color: #f2f4ef;
+}
+
+.owner-button::after {
+  content: "→";
+  position: absolute;
+  right: 15px;
+  color: #657060;
+}
+
+.owner-button:hover {
+  background: #252c22;
+}
+
+.owner-button:hover::after {
+  color: var(--login-accent);
+}
+
+.owner-button strong {
+  font-size: 14px;
+}
+
+.owner-button span {
+  color: #8e978a;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 10px;
+}
+
+input {
+  min-height: 48px;
+  border-color: var(--login-line);
+  background: #10130f;
+}
+
+input:focus {
+  border-color: var(--login-accent);
+  outline: 2px solid rgba(145, 184, 173, .35);
+}
+
+#code-form button[type="submit"] {
+  border: 1px solid var(--login-accent);
+  background: var(--login-accent);
+  color: #10201c;
+}
+
+.text-button {
+  border-color: var(--login-line);
+  border-radius: 4px;
+  color: #d9ddd5;
+}
+
+.feedback {
+  color: var(--login-accent);
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 11px;
+}
+
+.privacy {
+  border-color: #30362d;
+  color: #7f8982;
+  font-size: 10px;
+}
+
+@media (max-width: 520px) {
+  body {
+    place-items: center;
+  }
+
+  main {
+    margin: 0;
+    padding: 25px 19px;
+    border-radius: 5px;
+  }
+
+  .owner-grid {
+    grid-template-columns: 1fr;
+  }
+
+  button,
+  input {
+    min-height: 44px;
+  }
+}

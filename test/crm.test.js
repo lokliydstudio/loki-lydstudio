@@ -101,6 +101,8 @@ test("CRM uses the Loki Studio Console design system across desktop, mobile and 
   assert.match(html, /studio-console\.css/);
   assert.ok(html.indexOf("mobile-dashboard.css") < html.indexOf("studio-console.css"));
   assert.match(login, /login-console\.css/);
+  assert.match(login, /\/crm-login-console\.css/);
+  assert.ok(fs.existsSync(path.join(__dirname, "..", "crm-login-console.css")));
   assert.match(tasks, /tasks-console\.css/);
   assert.match(styles, /--accent:\s*#365f55/);
   assert.match(styles, /--radius:\s*6px/);
