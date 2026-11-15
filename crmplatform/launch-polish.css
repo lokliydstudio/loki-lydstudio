@@ -764,6 +764,30 @@ input[type="radio"] {
   font-size: 10px !important;
 }
 
+.customer-directory-columns,
+.customer-directory-copy > span em,
+.rental-metrics span,
+.rental-contract .state,
+.rental-sheet th,
+.google-calendar-agenda-date span,
+.google-calendar-detail-meta span,
+.mix-comment-copy strong span {
+  font-size: 10px !important;
+}
+
+.rental-metrics small,
+.rental-tenant-copy small,
+.rental-contact a,
+.rental-contact .missing,
+.rental-sheet-help,
+.rental-keys-head p,
+.rental-key-copy span,
+.rental-save-state,
+.google-calendar-agenda-copy strong,
+.google-calendar-empty {
+  font-size: 11px !important;
+}
+
 .message small,
 .message em,
 .booking-copy span,
