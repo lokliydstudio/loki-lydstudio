@@ -191,6 +191,8 @@ test("CRM sidebar is compact, task grouped and keeps system details in settings"
   assert.match(html, /id="connection-title"/);
   assert.match(html, /id="jotta-status"/);
   assert.match(html, /id="presence-list"/);
+  assert.match(html, /Promise\.allSettled\(moduleJobs\)/);
+  assert.match(html, /Promise\.allSettled\(\[window\.LokiDocuments\.init\(\),loadMailbox\(\)\]\)/);
   assert.match(styles, /--sidebar-width:\s*260px/);
   assert.match(styles, /\.nav-section button\s*\{[^}]*min-height:\s*42px/s);
   assert.match(styles, /@media screen and \(max-width: 767px\)/);
