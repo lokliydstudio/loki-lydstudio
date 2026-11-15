@@ -81,14 +81,20 @@
     filters.querySelectorAll("[data-task-filter]").forEach((button) => {
       button.onclick = () => { taskAssigneeFilter = button.dataset.taskFilter; renderTasks(); };
     });
+    const todayKey = new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Oslo" }).format(new Date());
+    const priorityRank = { "Høy": 0, "Normal": 1, "Lav": 2 };
     const sorted = [...visible].sort((left, right) => taskStatusFilter === "completed"
       ? String(right.updatedAt || right.createdAt || "").localeCompare(String(left.updatedAt || left.createdAt || ""))
-      : String(left.dueDate || "9999").localeCompare(String(right.dueDate || "9999")));
+      : String(left.dueDate || "9999").localeCompare(String(right.dueDate || "9999"))
+        || (priorityRank[left.priority] ?? 1) - (priorityRank[right.priority] ?? 1)
+        || String(left.createdAt || "").localeCompare(String(right.createdAt || "")));
     list.innerHTML = sorted.length ? sorted.map((task) => {
       const hasDetails = Boolean(task.details);
       const expanded = hasDetails && expandedTasks.has(task.id);
+      const overdue = !task.completed && Boolean(task.dueDate) && task.dueDate < todayKey;
+      const dueToday = !task.completed && task.dueDate === todayKey;
       const summary = `<span class="task-title-line"><strong>${esc(task.title)}</strong>${hasDetails ? '<i aria-hidden="true">⌄</i>' : ""}</span><span class="task-meta"><em>${esc(task.assignee)}</em><em>${esc(formatDate(task.dueDate))}</em><em class="${task.priority === "Høy" ? "high" : ""}">${esc(task.priority)} prioritet</em></span>`;
-      return `<article class="task-row ${task.completed ? "completed" : ""} ${expanded ? "expanded" : "collapsed"}">
+      return `<article class="task-row ${task.completed ? "completed" : ""} ${task.priority === "Høy" ? "priority-high" : ""} ${overdue ? "overdue" : ""} ${dueToday ? "due-today" : ""} ${expanded ? "expanded" : "collapsed"}">
         <input class="task-check" type="checkbox" data-task-toggle="${esc(task.id)}" ${task.completed ? "checked" : ""} aria-label="Marker oppgave som ${task.completed ? "åpen" : "fullført"}">
         <div class="task-copy">${hasDetails ? `<button class="task-toggle" type="button" data-task-expand="${esc(task.id)}" aria-expanded="${expanded}" aria-controls="task-details-${esc(task.id)}">${summary}</button><span class="task-details" id="task-details-${esc(task.id)}" ${expanded ? "" : "hidden"}>${esc(task.details)}</span>` : `<div class="task-toggle static">${summary}</div>`}</div>
         <button class="icon-button" data-task-delete="${esc(task.id)}" aria-label="Slett oppgave">×</button>

@@ -1,0 +1,858 @@
+/*
+ * Loki CRM · task-shaped layouts
+ *
+ * The visual language stays shared, while each core workspace is shaped around
+ * its actual job: triage, lookup, progression, relationship work or execution.
+ * Loaded after the global console skin so it can specialize layout without
+ * changing application state or business logic.
+ */
+
+@media screen and (min-width: 768px) {
+  .content {
+    width: 100%;
+    max-width: 1680px;
+    padding: 26px 32px 54px;
+  }
+
+  /* Dashboard: one command centre, not a collection of equal cards. */
+  #overview {
+    grid-template-columns: minmax(0, 1.45fr) minmax(300px, .55fr);
+    grid-template-areas:
+      "welcome welcome"
+      "metrics metrics"
+      "work followups"
+      "systems systems";
+    column-gap: 22px;
+    align-items: start;
+  }
+
+  #overview.active {
+    display: grid;
+  }
+
+  #overview > .overview-welcome {
+    grid-area: welcome;
+    min-height: 112px;
+    padding: 8px 0 22px;
+  }
+
+  #overview > .overview-metrics {
+    grid-area: metrics;
+    grid-template-columns: minmax(240px, 1.35fr) repeat(3, minmax(150px, 1fr));
+    margin: 0 0 22px;
+    border-block: 1px solid var(--line-strong);
+    border-inline: 0;
+    border-radius: 0;
+  }
+
+  #overview .overview-metrics .metric {
+    min-height: 94px;
+    justify-content: center;
+    padding: 17px 20px;
+  }
+
+  #overview .overview-metrics .metric:nth-child(4) {
+    order: -2;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+  }
+
+  #overview .overview-metrics .metric:nth-child(2) {
+    order: -1;
+  }
+
+  #overview .overview-metrics .metric strong {
+    margin: 7px 0 3px;
+    font-family: var(--font-data);
+    font-size: 27px;
+    font-weight: 580;
+  }
+
+  #overview > .overview-grid {
+    grid-area: work;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  #overview > .overview-followups {
+    grid-area: followups;
+    position: sticky;
+    top: 90px;
+    min-height: 100%;
+  }
+
+  #overview .overview-panel,
+  #overview .overview-followups {
+    padding: 18px 20px;
+    border-radius: 6px;
+  }
+
+  #overview .overview-panel:first-child {
+    border-top: 2px solid var(--accent);
+  }
+
+  #overview .overview-panel:nth-child(2),
+  #overview .overview-followups {
+    border-top: 2px solid var(--line-strong);
+  }
+
+  #overview > .automation {
+    grid-area: systems;
+    margin-top: 18px;
+    border: 0;
+    border-top: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  #overview > .automation > div {
+    min-height: 48px;
+    padding: 12px 18px 0 0;
+    border: 0;
+  }
+
+  /* Contact and lead navigation behaves like a workspace switcher. */
+  .crm-category-switch {
+    width: max-content;
+    max-width: 100%;
+    grid-template-columns: repeat(3, minmax(180px, 240px));
+    gap: 0;
+    margin: 0 0 24px;
+    border-bottom: 1px solid var(--line-strong);
+    background: transparent;
+  }
+
+  .crm-category-tab {
+    min-height: 58px;
+    padding: 10px 14px;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .crm-category-tab + .crm-category-tab {
+    border-left: 1px solid var(--line);
+  }
+
+  .crm-category-tab.active {
+    border-bottom-color: var(--accent);
+    background: var(--surface-subtle);
+    box-shadow: none;
+  }
+
+  .crm-category-tab strong {
+    font-family: var(--font-data);
+    font-size: 14px;
+  }
+
+  /* Contacts: a dense, scan-first register rather than a card gallery. */
+  .customer-directory {
+    padding: 0;
+    overflow: hidden;
+    border-top: 2px solid var(--accent);
+  }
+
+  .customer-directory-head {
+    align-items: center;
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .customer-directory-head h2 {
+    margin: 4px 0 0;
+    font-size: 21px;
+  }
+
+  .customer-directory-tools {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) 145px 150px auto;
+    gap: 8px;
+  }
+
+  .customer-directory-tools .state {
+    display: none;
+  }
+
+  .customer-directory-tools .search {
+    width: auto;
+    min-width: 0;
+  }
+
+  .customer-directory-tools select {
+    min-height: 38px;
+    padding: 8px 28px 8px 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 5px;
+    background: var(--panel);
+    color: var(--ink);
+    font-size: 10px;
+  }
+
+  .customer-directory-columns {
+    display: grid;
+    grid-template-columns: 38px minmax(220px, 1.4fr) minmax(210px, 1fr) minmax(150px, .72fr) 32px;
+    gap: 12px;
+    padding: 9px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-muted);
+    color: var(--muted);
+    font-family: var(--font-data);
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .customer-directory-columns span:first-child {
+    grid-column: 2;
+  }
+
+  .customer-directory-grid {
+    display: block;
+    margin: 0;
+  }
+
+  .customer-directory-card {
+    grid-template-columns: 38px minmax(220px, 1.4fr) minmax(210px, 1fr) minmax(150px, .72fr) 32px;
+    min-height: 62px;
+    gap: 12px;
+    padding: 10px 16px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: var(--panel);
+    transition: background-color .12s ease, box-shadow .12s ease;
+  }
+
+  .customer-directory-card:last-child {
+    border-bottom: 0;
+  }
+
+  .customer-directory-card:hover,
+  .customer-directory-card:focus-visible {
+    transform: none;
+    border-color: var(--line);
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 var(--accent);
+  }
+
+  .customer-directory-contact {
+    min-width: 0;
+    display: grid;
+    gap: 3px;
+  }
+
+  .customer-directory-contact b,
+  .customer-directory-contact em {
+    overflow: hidden;
+    color: var(--ink);
+    font-size: 10px;
+    font-style: normal;
+    font-weight: 550;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .customer-directory-contact em {
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 450;
+  }
+
+  .customer-directory-status {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  /* Pipeline: one connected process with a dense working table. */
+  .lead-section-divider {
+    align-items: center;
+    margin: 0 0 14px;
+    padding: 0;
+  }
+
+  .lead-section-divider h2 {
+    margin: 4px 0 0;
+    font-size: 21px;
+  }
+
+  .lead-tools {
+    align-items: end;
+  }
+
+  .pipeline {
+    grid-template-columns: repeat(6, minmax(120px, 1fr));
+    gap: 0;
+    margin: 0 0 14px;
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    border-radius: 6px;
+    background: var(--panel);
+  }
+
+  .pipeline .pipeline-tab {
+    min-height: 64px;
+    padding: 11px 13px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    background: var(--panel);
+  }
+
+  .pipeline .pipeline-tab + .pipeline-tab {
+    border-left: 1px solid var(--line);
+  }
+
+  .pipeline .pipeline-tab:hover {
+    transform: none;
+    background: var(--surface-subtle);
+  }
+
+  .pipeline .pipeline-tab.active {
+    border-bottom-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: none;
+  }
+
+  .pipeline .pipeline-tab span {
+    max-width: 100px;
+    line-height: 1.25;
+  }
+
+  .pipeline .pipeline-tab strong {
+    font-family: var(--font-data);
+    font-size: 20px;
+    font-weight: 560;
+  }
+
+  .pipeline .archive,
+  .pipeline .irrelevant-tab {
+    color: var(--muted);
+  }
+
+  #lead-section .table-panel {
+    border-top: 2px solid var(--line-strong);
+  }
+
+  .stage-view-bar {
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-subtle);
+  }
+
+  .stage-view-bar strong {
+    font-size: 14px;
+  }
+
+  .crm-row {
+    grid-template-columns: minmax(180px, 1.2fr) minmax(190px, 1.25fr) 110px 100px minmax(180px, 1.25fr) 122px;
+    min-height: 60px;
+    padding: 10px 14px;
+  }
+
+  .crm-row.crm-head {
+    min-height: 34px;
+    padding-block: 8px;
+  }
+
+  .crm-row[data-open-lead]:hover,
+  .crm-row[data-open-lead]:focus-visible {
+    background: var(--accent-soft);
+    box-shadow: inset 3px 0 var(--accent);
+  }
+
+  .lead-row-actions {
+    justify-content: flex-end;
+  }
+
+  /* Customer profile: relationship workspace with grouped data and timeline. */
+  .lead-profile-modal {
+    width: min(1180px, calc(100vw - 40px));
+    max-width: 1180px;
+    max-height: calc(100dvh - 32px);
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .lead-profile-modal > .modal-head {
+    min-height: 78px;
+    margin: 0;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .lead-profile-modal > .modal-head h2 {
+    margin: 3px 0 0;
+    font-size: 23px;
+  }
+
+  .lead-profile-workspace {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 350px;
+    max-height: calc(100dvh - 112px);
+    overflow: hidden;
+  }
+
+  .lead-profile-workspace:has(.lead-timeline[hidden]) .lead-profile-form {
+    grid-column: 1 / -1;
+  }
+
+  .lead-profile-form {
+    min-width: 0;
+    overflow-y: auto;
+    padding: 0 22px 20px;
+  }
+
+  .profile-sections {
+    display: grid;
+    grid-template-columns: minmax(280px, .86fr) minmax(360px, 1.14fr);
+    column-gap: 26px;
+  }
+
+  .profile-section {
+    min-width: 0;
+    margin: 0;
+    padding: 20px 0 4px;
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .profile-section:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  .profile-section-notes {
+    grid-column: 1 / -1;
+  }
+
+  .profile-section legend {
+    width: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 9px;
+    margin: 0 0 14px;
+    padding: 0;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .profile-section legend span {
+    color: var(--accent);
+    font-family: var(--font-data);
+    font-size: 8px;
+    letter-spacing: .08em;
+  }
+
+  .profile-section .lead-profile-grid {
+    gap: 11px;
+  }
+
+  .profile-section-contact .lead-profile-grid,
+  .profile-section-relationship .lead-profile-grid,
+  .profile-section-notes .lead-profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lead-email-source {
+    border-radius: 5px;
+  }
+
+  .lead-quick-actions {
+    margin-top: 18px;
+    padding: 14px 0;
+    border-block: 1px solid var(--line);
+  }
+
+  .lead-form-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    margin: 0 -22px -20px;
+    padding: 12px 22px;
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--panel) 94%, transparent);
+    backdrop-filter: blur(12px);
+  }
+
+  .lead-profile-modal .lead-timeline {
+    min-width: 0;
+    margin: 0;
+    padding: 22px 20px;
+    overflow-y: auto;
+    border: 0;
+    border-left: 1px solid var(--line);
+    background: var(--surface-subtle);
+  }
+
+  .lead-profile-modal .timeline-head h3 {
+    margin-top: 4px;
+    font-size: 18px;
+  }
+
+  .lead-activity-list {
+    position: relative;
+    gap: 0;
+    margin: 16px 0 20px;
+    padding-left: 4px;
+  }
+
+  .lead-activity-list::before {
+    content: "";
+    position: absolute;
+    top: 9px;
+    bottom: 9px;
+    left: 8px;
+    width: 1px;
+    background: var(--line-strong);
+  }
+
+  .activity-row {
+    position: relative;
+    grid-template-columns: 10px minmax(0, 1fr);
+    padding: 0 0 18px;
+    border: 0;
+  }
+
+  .activity-row i {
+    z-index: 1;
+    margin-top: 4px;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--surface-subtle);
+  }
+
+  .activity-row time {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 4px;
+  }
+
+  .lead-timeline form {
+    grid-template-columns: 110px minmax(0, 1fr);
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+  }
+
+  .lead-timeline form button {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+
+  /* Tasks: execution-first list, notes remain a supporting workspace. */
+  #workspace-tools > .section-intro {
+    align-items: center;
+    margin: 0 0 18px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  #workspace-tools > .section-intro h2 {
+    margin: 4px 0;
+    font-size: 22px;
+  }
+
+  #workspace-tools .workspace-grid {
+    grid-template-columns: minmax(520px, 1.35fr) minmax(360px, .65fr);
+    gap: 20px;
+  }
+
+  #workspace-tools .workspace-column:first-child > .panel:first-child {
+    padding: 0;
+    overflow: hidden;
+    border-top: 2px solid var(--accent);
+  }
+
+  #workspace-tools .workspace-column:first-child > .panel:first-child > .panel-head {
+    margin: 0;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  #workspace-tools .compact-form {
+    grid-template-columns: minmax(220px, 1.5fr) 130px 140px 120px auto;
+    gap: 8px;
+    padding: 14px 18px;
+    border-radius: 0;
+    background: var(--surface-subtle);
+  }
+
+  #workspace-tools .compact-form label:first-child {
+    grid-column: 1 / 3;
+  }
+
+  #workspace-tools .compact-form label:nth-of-type(5) {
+    grid-column: 1 / 5;
+  }
+
+  #workspace-tools .compact-form button[type="submit"] {
+    grid-column: 5;
+    align-self: end;
+  }
+
+  #workspace-tools .task-status-tabs {
+    margin: 0;
+    padding: 12px 18px 0;
+  }
+
+  #workspace-tools .task-filter-bar {
+    margin: 0;
+    padding: 10px 18px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+    background: transparent;
+  }
+
+  #workspace-tools .task-list {
+    gap: 0;
+    margin: 0;
+  }
+
+  #workspace-tools .task-row {
+    min-height: 64px;
+    padding: 12px 16px;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    background: var(--panel);
+  }
+
+  #workspace-tools .task-row:last-child {
+    border-bottom: 0;
+  }
+
+  #workspace-tools .task-row:hover {
+    background: var(--surface-subtle);
+  }
+
+  #workspace-tools .task-row.priority-high {
+    border-left-color: var(--amber);
+  }
+
+  #workspace-tools .task-row.overdue {
+    border-left-color: var(--danger);
+    background: color-mix(in srgb, var(--danger) 5%, var(--panel));
+  }
+
+  #workspace-tools .task-row.due-today {
+    border-left-color: var(--accent);
+  }
+
+  #workspace-tools .task-meta em {
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  #workspace-tools .workspace-column:nth-child(2) > .panel {
+    padding: 18px;
+    border-top: 2px solid var(--line-strong);
+  }
+
+  #workspace-tools .note-list {
+    gap: 0;
+  }
+
+  #workspace-tools .note-card {
+    padding: 12px 0;
+    border: 0;
+    border-bottom: 1px solid var(--line);
+    border-radius: 0;
+  }
+
+  /* Secondary workspaces keep their own operational structures. */
+  #inbox .inbox {
+    grid-template-columns: minmax(310px, .62fr) minmax(540px, 1.38fr);
+  }
+
+  #operations .ops-metrics,
+  #economy .receipt-metrics {
+    border-block: 1px solid var(--line-strong);
+  }
+
+  #projects .studio-layout {
+    grid-template-columns: 270px minmax(0, 1fr);
+  }
+
+  #documents .table-panel,
+  #economy .receipt-list-panel {
+    border-top: 2px solid var(--line-strong);
+  }
+}
+
+@media screen and (min-width: 768px) and (max-width: 1180px) {
+  #overview {
+    grid-template-columns: 1fr;
+    grid-template-areas: "welcome" "metrics" "work" "followups" "systems";
+  }
+
+  #overview > .overview-followups {
+    position: static;
+  }
+
+  .customer-directory-head,
+  .lead-section-divider {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .customer-directory-tools {
+    grid-template-columns: minmax(220px, 1fr) 150px 150px auto;
+  }
+
+  .pipeline {
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+
+  .pipeline .pipeline-tab:nth-child(4) {
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .pipeline .pipeline-tab:nth-child(n + 5) {
+    border-top: 1px solid var(--line);
+  }
+
+  .lead-profile-workspace {
+    grid-template-columns: minmax(0, 1fr) 310px;
+  }
+
+  .profile-sections {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-section:nth-child(2) {
+    border-top: 1px solid var(--line);
+  }
+
+  .profile-section-notes {
+    grid-column: auto;
+  }
+
+  #workspace-tools .workspace-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  .customer-directory-columns {
+    display: none;
+  }
+
+  .customer-directory-tools select {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px;
+    border: 1px solid var(--line-strong);
+    border-radius: 5px;
+    background: var(--panel);
+    color: var(--ink);
+  }
+
+  .customer-directory-contact {
+    display: none;
+  }
+
+  .pipeline {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    border-block: 1px solid var(--line);
+    scrollbar-width: none;
+    scroll-snap-type: x proximity;
+  }
+
+  .pipeline .pipeline-tab {
+    min-width: 142px;
+    scroll-snap-align: start;
+    border: 0;
+    border-right: 1px solid var(--line);
+    border-bottom: 2px solid transparent;
+    border-radius: 0;
+  }
+
+  .pipeline .pipeline-tab.active {
+    border-bottom-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: none;
+  }
+
+  .lead-profile-modal {
+    padding: 0 !important;
+  }
+
+  .lead-profile-modal > .modal-head {
+    margin: 0;
+    padding: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .lead-profile-workspace {
+    display: block;
+  }
+
+  .lead-profile-form,
+  .lead-profile-modal .lead-timeline {
+    padding: 0 16px 18px;
+  }
+
+  .profile-section {
+    min-width: 0;
+    margin: 0;
+    padding: 18px 0 2px;
+    border: 0;
+    border-top: 1px solid var(--line);
+  }
+
+  .profile-section:first-child {
+    border-top: 0;
+  }
+
+  .profile-section legend {
+    margin-bottom: 12px;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .profile-section legend span {
+    margin-right: 7px;
+    color: var(--accent);
+    font-family: var(--font-data);
+    font-size: 8px;
+  }
+
+  .profile-section .lead-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-section .span-2 {
+    grid-column: auto;
+  }
+
+  .lead-profile-modal .lead-timeline {
+    margin: 0;
+    border: 0;
+    border-top: 1px solid var(--line-strong);
+    background: var(--surface-subtle);
+  }
+
+  #workspace-tools .task-row.priority-high {
+    border-left-color: var(--amber);
+  }
+
+  #workspace-tools .task-row.overdue {
+    border-left-color: var(--danger);
+  }
+
+  #workspace-tools .task-row.due-today {
+    border-left-color: var(--accent);
+  }
+}
+

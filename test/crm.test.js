@@ -112,6 +112,28 @@ test("CRM uses the Loki Studio Console design system across desktop, mobile and 
   assert.match(styles, /\.mobile-primary-nav button\.active\s*\{[^}]*border-top-color:\s*var\(--accent\)/s);
 });
 
+test("CRM core workspaces use task-shaped layouts without changing their workflows", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "ux-layout.css"), "utf8");
+  const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
+  assert.match(html, /ux-layout\.css/);
+  assert.ok(html.indexOf("studio-console.css") < html.indexOf("ux-layout.css"));
+  assert.match(html, /id="customer-stage-filter"/);
+  assert.match(html, /id="customer-sort"/);
+  assert.match(html, /class="customer-directory-columns"/);
+  assert.match(html, /class="lead-profile-workspace"/);
+  assert.match(html, /profile-section-contact/);
+  assert.match(html, /profile-section-relationship/);
+  assert.match(html, /profile-section-notes/);
+  assert.match(styles, /#overview\.active\s*\{\s*display:\s*grid/s);
+  assert.match(styles, /\.customer-directory-grid\s*\{[^}]*display:\s*block/s);
+  assert.match(styles, /\.pipeline\s*\{[^}]*grid-template-columns:\s*repeat\(6/s);
+  assert.match(styles, /\.lead-profile-workspace\s*\{[^}]*grid-template-columns/s);
+  assert.match(styles, /#workspace-tools \.task-row\.overdue/);
+  assert.match(workspace, /priorityRank/);
+  assert.match(workspace, /due-today/);
+});
+
 test("CRM overview is personalized and prioritizes owner tasks and stale Formspree enquiries", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
