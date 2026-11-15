@@ -1,9 +1,9 @@
 :root {
-  --login-bg: #0d100c;
-  --login-panel: #171b16;
-  --login-line: #394034;
-  --login-muted: #929a8e;
-  --login-accent: #c7ee5d;
+  --login-bg: #101512;
+  --login-panel: #191f1c;
+  --login-line: #39423d;
+  --login-muted: #9ba39e;
+  --login-accent: #91b8ad;
 }
 
 html,
@@ -14,17 +14,7 @@ body {
 body {
   position: relative;
   overflow: hidden auto;
-  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif !important;
-}
-
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: linear-gradient(rgba(255,255,255,.026) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.026) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: linear-gradient(to bottom, #000, transparent 76%);
+  font-family: Inter, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif !important;
 }
 
 main {
@@ -32,7 +22,7 @@ main {
   width: min(430px, 100%);
   padding: 34px;
   border: 1px solid var(--login-line);
-  border-radius: 3px;
+  border-radius: 9px;
   background: var(--login-panel);
   box-shadow: 0 24px 70px rgba(0,0,0,.34);
 }
@@ -64,7 +54,7 @@ main {
 
 h1 {
   margin: 8px 0 11px;
-  font-family: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-family: Inter, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   font-size: 28px;
   font-weight: 650;
   letter-spacing: -.045em;
@@ -83,7 +73,7 @@ p {
 
 button,
 input {
-  border-radius: 2px;
+  border-radius: 5px;
   box-shadow: none;
   font-family: inherit;
 }
@@ -127,19 +117,19 @@ input {
 }
 
 input:focus {
-  border-color: #8eaf35;
-  outline: 2px solid rgba(199,238,93,.16);
+  border-color: var(--login-accent);
+  outline: 2px solid rgba(145,184,173,.18);
 }
 
 #code-form button[type="submit"] {
-  border: 1px solid #8eaf35;
+  border: 1px solid var(--login-accent);
   background: var(--login-accent);
-  color: #17200d;
+  color: #10201c;
 }
 
 .text-button {
   border-color: var(--login-line);
-  border-radius: 2px;
+  border-radius: 5px;
   color: #d9ddd5;
 }
 
@@ -163,7 +153,7 @@ input:focus {
   main {
     margin: 0;
     padding: 25px 19px;
-    border-radius: 2px;
+    border-radius: 8px;
   }
 
   .owner-grid {

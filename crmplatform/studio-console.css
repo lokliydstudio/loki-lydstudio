@@ -7,50 +7,52 @@
 @media screen {
   :root {
     color-scheme: light;
-    --ink: #1b211b;
-    --muted: #687067;
-    --line: #cdd2c9;
-    --line-strong: #aeb6aa;
-    --paper: #eceee9;
-    --panel: #f9faf6;
-    --sidebar: #141813;
-    --surface-subtle: #f1f3ee;
-    --surface-muted: #e5e9e1;
-    --accent: #b9e54a;
-    --accent-hover: #a8d33b;
-    --accent-soft: #edf5d7;
-    --accent-ink: #1d280f;
-    --lime: #b9e54a;
-    --violet: #52724a;
-    --blue: #3f6f6a;
-    --green: #496d42;
+    --ink: #202421;
+    --muted: #676d69;
+    --line: #d5d8d3;
+    --line-strong: #b9beb8;
+    --paper: #f2f2ef;
+    --panel: #fbfbf9;
+    --sidebar: #171c19;
+    --surface-subtle: #f5f5f2;
+    --surface-muted: #e9ebe7;
+    --accent: #365f55;
+    --accent-hover: #294b43;
+    --accent-soft: #e3ece8;
+    --accent-ink: #ffffff;
+    --accent-line: #527d72;
+    --lime: #365f55;
+    --violet: #52736b;
+    --blue: #4c716c;
+    --green: #365f55;
     --amber: #936d27;
     --danger: #a64b3f;
     --shadow-card: none;
-    --font-ui: "Avenir Next", Avenir, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --font-ui: Inter, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-data: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-    --radius: 3px;
-    --sidebar-width: 224px;
+    --radius: 6px;
+    --sidebar-width: 232px;
   }
 
   html[data-theme="dark"] {
     color-scheme: dark;
-    --ink: #eef1e9;
-    --muted: #9da59a;
-    --line: #333a31;
-    --line-strong: #4b5547;
-    --paper: #10130f;
-    --panel: #181c17;
-    --sidebar: #0c0f0b;
-    --surface-subtle: #1d221c;
-    --surface-muted: #242a22;
-    --accent: #c7ee5d;
-    --accent-hover: #d6fa75;
-    --accent-soft: #2b361c;
-    --accent-ink: #11170a;
-    --violet: #9ebf91;
-    --blue: #8dbbb4;
-    --green: #91bd84;
+    --ink: #edf0ed;
+    --muted: #9ca49f;
+    --line: #353b37;
+    --line-strong: #4c5550;
+    --paper: #121614;
+    --panel: #191e1b;
+    --sidebar: #0d110f;
+    --surface-subtle: #1e2421;
+    --surface-muted: #252c28;
+    --accent: #91b8ad;
+    --accent-hover: #a8cbc2;
+    --accent-soft: #213731;
+    --accent-ink: #10201c;
+    --accent-line: #6f9d91;
+    --violet: #9bbab2;
+    --blue: #8fb8b0;
+    --green: #91b8ad;
     --amber: #d5ae62;
     --danger: #e9897d;
   }
@@ -2154,6 +2156,285 @@
     border-bottom: 0;
     border-left: 0;
     border-radius: 3px 3px 0 0 !important;
+  }
+}
+
+/* Nordic identity refinement: calm contrast, one product accent, consistent geometry. */
+@media screen {
+  a,
+  a:visited,
+  .link-button,
+  .section-intro a,
+  .mobile-section-heading button {
+    color: var(--accent);
+  }
+
+  .primary {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .primary:hover {
+    border-color: var(--accent-hover);
+    background: var(--accent-hover);
+  }
+
+  .push-toggle.active {
+    border-color: var(--accent-line);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--accent-line) !important;
+  }
+
+  input[type="checkbox"],
+  input[type="radio"] {
+    accent-color: var(--accent);
+  }
+
+  .nav button.active {
+    border-left-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 16%, #171c19);
+  }
+
+  .nav button.active .nav-icon,
+  .nav button.active .count,
+  .profile-circle,
+  .presence-dot.online {
+    color: var(--accent);
+  }
+
+  .overview-welcome h2 {
+    font-size: clamp(27px, 2.5vw, 35px);
+  }
+
+  .overview-cta,
+  html[data-theme="dark"] .overview-cta {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .overview-cta:hover,
+  html[data-theme="dark"] .overview-cta:hover {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .overview-cta span,
+  .overview-welcome .kicker,
+  .message em,
+  .crm-category-tab > strong,
+  .crm-category-tab.active > strong {
+    color: var(--accent);
+  }
+
+  .overview-panel,
+  .overview-panel:nth-child(2),
+  .overview-followups {
+    border-top-color: var(--accent-line);
+  }
+
+  .progress i,
+  .goal-progress i,
+  .prospect-score i::after {
+    background: var(--accent) !important;
+  }
+
+  .message.unread .message-sender::after,
+  .mobile-priority-label i {
+    background: var(--accent);
+  }
+
+  .message.selected,
+  .customer-directory-card:hover,
+  .customer-directory-card:focus-visible,
+  .crm-row.priority-lead,
+  .crm-row.priority-lead:hover,
+  .crm-row.priority-lead:focus-visible,
+  .project-list button.active,
+  .track-card[open],
+  .project-image-card[open],
+  .receipt-row.selected,
+  .prospect-card.active {
+    background: var(--accent-soft);
+    box-shadow: inset 2px 0 var(--accent-line) !important;
+  }
+
+  .inbox-tab.active,
+  .crm-category-tab.active,
+  .prospect-tab.active {
+    border-color: var(--accent);
+  }
+
+  .pipeline .pipeline-tab.active,
+  .task-status-tab.active,
+  .task-filter-button.active,
+  .tenant-studio-tabs button.active {
+    background: color-mix(in srgb, var(--accent) 18%, var(--ink));
+    box-shadow: inset 0 -3px var(--accent) !important;
+  }
+
+  .task-status-tab.active,
+  .task-filter-button.active {
+    box-shadow: inset 2px 0 var(--accent) !important;
+  }
+
+  .task-status-tab.active strong,
+  .task-filter-button.active strong {
+    color: color-mix(in srgb, var(--accent) 74%, white);
+  }
+
+  .google-calendar-day.today {
+    box-shadow: inset 0 0 0 2px var(--accent-line);
+  }
+
+  .google-calendar-detail,
+  .mobile-priority-card {
+    border-left-color: var(--accent-line);
+  }
+
+  .prospect-score-ring {
+    border-color: var(--accent-line);
+  }
+
+  .panel,
+  .metrics,
+  .modal,
+  .customer-directory-card,
+  .project-card,
+  .grant-card,
+  .booking-card,
+  .quote-card,
+  .note-card,
+  .goal-card,
+  .task-row,
+  .ops-metrics article,
+  .prospect-metrics article,
+  .fiken-metric,
+  .compact-form,
+  .note-form,
+  .goal-form,
+  .project-fields,
+  .audio-form,
+  .quote-lines,
+  .project-image-uploader,
+  .workspace-disclosure,
+  .studio-disclosure,
+  .studio-subdisclosure,
+  .admin-disclosure,
+  .track-card,
+  .delivery-playlist-card,
+  .delivery-track-choice,
+  .project-image-card,
+  .spotify-reference-card,
+  .time-entry-row,
+  .delivery-playlist-builder,
+  .project-image-section,
+  .receipt-capture,
+  .tenant-admin-grid > section,
+  .prospect-tags span,
+  .prospect-links a,
+  .prospect-contact-grid > span,
+  .prospect-evidence,
+  .prospect-contact,
+  .prospect-check {
+    border-radius: var(--radius) !important;
+  }
+
+  .primary,
+  .secondary,
+  .dark-button,
+  .tiny-button,
+  .round,
+  .icon-button,
+  .close,
+  .danger-button,
+  .theme-toggle,
+  .push-toggle,
+  .lead-relevance-button,
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea,
+  .search {
+    border-radius: 5px !important;
+  }
+
+  .state,
+  .message-badge,
+  .enquiry-type-badge,
+  .lead-source-badge,
+  .task-meta em,
+  .customer-directory-copy > span em {
+    border-radius: 3px !important;
+  }
+
+  .modal {
+    border-radius: 9px !important;
+  }
+
+  .toast {
+    border-left-color: var(--accent);
+    border-radius: 5px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  :root {
+    --mobile-accent: var(--accent);
+  }
+
+  .mobile-overview-welcome h2 {
+    font-size: 24px;
+  }
+
+  .topbar #new-lead {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-ink);
+  }
+
+  .mobile-priority-card {
+    border-left-color: var(--accent-line);
+    border-radius: 6px;
+  }
+
+  .mobile-priority-label,
+  .mobile-priority-action span:last-child,
+  .mobile-quick-actions svg,
+  .mobile-primary-nav button.active svg {
+    color: var(--accent);
+  }
+
+  .mobile-priority-action {
+    border-color: var(--ink);
+    border-radius: 5px;
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .mobile-work-queue,
+  .mobile-quick-actions,
+  .mobile-more-panel {
+    border-radius: 6px;
+  }
+
+  .mobile-queue-count {
+    border-radius: 4px;
+  }
+
+  .mobile-primary-nav button.active {
+    border-top-color: var(--accent);
+  }
+
+  .project-list button.active {
+    box-shadow: inset 0 -2px var(--accent) !important;
   }
 }
 

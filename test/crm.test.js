@@ -102,14 +102,14 @@ test("CRM uses the Loki Studio Console design system across desktop, mobile and 
   assert.ok(html.indexOf("mobile-dashboard.css") < html.indexOf("studio-console.css"));
   assert.match(login, /login-console\.css/);
   assert.match(tasks, /tasks-console\.css/);
-  assert.match(styles, /--accent:\s*#b9e54a/);
-  assert.match(styles, /--radius:\s*3px/);
+  assert.match(styles, /--accent:\s*#365f55/);
+  assert.match(styles, /--radius:\s*6px/);
   assert.match(styles, /html\[data-theme="dark"\]/);
   assert.match(styles, /\.nav \.count\s*\{[^}]*background:\s*transparent/s);
   assert.match(styles, /\.overview-welcome\s*\{[^}]*background:\s*transparent/s);
   assert.match(styles, /\.pipeline \.pipeline-tab\.active\s*\{[^}]*box-shadow:\s*inset 0 -3px var\(--accent\)/s);
   assert.match(styles, /@media screen and \(max-width: 767px\)/);
-  assert.match(styles, /\.mobile-primary-nav button\.active\s*\{[^}]*border-top-color:\s*#76922f/s);
+  assert.match(styles, /\.mobile-primary-nav button\.active\s*\{[^}]*border-top-color:\s*var\(--accent\)/s);
 });
 
 test("CRM overview is personalized and prioritizes owner tasks and stale Formspree enquiries", () => {
