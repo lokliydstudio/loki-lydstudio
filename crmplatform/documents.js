@@ -98,12 +98,14 @@
   function updateConnectionStatus() {
     const available = documents.filter((item) => item.downloadable).length;
     const waiting = documents.filter((item) => item.importPending || item.syncStatus === "pending").length;
+    const failed = documents.filter((item) => item.syncStatus === "error").length;
     const jottaDot = document.getElementById("jotta-dot");
     const jottaStatus = document.getElementById("jotta-status");
-    if (jottaDot) jottaDot.className = waiting ? "dot amber" : "dot green";
+    if (jottaDot) jottaDot.className = waiting || failed ? "dot amber" : "dot green";
     if (jottaStatus) jottaStatus.textContent = documents.length
-      ? `${available} kan lastes ned i CRM${waiting ? ` · ${waiting} venter på bro` : ""}`
+      ? `${available} kan lastes ned i CRM${waiting ? ` · ${waiting} venter på bro` : ""}${failed ? ` · ${failed} synkfeil` : ""}`
       : "Ingen dokumenter indeksert ennå";
+    window.LokiIntegrationStatus?.setIssue("jottacloud", failed ? `${failed} Jottacloud-${failed === 1 ? "synk" : "synker"} feilet.` : "");
   }
 
   function render() {
@@ -287,9 +289,14 @@
   }
 
   async function load() {
-    const data = await request("/api/crm/documents");
-    documents = data.documents || [];
-    render();
+    try {
+      const data = await request("/api/crm/documents");
+      documents = data.documents || [];
+      render();
+    } catch (error) {
+      window.LokiIntegrationStatus?.setIssue("jottacloud", "Dokumentindeksen kunne ikke oppdateres.");
+      throw error;
+    }
   }
 
   async function init() {

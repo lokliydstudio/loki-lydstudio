@@ -170,6 +170,32 @@ test("independent design audit removes duplicated hierarchy and scales dense col
   assert.match(operations, /Extended_Pictographic/);
 });
 
+test("CRM sidebar is compact, task grouped and keeps system details in settings", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const styles = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "sidebar-redesign.css"), "utf8");
+  const sidebar = html.match(/<aside class="sidebar">([\s\S]*?)<\/aside>/)?.[1] || "";
+
+  assert.match(html, /sidebar-redesign\.css/);
+  assert.ok(html.indexOf("launch-polish.css") < html.indexOf("sidebar-redesign.css"));
+  assert.match(sidebar, />Oversikt<\/span>/);
+  assert.match(sidebar, />Arbeidsflate<\/span>/);
+  assert.match(sidebar, />Kunder og prosjekter<\/span>/);
+  assert.match(sidebar, />Administrasjon<\/span>/);
+  assert.match(sidebar, /id="profile-menu-trigger"/);
+  assert.match(sidebar, /id="sidebar-integration-alert"[^>]*hidden/);
+  assert.doesNotMatch(sidebar, /class="connection"/);
+  assert.doesNotMatch(sidebar, /class="presence-card/);
+  assert.doesNotMatch(sidebar, /id="profile-email"/);
+  assert.match(html, /data-settings-panel="integrations"/);
+  assert.match(html, /data-settings-panel="activity"/);
+  assert.match(html, /id="connection-title"/);
+  assert.match(html, /id="jotta-status"/);
+  assert.match(html, /id="presence-list"/);
+  assert.match(styles, /--sidebar-width:\s*260px/);
+  assert.match(styles, /\.nav-section button\s*\{[^}]*min-height:\s*42px/s);
+  assert.match(styles, /@media screen and \(max-width: 767px\)/);
+});
+
 test("external booking portal shares the restrained Loki product identity", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
   const script = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
@@ -647,7 +673,7 @@ test("Bilag replaces the visible Fiken module with an iPhone camera flow", () =>
   const styles = fs.readFileSync(path.join(root, "crmplatform", "receipts.css"), "utf8");
   const workspace = fs.readFileSync(path.join(root, "crmplatform", "workspace.js"), "utf8");
   const api = fs.readFileSync(path.join(root, "api", "crm", "receipts.js"), "utf8");
-  assert.match(html, /data-view-target="economy"><span class="nav-icon"[^>]*><svg[\s\S]*?<\/svg><\/span>Bilag/);
+  assert.match(html, /data-view-target="economy"><span class="nav-icon"[^>]*><svg[\s\S]*?<\/svg><\/span><span class="nav-text">Bilag<\/span>/);
   assert.match(html, /id="receipt-camera-button"[^>]+for="receipt-camera-input"/);
   assert.match(html, /id="receipt-camera-input"[^>]+accept="image\/\*"[^>]+capture="environment"/);
   assert.match(html, /id="receipt-file-input"[^>]+application\/pdf/);
@@ -1685,12 +1711,14 @@ test("presence is limited to the two active Loki owners and expires quickly", ()
   assert.equal(loggedOut.lastLoginAt, leonLogin.lastLoginAt);
 });
 
-test("CRM sidebar exposes authenticated live presence without hard-coded status", () => {
+test("CRM settings expose authenticated live presence without cluttering the sidebar", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const client = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "presence.js"), "utf8");
   const endpoint = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  const sidebar = html.match(/<aside class="sidebar">([\s\S]*?)<\/aside>/)?.[1] || "";
   assert.match(html, /id="presence-list"/);
-  assert.match(html, /Pålogget nå/);
+  assert.match(html, /data-settings-panel="activity"/);
+  assert.doesNotMatch(sidebar, /id="presence-list"/);
   assert.match(client, /\/api\/studio\?action=presence/);
   assert.match(client, /visibilitychange/);
   assert.match(client, /Sist pålogget/);
