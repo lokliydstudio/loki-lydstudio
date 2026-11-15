@@ -895,6 +895,14 @@ input[type="radio"] {
   top: 72px;
 }
 
+/* A sticky row cannot use the clipped table panel as its scroll container;
+   that offsets it into the first document row. The document workspace is
+   already width-constrained, so letting this panel overflow vertically keeps
+   the header in normal flow and sticky against the app viewport. */
+#documents .table-panel {
+  overflow: visible;
+}
+
 /* Remove residual campaign-like styling from deep project/workspace modules. */
 .delivery-playlist-builder,
 .project-time-section,
