@@ -132,6 +132,8 @@ test("CRM core workspaces use task-shaped layouts without changing their workflo
   assert.match(styles, /\.pipeline\s*\{[^}]*grid-template-columns:\s*repeat\(6/s);
   assert.match(styles, /\.lead-profile-workspace\s*\{[^}]*grid-template-columns/s);
   assert.match(styles, /#workspace-tools \.task-row\.overdue/);
+  assert.match(styles, /#workspace-tools \.note-card\s*\{[^}]*padding:\s*16px 18px/s);
+  assert.match(styles, /@media screen and \(max-width: 767px\)[\s\S]*?#workspace-tools \.note-card\s*\{[^}]*padding:\s*18px 16px/s);
   assert.match(workspace, /priorityRank/);
   assert.match(workspace, /due-today/);
 });

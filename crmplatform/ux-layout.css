@@ -698,7 +698,7 @@
   }
 
   #workspace-tools .note-card {
-    padding: 12px 0;
+    padding: 16px 18px;
     border: 0;
     border-bottom: 1px solid var(--line);
     border-radius: 0;
@@ -779,6 +779,14 @@
 }
 
 @media screen and (max-width: 767px) {
+  #workspace-tools .workspace-column:nth-child(2) > .panel {
+    padding-inline: 18px;
+  }
+
+  #workspace-tools .note-card {
+    padding: 18px 16px;
+  }
+
   .customer-directory-columns {
     display: none;
   }
