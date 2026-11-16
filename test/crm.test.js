@@ -58,6 +58,7 @@ const {
   verifyLoginCode: verifyTenantLoginCode,
 } = require("../lib/tenant-booking");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
+const { defaultAnnualWheel, sanitizeAnnualWheel } = require("../lib/crm-annual-wheel");
 
 test("only active owners can receive CRM tokens", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
@@ -2032,4 +2033,54 @@ test("CRM keeps operational copy concise without instructional tip panels", () =
   assert.doesNotMatch(studio, /COLD STORAGE-BACKUP/);
   assert.doesNotMatch(tasks, /class="install-note"/);
   assert.doesNotMatch(receipts, /Kontroller alltid originalen/);
+});
+
+test("annual wheel starts with a complete editable 2027 operating plan", () => {
+  const wheel = defaultAnnualWheel();
+  assert.equal(wheel.year, 2027);
+  assert.equal(wheel.months.length, 12);
+  assert.equal(wheel.months[0].name, "Januar");
+  assert.match(wheel.months[2].focus, /Loki Songs/);
+  assert.match(wheel.months[2].focus, /4.–6. mars/);
+  assert.deepEqual(wheel.rhythms.map((rhythm) => rhythm.id), ["weekly", "monthly", "quarterly"]);
+  assert.equal(wheel.goals.length >= 6, true);
+});
+
+test("annual wheel sanitization preserves the schema and records the editor", () => {
+  const existing = defaultAnnualWheel();
+  const wheel = sanitizeAnnualWheel({
+    year: 2200,
+    title: "  Loki årsplan\u0000  ",
+    months: [{ month: 1, focus: "Nytt januar-fokus", items: [" Første oppgave ", "", "Andre oppgave"] }],
+    rhythms: [{ id: "weekly", items: ["Ny mandagsrutine"] }],
+    goals: ["Nytt mål"],
+  }, existing, "LEON@LOKILYD.NO");
+  assert.equal(wheel.year, 2027);
+  assert.equal(wheel.title, "Loki årsplan");
+  assert.equal(wheel.months.length, 12);
+  assert.deepEqual(wheel.months[0].items, ["Første oppgave", "Andre oppgave"]);
+  assert.equal(wheel.months[1].focus, existing.months[1].focus);
+  assert.deepEqual(wheel.rhythms.find((rhythm) => rhythm.id === "weekly").items, ["Ny mandagsrutine"]);
+  assert.deepEqual(wheel.goals, ["Nytt mål"]);
+  assert.equal(wheel.updatedBy, "leon@lokilyd.no");
+  assert.match(wheel.updatedAt, /^\d{4}-\d{2}-\d{2}T/);
+});
+
+test("CRM exposes the private annual wheel in desktop and mobile administration", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "annual-wheel.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "annual-wheel.css"), "utf8");
+  const api = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  assert.match(html, /data-view-target="annual-wheel"/);
+  assert.match(html, /id="annual-wheel-svg"/);
+  assert.match(html, /id="annual-month-detail"/);
+  assert.match(html, /id="annual-rhythm-form" hidden/);
+  assert.match(html, /LokiAnnualWheel\.init\(\)/);
+  assert.match(client, /\/api\/studio\?action=annual-wheel/);
+  assert.match(client, /method: "PUT"/);
+  assert.match(client, /role="button" tabindex="0"/);
+  assert.match(css, /@media \(max-width: 767px\)/);
+  assert.match(api, /requireUser\(req, res\)/);
+  assert.match(api, /action === "annual-wheel"/);
+  assert.match(api, /readCollection\("annual-wheel"\)/);
 });

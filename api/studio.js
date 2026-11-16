@@ -31,6 +31,7 @@ const {
   sanitizeProjectImage,
 } = require("../lib/crm-project-images");
 const { sanitizeProject } = require("../lib/crm-projects");
+const { defaultAnnualWheel, sanitizeAnnualWheel } = require("../lib/crm-annual-wheel");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
 const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
@@ -1087,7 +1088,7 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, rentals, projects, audio, audioComments, projectImages, audioPlaylists, documents, receipts, activities, bookings, quotes, mailSort, prospects, prospectRuns, tenantBookingUsers, tenantBookings] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, audioComments, projectImages, audioPlaylists, documents, receipts, activities, bookings, quotes, mailSort, prospects, prospectRuns, tenantBookingUsers, tenantBookings, annualWheelRecords] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("rentals"),
@@ -1106,6 +1107,7 @@ async function backupHandler(req, res) {
     readCollection("cold-call-runs"),
     readCollection("tenant-booking-users"),
     readCollection("tenant-bookings"),
+    readCollection("annual-wheel"),
   ]);
   const projectExport = createProjectExport(projects, audio, "", audioComments, projectImages, audioPlaylists);
   const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
@@ -1133,7 +1135,22 @@ async function backupHandler(req, res) {
     coldCallRuns: prospectRuns,
     tenantBookingUsers,
     tenantBookings,
+    annualWheel: sanitizeAnnualWheel(annualWheelRecords[0] || defaultAnnualWheel()),
   });
+}
+
+async function annualWheelHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const records = await readCollection("annual-wheel");
+  const existing = sanitizeAnnualWheel(records[0] || defaultAnnualWheel());
+  if (req.method === "GET") return res.status(200).json({ wheel: existing });
+  if (req.method === "PUT" || req.method === "PATCH") {
+    const wheel = sanitizeAnnualWheel(req.body?.wheel || req.body || {}, existing, user.email);
+    await writeCollection("annual-wheel", [wheel]);
+    return res.status(200).json({ wheel });
+  }
+  return res.status(405).json({ error: "Method not allowed" });
 }
 
 module.exports = async function handler(req, res) {
@@ -1171,6 +1188,7 @@ module.exports = async function handler(req, res) {
     if (action === "push") return await pushHandler(req, res);
     if (action === "native-push") return await nativePushHandler(req, res);
     if (action === "quotes") return await quotesHandler(req, res);
+    if (action === "annual-wheel") return await annualWheelHandler(req, res);
     if (action === "backup") return await backupHandler(req, res);
     if (action === "prospects") return await prospectsHandler(req, res);
     if (action === "prospect-sync") return await prospectSyncHandler(req, res);
