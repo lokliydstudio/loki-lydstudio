@@ -7,6 +7,7 @@
   let timer = null;
   let stopped = false;
   let lastUsers = FALLBACK_USERS;
+  let profileAvatars = new Map();
 
   const esc = (value) => String(value ?? "").replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[character]);
 
@@ -31,7 +32,9 @@
     count.title = error || `${onlineCount} pålogget`;
     list.innerHTML = users.map((user) => {
       const status = error ? "Status utilgjengelig" : user.online ? `Pålogget nå${user.isCurrent ? " · denne brukeren" : ""}` : lastLoginLabel(user.lastLoginAt);
-      return `<li class="presence-user ${user.online ? "online" : "offline"}${user.isCurrent ? " current" : ""}"><span class="presence-avatar">${esc(user.initial)}</span><span><strong>${esc(user.name)}</strong><small>${esc(status)}</small></span><i aria-label="${user.online ? "Pålogget" : "Ikke pålogget"}"></i></li>`;
+      const avatarUrl = profileAvatars.get(user.name);
+      const avatar = avatarUrl ? `<img src="${esc(avatarUrl)}" alt="">` : esc(user.initial);
+      return `<li class="presence-user ${user.online ? "online" : "offline"}${user.isCurrent ? " current" : ""}"><span class="presence-avatar">${avatar}</span><span><strong>${esc(user.name)}</strong><small>${esc(status)}</small></span><i aria-label="${user.online ? "Pålogget" : "Ikke pålogget"}"></i></li>`;
     }).join("");
   }
 
@@ -61,6 +64,10 @@
 
   function init() {
     render(FALLBACK_USERS);
+    window.addEventListener("loki-profiles-updated", (event) => {
+      profileAvatars = new Map((event.detail?.profiles || []).filter((profile) => profile.hasAvatar && profile.avatarUrl).map((profile) => [profile.name, profile.avatarUrl]));
+      render(lastUsers);
+    });
     refresh();
     timer = window.setInterval(refresh, INTERVAL_MS);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });

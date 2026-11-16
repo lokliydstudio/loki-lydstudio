@@ -1,0 +1,97 @@
+/* Private owner avatars */
+
+[data-current-avatar] {
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+[data-current-avatar] > span {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+}
+
+[data-current-avatar] img,
+.presence-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+[data-current-avatar].has-image {
+  border-color: var(--accent-line);
+  background: var(--surface-muted);
+  color: transparent;
+}
+
+.profile-avatar-controls {
+  display: grid;
+  gap: 10px;
+  padding: 16px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.profile-avatar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.profile-avatar-actions button {
+  min-height: 40px;
+}
+
+.profile-avatar-remove {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--line));
+  color: var(--danger);
+}
+
+.profile-avatar-status {
+  min-height: 16px;
+  color: var(--muted);
+  font-family: var(--font-data);
+  font-size: 9px;
+  line-height: 1.45;
+}
+
+.profile-avatar-status.saving { color: var(--amber); }
+.profile-avatar-status.saved { color: var(--green); }
+.profile-avatar-status.error { color: var(--danger); }
+
+.profile-avatar-progress {
+  height: 3px;
+  overflow: hidden;
+  background: var(--surface-muted);
+}
+
+.profile-avatar-progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--accent);
+  transition: width .12s linear;
+}
+
+.profile-avatar-progress[hidden],
+.profile-avatar-remove[hidden] {
+  display: none !important;
+}
+
+.presence-avatar {
+  overflow: hidden;
+}
+
+@media screen and (max-width: 480px) {
+  .profile-avatar-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-avatar-actions button {
+    width: 100%;
+    min-height: 44px;
+  }
+}

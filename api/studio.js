@@ -32,6 +32,14 @@ const {
 } = require("../lib/crm-project-images");
 const { sanitizeProject } = require("../lib/crm-projects");
 const { defaultAnnualWheel, sanitizeAnnualWheel } = require("../lib/crm-annual-wheel");
+const {
+  MAX_PROFILE_AVATAR_SIZE,
+  PROFILE_AVATAR_CONTENT_TYPES,
+  ownerProfile,
+  profileAvatarPathname,
+  publicUserProfiles,
+  sanitizeUserProfile,
+} = require("../lib/crm-user-profiles");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
 const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
@@ -212,6 +220,99 @@ async function projectImageUploadHandler(req, res) {
     console.error("Project image upload signing failed", error?.message);
     return res.status(400).json({ error: error?.message || "Kunne ikke starte bildeopplastingen." });
   }
+}
+
+async function profileAvatarUploadHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+  try {
+    const result = await handleUploadPresigned({
+      body: req.body,
+      request: req,
+      getSignedToken: async (pathname, clientPayload) => {
+        let payload;
+        try { payload = JSON.parse(clientPayload || "{}"); } catch { throw new Error("Ugyldig opplastingsdata."); }
+        if (profileAvatarPathname(user.email, payload.avatarId, payload.filename) !== pathname) throw new Error("Ugyldig filsti.");
+        const validUntil = Date.now() + 15 * 60 * 1000;
+        const token = await issueSignedToken({
+          pathname,
+          operations: ["put"],
+          allowedContentTypes: PROFILE_AVATAR_CONTENT_TYPES,
+          maximumSizeInBytes: MAX_PROFILE_AVATAR_SIZE,
+          validUntil,
+        });
+        return {
+          token,
+          urlOptions: {
+            allowedContentTypes: PROFILE_AVATAR_CONTENT_TYPES,
+            maximumSizeInBytes: MAX_PROFILE_AVATAR_SIZE,
+            validUntil,
+            addRandomSuffix: false,
+            allowOverwrite: false,
+            cacheControlMaxAge: 60,
+          },
+        };
+      },
+    });
+    return res.status(200).json(result);
+  } catch (error) {
+    console.error("Profile avatar upload signing failed", error?.message);
+    return res.status(400).json({ error: error?.message || "Kunne ikke starte bildeopplastingen." });
+  }
+}
+
+async function userProfileHandler(req, res) {
+  const user = requireUser(req, res);
+  if (!user) return;
+  const profiles = await readCollection("user-profiles");
+  if (req.method === "GET") {
+    const visible = publicUserProfiles(profiles, user.email);
+    return res.status(200).json({ profile: visible.find((profile) => profile.isCurrent), profiles: visible });
+  }
+
+  if (req.method === "POST" && req.body?.operation === "register-avatar") {
+    const pathname = cleanText(req.body?.avatar?.pathname, 500);
+    let actualBlob;
+    try { actualBlob = await head(pathname, { access: "private" }); }
+    catch { return res.status(400).json({ error: "Profilbildet ble ikke funnet etter opplastingen." }); }
+    const existingIndex = profiles.findIndex((profile) => profile.email === user.email);
+    const existing = existingIndex >= 0 ? profiles[existingIndex] : {};
+    const profile = sanitizeUserProfile(req.body?.avatar, actualBlob, user.email, {});
+    if (!profile) return res.status(400).json({ error: "Bruk JPEG, PNG eller WebP på maksimalt 5 MB." });
+    if (existingIndex >= 0) profiles[existingIndex] = profile;
+    else profiles.push(profile);
+    await writeCollection("user-profiles", profiles);
+    if (existing.pathname && existing.pathname !== profile.pathname) {
+      try { await del(existing.pathname); } catch (error) { console.error("Old profile avatar cleanup failed", error?.message); }
+    }
+    const visible = publicUserProfiles(profiles, user.email);
+    return res.status(201).json({ profile: visible.find((item) => item.isCurrent), profiles: visible });
+  }
+
+  if (req.method === "DELETE") {
+    const index = profiles.findIndex((profile) => profile.email === user.email);
+    if (index >= 0) {
+      const [removed] = profiles.splice(index, 1);
+      await writeCollection("user-profiles", profiles);
+      try { await del(removed.pathname); } catch (error) { console.error("Profile avatar deletion failed", error?.message); }
+    }
+    const visible = publicUserProfiles(profiles, user.email);
+    return res.status(200).json({ profile: visible.find((profile) => profile.isCurrent), profiles: visible });
+  }
+
+  return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function profileAvatarStreamHandler(req, res) {
+  if (!requireUser(req, res)) return;
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const owner = ownerProfile(req.query?.owner);
+  if (!owner) return res.status(404).json({ error: "Profilbildet ble ikke funnet." });
+  const profiles = await readCollection("user-profiles");
+  const profile = profiles.find((item) => item.email === owner.email);
+  if (!profile || profileAvatarPathname(owner.email, profile.avatarId, profile.filename) !== profile.pathname) return res.status(404).json({ error: "Profilbildet ble ikke funnet." });
+  return streamPrivateBlob(req, res, profile.pathname, profile.filename);
 }
 
 async function projectImagesHandler(req, res) {
@@ -1163,6 +1264,9 @@ module.exports = async function handler(req, res) {
     if (action === "project-export") return await projectExportHandler(req, res);
     if (action === "upload") return await uploadHandler(req, res);
     if (action === "project-image-upload") return await projectImageUploadHandler(req, res);
+    if (action === "profile-avatar-upload") return await profileAvatarUploadHandler(req, res);
+    if (action === "profile") return await userProfileHandler(req, res);
+    if (action === "profile-avatar-stream") return await profileAvatarStreamHandler(req, res);
     if (action === "project-images") return await projectImagesHandler(req, res);
     if (action === "project-image-stream") return await projectImageStreamHandler(req, res);
     if (action === "audio") return await audioHandler(req, res);

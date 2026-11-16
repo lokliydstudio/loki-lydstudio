@@ -59,6 +59,12 @@ const {
 } = require("../lib/tenant-booking");
 const { sanitizeLead, splitLeadViews } = require("../api/crm/leads")._test;
 const { defaultAnnualWheel, sanitizeAnnualWheel } = require("../lib/crm-annual-wheel");
+const {
+  MAX_PROFILE_AVATAR_SIZE,
+  profileAvatarPathname,
+  publicUserProfiles,
+  sanitizeUserProfile,
+} = require("../lib/crm-user-profiles");
 
 test("only active owners can receive CRM tokens", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
@@ -2083,4 +2089,47 @@ test("CRM exposes the private annual wheel in desktop and mobile administration"
   assert.match(api, /requireUser\(req, res\)/);
   assert.match(api, /action === "annual-wheel"/);
   assert.match(api, /readCollection\("annual-wheel"\)/);
+});
+
+test("owner profile avatars use private validated paths without exposing blob metadata", () => {
+  const avatarId = "avatar-12345678-1234-4abc-8def-123456789abc";
+  const pathname = profileAvatarPathname("leon@lokilyd.no", avatarId, "portrait.jpg");
+  assert.equal(pathname, `loki-crm/profile-avatars/leon/${avatarId}/portrait.jpg`);
+  assert.equal(profileAvatarPathname("daniel@lokilyd.no", avatarId, "portrait.jpg"), "");
+  assert.equal(profileAvatarPathname("leon@lokilyd.no", avatarId, "portrait.svg"), "");
+  const profile = sanitizeUserProfile({ avatarId, filename: "portrait.jpg" }, {
+    pathname,
+    contentType: "image/jpeg",
+    size: MAX_PROFILE_AVATAR_SIZE,
+  }, "leon@lokilyd.no");
+  assert.equal(profile.email, "leon@lokilyd.no");
+  assert.equal(profile.pathname, pathname);
+  assert.equal(sanitizeUserProfile({ avatarId, filename: "portrait.jpg" }, { pathname, contentType: "image/jpeg", size: MAX_PROFILE_AVATAR_SIZE + 1 }, "leon@lokilyd.no"), null);
+  const visible = publicUserProfiles([profile], "leon@lokilyd.no");
+  assert.equal(visible.length, 2);
+  assert.equal(visible[0].isCurrent, true);
+  assert.equal(visible[0].hasAvatar, true);
+  assert.match(visible[0].avatarUrl, /profile-avatar-stream&owner=leon/);
+  assert.equal(Object.hasOwn(visible[0], "pathname"), false);
+  assert.equal(Object.hasOwn(visible[0], "email"), false);
+});
+
+test("CRM profile settings let Leon and Charles manage their own avatars", () => {
+  const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "profile-avatar.js"), "utf8");
+  const css = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "profile-avatar.css"), "utf8");
+  const api = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  assert.match(html, /id="profile-avatar-input"[^>]+accept="image\/jpeg,image\/png,image\/webp"/);
+  assert.match(html, /id="profile-avatar-choose"/);
+  assert.match(html, /id="profile-avatar-remove"[^>]+hidden/);
+  assert.match(html, /data-current-avatar/);
+  assert.match(html, /LokiProfileAvatar\.init\(\{user:data\.user\}\)/);
+  assert.match(client, /profile-avatar-upload/);
+  assert.match(client, /operation: "register-avatar"/);
+  assert.match(client, /method: "DELETE"/);
+  assert.match(client, /loki-profiles-updated/);
+  assert.match(css, /object-fit:\s*cover/);
+  assert.match(api, /action === "profile"/);
+  assert.match(api, /action === "profile-avatar-stream"/);
+  assert.match(api, /requireUser\(req, res\)/);
 });
