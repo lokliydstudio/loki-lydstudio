@@ -393,6 +393,14 @@
     return totals;
   }
 
+  function projectHoursLabel(project) {
+    const entries = Array.isArray(project?.timeEntries) ? project.timeEntries : [];
+    if (!entries.length) return "Ingen timer registrert";
+    const total = timeTotals(project).total;
+    const value = total.toLocaleString("nb-NO", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return `${value} ${total === 1 ? "time" : "timer"} brukt`;
+  }
+
   function timeSummary(project) {
     const totals = timeTotals(project);
     return [
@@ -694,7 +702,7 @@
     });
     list.innerHTML = visibleProjects.length ? visibleProjects.map((project) => `
       <button class="${project.id === selectedProjectId ? "active" : ""}" data-project-id="${esc(project.id)}">
-        <strong>${esc(project.name)}</strong><span>${esc(project.clientName || "Ingen kunde")} · ${esc(project.status)} · ${formatHours(timeTotals(project).total)}</span>
+        <strong>${esc(project.name)}</strong><span class="project-list-meta">${esc(project.clientName || "Ingen kunde")} · ${esc(project.status)}</span><span class="project-hours-used">${projectHoursLabel(project)}</span>
       </button>`).join("") : `<div class="project-empty">${projectView === "archived" ? "Ingen ferdige prosjekter i arkivet." : "Ingen pågående prosjekter."}</div>`;
 
     const project = projects.find((item) => item.id === selectedProjectId);
@@ -980,8 +988,8 @@
       const entries = project.timeEntries || [];
       disclosureSummary.textContent = `${entries.length} ${entries.length === 1 ? "registrering" : "registreringer"} · ${formatHours(timeTotals(project).total)} totalt`;
     }
-    const projectButtonCopy = document.querySelector(`[data-project-id="${CSS.escape(project.id)}"] span`);
-    if (projectButtonCopy) projectButtonCopy.textContent = `${project.clientName || "Ingen kunde"} · ${project.status} · ${formatHours(timeTotals(project).total)}`;
+    const projectButtonHours = document.querySelector(`[data-project-id="${CSS.escape(project.id)}"] .project-hours-used`);
+    if (projectButtonHours) projectButtonHours.textContent = projectHoursLabel(project);
     bindTimeEntryActions();
   }
 

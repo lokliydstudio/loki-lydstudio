@@ -526,6 +526,7 @@ test("project time entries keep billable studio categories and valid hours", () 
 test("project workspace exposes per-project time logging and backup", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const studio = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
+  const customerPlayer = fs.readFileSync(path.join(__dirname, "..", "lytt", "index.html"), "utf8");
   assert.match(html, /project-time\.css/);
   assert.match(studio, /Timer på prosjektet/);
   assert.match(studio, /Innspilling/);
@@ -535,6 +536,11 @@ test("project workspace exposes per-project time logging and backup", () => {
   assert.match(studio, /Registrer timer og vis timelogg/);
   assert.match(studio, /timelogg\.csv/);
   assert.match(studio, /timeTotals\(project\)\.total/);
+  assert.match(studio, /function projectHoursLabel\(project\)/);
+  assert.match(studio, /Ingen timer registrert/);
+  assert.match(studio, /project-hours-used/);
+  assert.match(studio, /projectButtonHours\.textContent = projectHoursLabel\(project\)/);
+  assert.doesNotMatch(customerPlayer, /projectHoursTotal|Totalt timeført|project-hours-used/);
 });
 
 test("project workspace stores private outboard photos with mobile camera capture", () => {

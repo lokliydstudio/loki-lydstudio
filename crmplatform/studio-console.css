@@ -1272,6 +1272,14 @@
     box-shadow: inset 2px 0 var(--accent);
   }
 
+  .project-list .project-hours-used {
+    color: var(--accent);
+    font-family: var(--font-data);
+    font-size: 8px;
+    font-weight: 650;
+    letter-spacing: .01em;
+  }
+
   .project-toolbar {
     padding: 18px 20px;
     border-color: var(--line);
