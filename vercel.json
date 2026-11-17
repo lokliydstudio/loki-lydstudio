@@ -106,6 +106,9 @@
     { "source": "/camp-application", "destination": "/camp-application/", "permanent": false },
     { "source": "/crm-invite", "destination": "/crm-invite/", "permanent": false }
   ],
+  "rewrites": [
+    { "source": "/lytt/:slug([A-Za-z0-9_-]+)", "destination": "/lytt/index.html" }
+  ],
   "functions": {
     "api/crm/mailbox.js": { "maxDuration": 30 },
     "api/crm/send.js": { "maxDuration": 30 },

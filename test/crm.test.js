@@ -15,6 +15,7 @@ const { bridgeAuthorized, fileBridgeAuthorized } = require("../lib/crm-bridge");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { cleanTrackIds, playlistTracks, publicAudioPlaylist, sanitizeAudioPlaylist } = require("../lib/crm-audio-playlists");
+const { addAudioShareLink, projectSlug, resolveAudioShareLink, sanitizeAudioShareLink } = require("../lib/crm-audio-share-links");
 const { DELIVERY_STATUSES, decideAudioReview, normalizeDeliveryStatus, publicAudioReview, reviewStateForTrack, sanitizeAudioReview } = require("../lib/crm-audio-reviews");
 const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-calendar");
 const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, publicDocumentsWithOpens, recordDocumentOpen, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
@@ -288,6 +289,38 @@ test("CRM overview is personalized and prioritizes user tasks and stale Formspre
 test("tokens cannot be reused for another purpose", () => {
   const token = auth.createToken("leon@lokilyd.no", "login", 60);
   assert.equal(auth.verifyToken(token, "session"), null);
+});
+
+test("customer audio shares use readable, expiring and unguessable short links", () => {
+  const now = Date.parse("2026-11-17T12:00:00.000Z");
+  const expiresAt = new Date(now + 14 * 86400000).toISOString();
+  assert.equal(projectSlug("Léon Frick – EP 2027"), "leon-frick-ep-2027");
+  const created = addAudioShareLink([], {
+    kind: "playlist",
+    subjectId: "playlist-123",
+    projectName: "Léon Frick – EP 2027",
+    expiresAt,
+    createdBy: "leon@lokilyd.no",
+  }, { now, suffix: "Ab3dE6gH9jK2" });
+  assert.equal(created.record.slug, "leon-frick-ep-2027-Ab3dE6gH9jK2");
+  assert.equal(resolveAudioShareLink(created.items, created.record.slug, now + 1000)?.subjectId, "playlist-123");
+  assert.equal(resolveAudioShareLink(created.items, created.record.slug, Date.parse(expiresAt)), null);
+  assert.equal(sanitizeAudioShareLink({ ...created.record, expiresAt: "not-a-date" }), null);
+});
+
+test("listening page resolves short project URLs while preserving legacy token links", () => {
+  const root = path.join(__dirname, "..");
+  const config = JSON.parse(fs.readFileSync(path.join(root, "vercel.json"), "utf8"));
+  const listening = fs.readFileSync(path.join(root, "lytt", "index.html"), "utf8");
+  const studio = fs.readFileSync(path.join(root, "api", "studio.js"), "utf8");
+  assert.deepEqual(config.rewrites, [{ source: "/lytt/:slug([A-Za-z0-9_-]+)", destination: "/lytt/index.html" }]);
+  assert.match(listening, /action=public-link&slug=/);
+  assert.match(listening, /params\.get\("token"\)/);
+  assert.match(listening, /params\.get\("playlist"\)/);
+  assert.match(studio, /createShortAudioShare/);
+  assert.match(studio, /"public-link"/);
+  assert.doesNotMatch(studio, /\/lytt\/\?token=/);
+  assert.doesNotMatch(studio, /\/lytt\/\?playlist=/);
 });
 
 test("email login challenges issue a six-digit code bound to email and browser", () => {

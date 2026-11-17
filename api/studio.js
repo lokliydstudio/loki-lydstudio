@@ -6,6 +6,11 @@ const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeT
 const { MAX_COMMENTS_PER_TRACK, commentsForTrack, publicAudioComment, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { playlistTracks, publicAudioPlaylist, sanitizeAudioPlaylist } = require("../lib/crm-audio-playlists");
 const {
+  COLLECTION: AUDIO_SHARE_LINKS_COLLECTION,
+  addAudioShareLink,
+  resolveAudioShareLink,
+} = require("../lib/crm-audio-share-links");
+const {
   decorateTrackWithReviewState,
   decideAudioReview,
   normalizeDeliveryStatus,
@@ -69,6 +74,18 @@ function audioTimestamp(comment) {
   const total = Math.max(0, Math.round(Number(comment?.timestampSeconds) || 0));
   const minutes = Math.floor(total / 60);
   return `${String(minutes).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+async function createShortAudioShare(req, { kind, subjectId, projectName, days, createdBy }) {
+  const expiresAt = new Date(Date.now() + days * 86400000).toISOString();
+  const mutation = await mutateCollection(AUDIO_SHARE_LINKS_COLLECTION, (items) => {
+    const next = addAudioShareLink(items, { kind, subjectId, projectName, expiresAt, createdBy });
+    return { items: next.items, result: next.record };
+  });
+  return {
+    url: `${publicBaseUrl(req)}/lytt/${mutation.result.slug}`,
+    expiresAt,
+  };
 }
 
 async function projectsHandler(req, res) {
@@ -437,11 +454,15 @@ async function audioHandler(req, res) {
     const track = tracks.find((item) => item.id === cleanText(req.body?.id, 80));
     if (!track) return res.status(404).json({ error: "Lydfilen ble ikke funnet." });
     const days = Math.max(1, Math.min(Number(req.body?.days) || 14, 90));
-    const token = createScopedToken(track.id, "audio-share", days * 24 * 60 * 60);
-    return res.status(200).json({
-      url: `${publicBaseUrl(req)}/lytt/?token=${encodeURIComponent(token)}`,
-      expiresAt: new Date(Date.now() + days * 86400000).toISOString(),
-    });
+    const projects = await readCollection("projects");
+    const project = projects.find((item) => item.id === track.projectId);
+    return res.status(200).json(await createShortAudioShare(req, {
+      kind: "track",
+      subjectId: track.id,
+      projectName: project?.name || track.title || "Lydleveranse",
+      days,
+      createdBy: user.email,
+    }));
   }
 
   if (req.method === "PATCH") {
@@ -517,11 +538,16 @@ async function audioPlaylistsHandler(req, res) {
     playlists.unshift(playlist);
     await writeCollection("audio-playlists", playlists);
     const days = Math.max(1, Math.min(Number(req.body?.days) || 14, 90));
-    const token = createScopedToken(playlist.id, "audio-playlist-share", days * 24 * 60 * 60);
+    const share = await createShortAudioShare(req, {
+      kind: "playlist",
+      subjectId: playlist.id,
+      projectName: projects.find((project) => project.id === projectId)?.name || playlist.title || "Lydleveranse",
+      days,
+      createdBy: user.email,
+    });
     return res.status(201).json({
       playlist: publicAudioPlaylist(playlist),
-      url: `${publicBaseUrl(req)}/lytt/?playlist=${encodeURIComponent(token)}`,
-      expiresAt: new Date(Date.now() + days * 86400000).toISOString(),
+      ...share,
     });
   }
 
@@ -545,11 +571,15 @@ async function audioPlaylistsHandler(req, res) {
     const playlist = playlists.find((item) => item.id === cleanText(req.body?.id, 90));
     if (!playlist) return res.status(404).json({ error: "Spillelisten ble ikke funnet." });
     const days = Math.max(1, Math.min(Number(req.body?.days) || 14, 90));
-    const token = createScopedToken(playlist.id, "audio-playlist-share", days * 24 * 60 * 60);
-    return res.status(200).json({
-      url: `${publicBaseUrl(req)}/lytt/?playlist=${encodeURIComponent(token)}`,
-      expiresAt: new Date(Date.now() + days * 86400000).toISOString(),
-    });
+    const projects = await readCollection("projects");
+    const project = projects.find((item) => item.id === playlist.projectId);
+    return res.status(200).json(await createShortAudioShare(req, {
+      kind: "playlist",
+      subjectId: playlist.id,
+      projectName: project?.name || playlist.title || "Lydleveranse",
+      days,
+      createdBy: user.email,
+    }));
   }
 
   if (req.method === "DELETE") {
@@ -612,6 +642,17 @@ async function internalStreamHandler(req, res) {
   const track = tracks.find((item) => item.id === cleanText(req.query?.id, 80));
   if (!track) return res.status(404).json({ error: "Lydfilen ble ikke funnet." });
   return streamPrivateBlob(req, res, track.pathname, track.filename);
+}
+
+async function publicShortLinkHandler(req, res) {
+  if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  const records = await readCollection(AUDIO_SHARE_LINKS_COLLECTION);
+  const link = resolveAudioShareLink(records, req.query?.slug);
+  if (!link) return res.status(401).json({ error: "Lenken er ugyldig eller utløpt." });
+  const remainingSeconds = Math.max(60, Math.floor((Date.parse(link.expiresAt) - Date.now()) / 1000));
+  const purpose = link.kind === "playlist" ? "audio-playlist-share" : "audio-share";
+  const token = createScopedToken(link.subjectId, purpose, remainingSeconds);
+  return res.status(200).json({ kind: link.kind, token, expiresAt: link.expiresAt });
 }
 
 async function publicShareHandler(req, res) {
@@ -1398,6 +1439,7 @@ module.exports = async function handler(req, res) {
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert." });
   try {
     const publicActions = new Set([
+      "public-link",
       "public-share",
       "public-comments",
       "public-stream",
@@ -1438,6 +1480,7 @@ module.exports = async function handler(req, res) {
     if (action === "audio-playlists") return await audioPlaylistsHandler(req, res);
     if (action === "audio-comments") return await audioCommentsHandler(req, res);
     if (action === "internal-stream") return await internalStreamHandler(req, res);
+    if (action === "public-link") return await publicShortLinkHandler(req, res);
     if (action === "public-share") return await publicShareHandler(req, res);
     if (action === "public-comments") return await publicCommentsHandler(req, res);
     if (action === "public-stream") return await publicStreamHandler(req, res);
