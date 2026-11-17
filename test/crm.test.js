@@ -1185,6 +1185,32 @@ test("mix feedback is available in both internal and customer players", () => {
   assert.match(customerPlayer, /Tilbakemeldingen er sendt\. Vi tar en gjennomgang av ønskene dine\./);
 });
 
+test("revision guidance is shared by the customer player and CRM settings", () => {
+  const customerPlayer = fs.readFileSync(path.join(__dirname, "..", "lytt", "index.html"), "utf8");
+  const crm = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
+  const guideScript = fs.readFileSync(path.join(__dirname, "..", "assets", "js", "revision-guide.js"), "utf8");
+  const guideStyles = fs.readFileSync(path.join(__dirname, "..", "assets", "css", "revision-guide.css"), "utf8");
+
+  assert.match(guideScript, /Veiledning for revisjoner/);
+  assert.match(guideScript, /En revisjon er én samlet runde med justeringer/);
+  assert.match(guideScript, /Hva inngår normalt ikke i en revisjon\?/);
+  assert.match(guideScript, /Du trenger ikke å bruke tekniske uttrykk/);
+  assert.match(guideScript, /i henhold til avtalen/);
+  assert.doesNotMatch(guideScript, /ubegrenset|gratis revisjon/i);
+  assert.equal((customerPlayer.match(/data-revision-guide-open/g) || []).length, 2);
+  assert.match(customerPlayer, /Hva innebærer en revisjon\?/);
+  assert.match(customerPlayer, /Usikker på hva som inngår i en revisjon\?/);
+  assert.match(customerPlayer, /data-revision-guide-dialog/);
+  assert.match(customerPlayer, /assets\/js\/revision-guide\.js/);
+  assert.match(crm, /data-settings-tab="deliveries"/);
+  assert.match(crm, /data-settings-panel="deliveries"/);
+  assert.match(crm, /data-revision-guide-content/);
+  assert.match(crm, /endrer ikke antall revisjoner eller vilkårene/);
+  assert.match(guideScript, /returnTarget\.focus\(\)/);
+  assert.match(guideStyles, /@media \(max-width: 600px\)/);
+  assert.match(guideStyles, /env\(safe-area-inset-bottom\)/);
+});
+
 test("project audio supports controlled multi-selection deletion", () => {
   const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
   const internalScript = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");

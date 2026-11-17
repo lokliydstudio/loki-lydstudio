@@ -1,0 +1,276 @@
+.revision-guide-trigger {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--accent, #9fc8b9);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+}
+
+.revision-guide-trigger:hover {
+  border-bottom-color: currentColor;
+}
+
+.revision-guide-trigger:focus-visible,
+.revision-guide-close:focus-visible {
+  outline: 2px solid var(--accent, #9fc8b9);
+  outline-offset: 3px;
+}
+
+.revision-guide-trigger svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.7;
+}
+
+.revision-guide-inline-help {
+  display: flex;
+  align-items: center;
+  margin: -2px 0 -4px;
+}
+
+.revision-guide-inline-help .revision-guide-trigger {
+  min-height: 36px;
+  color: var(--muted, #9ca69f);
+  font-size: 10px;
+  font-weight: 520;
+}
+
+.revision-guide-inline-help .revision-guide-trigger span {
+  color: var(--accent, #9fc8b9);
+  font-weight: 680;
+}
+
+.revision-guide-dialog {
+  width: min(700px, calc(100% - 32px));
+  max-width: 700px;
+  max-height: min(88dvh, 820px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-strong, #455249);
+  border-radius: 5px;
+  background: var(--panel, #151b17);
+  color: var(--ink, var(--text, #f0f3ef));
+  box-shadow: 0 28px 80px rgba(0, 0, 0, .42);
+}
+
+.revision-guide-dialog::backdrop {
+  background: rgba(4, 7, 5, .78);
+  backdrop-filter: blur(2px);
+}
+
+.revision-guide-dialog-shell {
+  display: grid;
+  max-height: min(88dvh, 820px);
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.revision-guide-dialog-head {
+  display: flex;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 20px 15px 24px;
+  border-bottom: 1px solid var(--line, #303a33);
+  background: var(--panel, #151b17);
+}
+
+.revision-guide-dialog-head > div {
+  min-width: 0;
+}
+
+.revision-guide-dialog-head small,
+.revision-guide-admin-label {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--accent, #9fc8b9);
+  font-family: var(--font-data, var(--data, ui-monospace, monospace));
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.revision-guide-dialog-head h2 {
+  margin: 0;
+  color: inherit;
+  font-size: 20px;
+  font-weight: 620;
+  letter-spacing: -.02em;
+}
+
+.revision-guide-close {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid var(--line, #303a33);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted, #9ca69f);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.revision-guide-close:hover {
+  border-color: var(--line-strong, #455249);
+  color: var(--ink, var(--text, #f0f3ef));
+}
+
+.revision-guide-dialog-scroll {
+  min-height: 0;
+  padding: 5px 24px 28px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.revision-guide-content {
+  color: var(--muted, #9ca69f);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.revision-guide-introduction {
+  padding: 20px 0;
+  color: var(--ink, var(--text, #f0f3ef));
+  font-size: 13px;
+}
+
+.revision-guide-content p {
+  margin: 0 0 11px;
+}
+
+.revision-guide-content p:last-child {
+  margin-bottom: 0;
+}
+
+.revision-guide-section {
+  padding: 20px 0;
+  border-top: 1px solid var(--line, #303a33);
+}
+
+.revision-guide-section h3 {
+  margin: 0 0 11px;
+  color: var(--ink, var(--text, #f0f3ef));
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+
+.revision-guide-content ul,
+.revision-guide-content ol {
+  display: grid;
+  gap: 8px;
+  margin: 12px 0 14px;
+  padding-left: 22px;
+}
+
+.revision-guide-content li {
+  padding-left: 3px;
+}
+
+.revision-guide-content li::marker {
+  color: var(--accent, #9fc8b9);
+  font-weight: 700;
+}
+
+.revision-guide-content strong {
+  color: var(--ink, var(--text, #f0f3ef));
+  font-weight: 650;
+}
+
+.revision-guide-example-label {
+  margin-top: 16px !important;
+  color: var(--ink, var(--text, #f0f3ef));
+  font-weight: 650;
+}
+
+.revision-guide-content blockquote {
+  margin: 7px 0 15px;
+  padding: 11px 14px;
+  border-left: 2px solid var(--accent, #9fc8b9);
+  background: color-mix(in srgb, var(--accent, #9fc8b9) 7%, transparent);
+  color: var(--ink, var(--text, #f0f3ef));
+  font-style: normal;
+}
+
+.revision-guide-signature {
+  margin-top: 18px !important;
+  color: var(--ink, var(--text, #f0f3ef));
+  font-weight: 620;
+}
+
+.revision-guide-admin-note {
+  max-width: 650px;
+  margin: -12px 0 20px;
+  color: var(--muted, #6f746f);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.revision-guide-admin {
+  max-width: 700px;
+  border-top: 1px solid var(--line, #d8d5cc);
+}
+
+@media (max-width: 600px) {
+  .revision-guide-dialog {
+    width: 100%;
+    max-width: none;
+    max-height: min(94dvh, 900px);
+    margin: auto 0 0;
+    border-right: 0;
+    border-bottom: 0;
+    border-left: 0;
+    border-radius: 5px 5px 0 0;
+  }
+
+  .revision-guide-dialog-shell {
+    max-height: min(94dvh, 900px);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .revision-guide-dialog-head {
+    min-height: 70px;
+    padding: 13px 14px 13px 18px;
+  }
+
+  .revision-guide-dialog-head h2 {
+    font-size: 18px;
+  }
+
+  .revision-guide-dialog-scroll {
+    padding: 2px 18px 24px;
+    scrollbar-gutter: auto;
+  }
+
+  .revision-guide-content {
+    font-size: 12px;
+    line-height: 1.68;
+  }
+
+  .revision-guide-introduction,
+  .revision-guide-section {
+    padding-block: 17px;
+  }
+}
