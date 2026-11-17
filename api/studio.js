@@ -39,7 +39,7 @@ const {
   publicProjectImage,
   sanitizeProjectImage,
 } = require("../lib/crm-project-images");
-const { sanitizeProject } = require("../lib/crm-projects");
+const { sanitizeProject, totalProjectHours } = require("../lib/crm-projects");
 const { defaultAnnualWheel, sanitizeAnnualWheel } = require("../lib/crm-annual-wheel");
 const {
   MAX_PROFILE_AVATAR_SIZE,
@@ -635,6 +635,7 @@ async function publicShareHandler(req, res) {
       filename: track.filename,
       size: track.size,
       projectName: project?.name || "Loki Lydstudio",
+      projectHoursTotal: totalProjectHours(project),
       reviewState: reviewStateForTrack(track, reviews),
     },
     expiresAt: new Date(grant.expires).toISOString(),
@@ -726,6 +727,7 @@ async function publicPlaylistHandler(req, res) {
     playlist: {
       title: context.playlist.title,
       projectName: context.project?.name || "Loki Lydstudio",
+      projectHoursTotal: totalProjectHours(context.project),
       tracks: context.tracks.map((track) => publicPlaylistTrack(track, context.reviews)),
     },
     expiresAt: new Date(context.grant.expires).toISOString(),
