@@ -5,6 +5,14 @@ const { OWNERS: CRM_OWNERS, readAccessRecords, requireCrmAccess } = require("../
 const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeTrack } = require("../lib/crm-audio");
 const { MAX_COMMENTS_PER_TRACK, commentsForTrack, publicAudioComment, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { playlistTracks, publicAudioPlaylist, sanitizeAudioPlaylist } = require("../lib/crm-audio-playlists");
+const {
+  decorateTrackWithReviewState,
+  decideAudioReview,
+  normalizeDeliveryStatus,
+  publicAudioReview,
+  reviewStateForTrack,
+  sanitizeAudioReview,
+} = require("../lib/crm-audio-reviews");
 const { streamPrivateBlob } = require("../lib/crm-audio-stream");
 const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadGoogleCalendar } = require("../lib/crm-calendar");
@@ -43,7 +51,7 @@ const {
 } = require("../lib/crm-user-profiles");
 const { prospectSyncHandler, prospectsHandler } = require("../lib/crm-prospect-handler");
 const { sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
-const { isConfigured, readCollection, writeCollection } = require("../lib/crm-store");
+const { isConfigured, mutateCollection, readCollection, writeCollection } = require("../lib/crm-store");
 const tenantBookingHandler = require("../lib/tenant-booking-handler");
 const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { noteCollection, notesWithLiveContent } = require("../lib/crm-live-notes");
@@ -94,12 +102,13 @@ async function projectsHandler(req, res) {
 
   if (req.method === "DELETE") {
     const id = cleanText(req.query?.id || req.body?.id, 120);
-    const [projects, tracks, comments, projectImages, audioPlaylists] = await Promise.all([
+    const [projects, tracks, comments, projectImages, audioPlaylists, audioReviews] = await Promise.all([
       readCollection("projects"),
       readCollection("audio"),
       readCollection("audio-comments"),
       readCollection("project-images"),
       readCollection("audio-playlists"),
+      readCollection("audio-reviews"),
     ]);
     const deletion = planProjectDeletion(projects, tracks, id, projectImages);
     if (!deletion) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
@@ -111,6 +120,7 @@ async function projectsHandler(req, res) {
     await writeCollection("audio-comments", comments.filter((comment) => !deletedTrackIds.has(comment.trackId)));
     await writeCollection("project-images", deletion.remainingImages);
     await writeCollection("audio-playlists", audioPlaylists.filter((playlist) => playlist.projectId !== id));
+    await writeCollection("audio-reviews", audioReviews.filter((review) => review.projectId !== id && !deletedTrackIds.has(review.trackId)));
     await writeCollection("projects", deletion.remainingProjects);
 
     return res.status(200).json({
@@ -127,15 +137,16 @@ async function projectsHandler(req, res) {
 async function projectExportHandler(req, res) {
   if (!requireUser(req, res)) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [projects, tracks, comments, projectImages, audioPlaylists] = await Promise.all([
+  const [projects, tracks, comments, projectImages, audioPlaylists, audioReviews] = await Promise.all([
     readCollection("projects"),
     readCollection("audio"),
     readCollection("audio-comments"),
     readCollection("project-images"),
     readCollection("audio-playlists"),
+    readCollection("audio-reviews"),
   ]);
   const requestedId = cleanText(req.query?.id, 120);
-  const manifest = createProjectExport(projects, tracks, requestedId, comments, projectImages, audioPlaylists);
+  const manifest = createProjectExport(projects, tracks, requestedId, comments, projectImages, audioPlaylists, audioReviews);
   if (!manifest) return res.status(404).json({ error: "Prosjektet ble ikke funnet." });
   return res.status(200).json(manifest);
 }
@@ -384,9 +395,12 @@ async function audioHandler(req, res) {
     const projectId = cleanText(req.query?.projectId, 120);
     const visibleTracks = tracks.filter((track) => !projectId || track.projectId === projectId);
     const visibleTrackIds = new Set(visibleTracks.map((track) => track.id));
-    const comments = await readCollection("audio-comments");
+    const [comments, reviews] = await Promise.all([
+      readCollection("audio-comments"),
+      readCollection("audio-reviews"),
+    ]);
     return res.status(200).json({
-      tracks: visibleTracks,
+      tracks: visibleTracks.map((track) => decorateTrackWithReviewState(track, reviews)),
       comments: comments.filter((comment) => visibleTrackIds.has(comment.trackId)).map(publicAudioComment),
     });
   }
@@ -397,7 +411,16 @@ async function audioHandler(req, res) {
     if (tracks.some((track) => track.id === req.body?.track?.id)) return res.status(409).json({ error: "Lydfilen er allerede registrert." });
     const pathname = cleanText(req.body?.track?.pathname, 500);
     const actualBlob = await head(pathname, { access: "private" });
-    const track = sanitizeTrack(req.body?.track, actualBlob, user.email);
+    const requestedTrack = req.body?.track || {};
+    const requestedPreviousId = cleanText(requestedTrack.previousVersionId, 80);
+    const previousTrack = tracks.find((item) => item.id === requestedPreviousId && item.projectId === requestedTrack.projectId)
+      || tracks.find((item) => item.projectId === requestedTrack.projectId
+        && String(item.title || "").trim().toLowerCase() === String(requestedTrack.title || "").trim().toLowerCase());
+    const track = sanitizeTrack({
+      ...requestedTrack,
+      mixGroupId: previousTrack?.mixGroupId,
+      previousVersionId: previousTrack?.id,
+    }, actualBlob, user.email);
     if (!track) return res.status(400).json({ error: "Lydfilen kunne ikke verifiseres." });
     tracks.unshift(track);
     await writeCollection("audio", tracks);
@@ -407,7 +430,7 @@ async function audioHandler(req, res) {
       tag: `audio-${track.id}`,
       url: "/crmplatform/#projects",
     });
-    return res.status(201).json({ track });
+    return res.status(201).json({ track: decorateTrackWithReviewState(track, []) });
   }
 
   if (req.method === "POST" && req.body?.operation === "share") {
@@ -424,14 +447,22 @@ async function audioHandler(req, res) {
   if (req.method === "PATCH") {
     const index = tracks.findIndex((item) => item.id === cleanText(req.body?.id, 80));
     if (index < 0) return res.status(404).json({ error: "Lydfilen ble ikke funnet." });
+    const requestedStatus = cleanText(req.body?.changes?.deliveryStatus, 40);
+    const statusChanged = ["awaiting_feedback", "under_revision"].includes(requestedStatus);
+    const deliveryStatus = statusChanged
+      ? requestedStatus
+      : normalizeDeliveryStatus(tracks[index].deliveryStatus);
     tracks[index] = {
       ...tracks[index],
       title: cleanText(req.body?.changes?.title ?? tracks[index].title, 160),
       version: cleanText(req.body?.changes?.version ?? tracks[index].version, 40),
       notes: cleanText(req.body?.changes?.notes ?? tracks[index].notes, 500),
+      deliveryStatus,
+      reviewUpdatedAt: statusChanged ? new Date().toISOString() : tracks[index].reviewUpdatedAt || null,
     };
     await writeCollection("audio", tracks);
-    return res.status(200).json({ track: tracks[index] });
+    const reviews = await readCollection("audio-reviews");
+    return res.status(200).json({ track: decorateTrackWithReviewState(tracks[index], reviews) });
   }
 
   if (req.method === "DELETE") {
@@ -449,6 +480,8 @@ async function audioHandler(req, res) {
     await writeCollection("audio", tracks.filter((track) => !deletedIds.has(track.id)));
     const comments = await readCollection("audio-comments");
     await writeCollection("audio-comments", comments.filter((comment) => !deletedIds.has(comment.trackId)));
+    const reviews = await readCollection("audio-reviews");
+    await writeCollection("audio-reviews", reviews.filter((review) => !deletedIds.has(review.trackId)));
     const playlists = await readCollection("audio-playlists");
     await writeCollection("audio-playlists", playlists
       .map((playlist) => ({ ...playlist, trackIds: (playlist.trackIds || []).filter((trackId) => !deletedIds.has(trackId)) }))
@@ -585,18 +618,24 @@ async function publicShareHandler(req, res) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
   const grant = verifyScopedToken(req.query?.token, "audio-share");
   if (!grant) return res.status(401).json({ error: "Lenken er ugyldig eller utløpt." });
-  const [tracks, projects] = await Promise.all([readCollection("audio"), readCollection("projects")]);
+  const [tracks, projects, reviews] = await Promise.all([
+    readCollection("audio"),
+    readCollection("projects"),
+    readCollection("audio-reviews"),
+  ]);
   const track = tracks.find((item) => item.id === grant.subject);
   if (!track) return res.status(404).json({ error: "Lydfilen ble ikke funnet." });
   const project = projects.find((item) => item.id === track.projectId);
   return res.status(200).json({
     track: {
+      id: track.id,
       title: track.title,
       version: track.version,
       notes: track.notes,
       filename: track.filename,
       size: track.size,
       projectName: project?.name || "Loki Lydstudio",
+      reviewState: reviewStateForTrack(track, reviews),
     },
     expiresAt: new Date(grant.expires).toISOString(),
   });
@@ -653,19 +692,20 @@ async function publicStreamHandler(req, res) {
 async function publicPlaylistContext(token) {
   const grant = verifyScopedToken(token, "audio-playlist-share");
   if (!grant) return null;
-  const [playlists, tracks, projects] = await Promise.all([
+  const [playlists, tracks, projects, reviews] = await Promise.all([
     readCollection("audio-playlists"),
     readCollection("audio"),
     readCollection("projects"),
+    readCollection("audio-reviews"),
   ]);
   const playlist = playlists.find((item) => item.id === grant.subject);
   if (!playlist) return null;
   const selectedTracks = playlistTracks(playlist, tracks);
   const project = projects.find((item) => item.id === playlist.projectId);
-  return { grant, playlist, tracks: selectedTracks, project };
+  return { grant, playlist, tracks: selectedTracks, project, reviews };
 }
 
-function publicPlaylistTrack(track) {
+function publicPlaylistTrack(track, reviews = []) {
   return {
     id: track.id,
     title: track.title,
@@ -673,6 +713,7 @@ function publicPlaylistTrack(track) {
     notes: track.notes,
     filename: track.filename,
     size: Number(track.size) || 0,
+    reviewState: reviewStateForTrack(track, reviews),
   };
 }
 
@@ -685,7 +726,7 @@ async function publicPlaylistHandler(req, res) {
     playlist: {
       title: context.playlist.title,
       projectName: context.project?.name || "Loki Lydstudio",
-      tracks: context.tracks.map(publicPlaylistTrack),
+      tracks: context.tracks.map((track) => publicPlaylistTrack(track, context.reviews)),
     },
     expiresAt: new Date(context.grant.expires).toISOString(),
   });
@@ -725,6 +766,89 @@ async function publicPlaylistCommentsHandler(req, res) {
   }
 
   return res.status(405).json({ error: "Method not allowed" });
+}
+
+async function publicReviewContext(req) {
+  const playlistToken = String(req.query?.playlist || "");
+  if (playlistToken) {
+    const context = await publicPlaylistContext(playlistToken);
+    if (!context) return null;
+    const track = context.tracks.find((item) => item.id === cleanText(req.query?.trackId || req.body?.trackId, 80));
+    if (!track) return { error: "Lydfilen finnes ikke i denne leveransen.", status: 404 };
+    return { ...context, track, source: "playlist" };
+  }
+  const grant = verifyScopedToken(req.query?.token, "audio-share");
+  if (!grant) return null;
+  const [tracks, projects, reviews] = await Promise.all([
+    readCollection("audio"),
+    readCollection("projects"),
+    readCollection("audio-reviews"),
+  ]);
+  const track = tracks.find((item) => item.id === grant.subject);
+  if (!track) return { error: "Lydfilen ble ikke funnet.", status: 404 };
+  return {
+    grant,
+    track,
+    project: projects.find((item) => item.id === track.projectId),
+    reviews,
+    source: "single",
+  };
+}
+
+async function publicReviewHandler(req, res) {
+  const context = await publicReviewContext(req);
+  if (!context) return res.status(401).json({ error: "Lyttelenken er ugyldig eller utløpt." });
+  if (context.error) return res.status(context.status || 400).json({ error: context.error });
+  if (req.method === "GET") {
+    return res.status(200).json({ reviewState: reviewStateForTrack(context.track, context.reviews) });
+  }
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
+
+  const comments = await readCollection("audio-comments");
+  const review = sanitizeAudioReview(req.body, { track: context.track, comments });
+  if (!review) {
+    return res.status(400).json({
+      error: req.body?.action === "request_changes"
+        ? "Skriv navn og hva du ønsker endret."
+        : "Skriv navnet ditt før du godkjenner miksen.",
+    });
+  }
+
+  const result = await mutateCollection("audio-reviews", (items) => decideAudioReview(items, review));
+  if (result.error) return res.status(result.error.status || 409).json({ error: result.error.message });
+
+  const savedReview = result.result.review;
+  await mutateCollection("audio", (items) => {
+    const index = items.findIndex((item) => item.id === context.track.id && item.projectId === context.track.projectId);
+    if (index < 0) return { error: { status: 404, message: "Lydfilen ble ikke funnet." } };
+    const updated = [...items];
+    updated[index] = {
+      ...updated[index],
+      deliveryStatus: normalizeDeliveryStatus(savedReview.status),
+      reviewUpdatedAt: savedReview.createdAt,
+    };
+    return { items: updated, result: updated[index] };
+  });
+
+  if (result.result.created) {
+    const actionText = savedReview.action === "approve" ? "godkjente" : "ba om endringer på";
+    await sendPush("", {
+      title: savedReview.action === "approve" ? "Miks godkjent" : "Endringer ønsket",
+      body: `${savedReview.customerName} ${actionText} «${savedReview.audioTitle} · ${savedReview.version}».`,
+      tag: `audio-review-${savedReview.id}`,
+      url: `/crmplatform/#projects`,
+    }, { includeActor: true });
+  }
+
+  return res.status(result.result.created ? 201 : 200).json({
+    review: publicAudioReview(savedReview),
+    reviewState: reviewStateForTrack({
+      ...context.track,
+      deliveryStatus: savedReview.status,
+      reviewUpdatedAt: savedReview.createdAt,
+    }, [savedReview, ...context.reviews]),
+    duplicate: !result.result.created,
+  });
 }
 
 async function publicPlaylistStreamHandler(req, res) {
@@ -1196,13 +1320,14 @@ async function backupHandler(req, res) {
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
-  const [leads, workspace, rentals, projects, audio, audioComments, projectImages, audioPlaylists, documents, receipts, activities, bookings, quotes, mailSort, prospects, prospectRuns, tenantBookingUsers, tenantBookings, annualWheelRecords] = await Promise.all([
+  const [leads, workspace, rentals, projects, audio, audioComments, audioReviews, projectImages, audioPlaylists, documents, receipts, activities, bookings, quotes, mailSort, prospects, prospectRuns, tenantBookingUsers, tenantBookings, annualWheelRecords] = await Promise.all([
     readCollection("leads"),
     readCollection("workspace"),
     readCollection("rentals"),
     readCollection("projects"),
     readCollection("audio"),
     readCollection("audio-comments"),
+    readCollection("audio-reviews"),
     readCollection("project-images"),
     readCollection("audio-playlists"),
     readCollection("documents"),
@@ -1217,7 +1342,7 @@ async function backupHandler(req, res) {
     readCollection("tenant-bookings"),
     readCollection("annual-wheel"),
   ]);
-  const projectExport = createProjectExport(projects, audio, "", audioComments, projectImages, audioPlaylists);
+  const projectExport = createProjectExport(projects, audio, "", audioComments, projectImages, audioPlaylists, audioReviews);
   const safeDocuments = documents.map(({ pathname, uploadedBy, ...document }) => document);
   const safeReceipts = receipts.map(({ pathname, uploadedBy, ...receipt }) => receipt);
   return res.status(200).json({
@@ -1233,6 +1358,7 @@ async function backupHandler(req, res) {
     audioFiles: projectExport.files,
     projectImages: projectExport.imageFiles,
     audioComments: audioComments.map(publicAudioComment),
+    audioReviews: audioReviews.map(publicAudioReview),
     documents: safeDocuments,
     receipts: safeReceipts,
     activities,
@@ -1274,6 +1400,7 @@ module.exports = async function handler(req, res) {
       "public-playlist",
       "public-playlist-comments",
       "public-playlist-stream",
+      "public-review",
       "jotta-sync",
       "jotta-download",
       "prospect-sync",
@@ -1313,6 +1440,7 @@ module.exports = async function handler(req, res) {
     if (action === "public-playlist") return await publicPlaylistHandler(req, res);
     if (action === "public-playlist-comments") return await publicPlaylistCommentsHandler(req, res);
     if (action === "public-playlist-stream") return await publicPlaylistStreamHandler(req, res);
+    if (action === "public-review") return await publicReviewHandler(req, res);
     if (action === "jotta-sync") return await jottaSyncHandler(req, res);
     if (action === "jotta-download") return await jottaDownloadHandler(req, res);
     if (action === "workspace") return await workspaceHandler(req, res);

@@ -1,5 +1,11 @@
 (() => {
   const statuses = ["Planlegges", "Booket", "Innspilling", "Miks", "Mastering", "Levert", "På vent"];
+  const deliveryStatuses = {
+    awaiting_feedback: "Avventer tilbakemelding",
+    changes_requested: "Endringer ønsket",
+    under_revision: "Under revisjon",
+    approved: "Godkjent",
+  };
   const audioTypes = {
     aac: "audio/aac",
     aif: "audio/aiff",
@@ -229,6 +235,16 @@
     return audioPlaylists.filter((playlist) => playlist.projectId === selectedProjectId);
   }
 
+  function latestProjectTrackIds() {
+    const latest = new Map();
+    projectTracks().forEach((track) => {
+      const group = track.mixGroupId || `title:${String(track.title || track.filename).trim().toLowerCase()}`;
+      const current = latest.get(group);
+      if (!current || String(track.uploadedAt || "").localeCompare(String(current.uploadedAt || "")) > 0) latest.set(group, track);
+    });
+    return new Set([...latest.values()].map((track) => track.id));
+  }
+
   function projectSectionKey(section) {
     return `${selectedProjectId || "none"}:${section}`;
   }
@@ -262,6 +278,59 @@
         <div class="mix-comment-copy"><strong>${esc(comment.authorName)}${comment.authorType === "studio" ? ' <span>LOKI</span>' : ""}</strong><p>${esc(comment.body)}</p><small>${new Date(comment.createdAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</small></div>
         <button class="mix-comment-delete" type="button" data-delete-comment="${esc(comment.id)}" data-track-id="${esc(trackId)}" aria-label="Slett kommentar">×</button>
       </article>`).join("");
+  }
+
+  function trackDeliveryStatus(track) {
+    const status = track?.reviewState?.status || track?.deliveryStatus || "awaiting_feedback";
+    return Object.hasOwn(deliveryStatuses, status) ? status : "awaiting_feedback";
+  }
+
+  function deliveryStatusControl(track) {
+    const status = trackDeliveryStatus(track);
+    if (status === "approved") return '<span class="delivery-status-note">Ny versjon krever ny godkjenning.</span>';
+    const options = status === "changes_requested"
+      ? '<option value="changes_requested" selected disabled>Endringer ønsket</option><option value="under_revision">Sett under revisjon</option>'
+      : status === "under_revision"
+        ? '<option value="under_revision" selected>Under revisjon</option><option value="awaiting_feedback">Avventer tilbakemelding</option>'
+        : '<option value="awaiting_feedback" selected>Avventer tilbakemelding</option><option value="under_revision">Sett under revisjon</option>';
+    return `<label class="delivery-status-control">Leveransestatus<select data-track-status="${esc(track.id)}">${options}</select></label>`;
+  }
+
+  function reviewCommentSnapshots(review) {
+    const comments = Array.isArray(review?.comments) ? review.comments : [];
+    if (!comments.length) return "";
+    return `<details class="review-comment-snapshots"><summary>${comments.length} tidsstemplet${comments.length === 1 ? " kommentar" : "e kommentarer"}</summary><div>${comments.map((comment) => `<p><strong>${formatTimestamp(comment.timestampSeconds)}</strong><span>${esc(comment.body)}</span></p>`).join("")}</div></details>`;
+  }
+
+  function reviewHistoryRows(track) {
+    const history = Array.isArray(track?.reviewState?.history) ? track.reviewState.history : [];
+    if (!history.length) return '<p class="delivery-history-empty">Ingen kundebeslutninger på denne versjonen ennå.</p>';
+    return history.map((review) => `
+      <article class="delivery-history-row">
+        <span class="delivery-history-mark ${esc(review.status)}" aria-hidden="true"></span>
+        <div><strong>${review.action === "approve" ? "Miks godkjent" : "Endringer ønsket"}</strong><span>${esc(review.customerName)} · ${new Date(review.createdAt).toLocaleString("nb-NO", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>${review.message ? `<p>${esc(review.message)}</p>` : ""}${reviewCommentSnapshots(review)}</div>
+      </article>`).join("");
+  }
+
+  function projectDeliveryHistory() {
+    const rows = projectTracks().flatMap((track) => (track.reviewState?.history || []).map((review) => ({ track, review })))
+      .sort((left, right) => String(right.review.createdAt).localeCompare(String(left.review.createdAt)));
+    if (!rows.length) return '<p class="delivery-history-empty">Ingen godkjenninger eller endringsforespørsler i prosjektet ennå.</p>';
+    return rows.map(({ track, review }) => `
+      <article class="project-delivery-event">
+        <span class="delivery-status ${esc(review.status)}">${esc(review.statusLabel || deliveryStatuses[review.status])}</span>
+        <div><strong>${esc(track.title)} · ${esc(review.version || track.version)}</strong><span>${esc(review.customerName)} · ${new Date(review.createdAt).toLocaleString("nb-NO", { dateStyle: "medium", timeStyle: "short" })}</span><span>${esc(review.filename || track.filename)}${review.comments?.length ? ` · ${review.comments.length} tidsstemplet${review.comments.length === 1 ? " kommentar" : "e kommentarer"}` : ""}</span>${review.message ? `<p>${esc(review.message)}</p>` : ""}${reviewCommentSnapshots(review)}</div>
+      </article>`).join("");
+  }
+
+  function revisionOptions() {
+    const visible = projectTracks();
+    return ['<option value="">Ny miks / demo</option>', ...visible.map((track) => `<option value="${esc(track.id)}">Ny versjon av ${esc(track.title)} · ${esc(track.version)}</option>`)].join("");
+  }
+
+  function nextVersionLabel(value) {
+    const match = String(value || "").trim().match(/^(.*?)(\d+)$/);
+    return match ? `${match[1]}${Number(match[2]) + 1}` : "V2";
   }
 
   function bindCommentActions(root = document) {
@@ -408,9 +477,12 @@
     if (!visible.length) return '<div class="project-empty">Ingen lydfiler i prosjektet ennå.</div>';
     return visible.map((track) => {
       const comments = commentsForTrack(track.id).length;
+      const deliveryStatus = trackDeliveryStatus(track);
+      const reviewCount = track.reviewState?.history?.length || 0;
+      const previousVersion = tracks.find((item) => item.id === track.previousVersionId);
       return `
       <details class="track-card${selectedTrackIds.has(track.id) ? " selected" : ""}" data-track-card="${esc(track.id)}" data-track-disclosure="${esc(track.id)}"${expandedTrackCards.has(track.id) ? " open" : ""}>
-        <summary><label class="track-select-control" data-track-select-control><input class="track-select-box" type="checkbox" data-select-track="${esc(track.id)}" aria-label="Velg ${esc(track.title)} ${esc(track.version)}" ${selectedTrackIds.has(track.id) ? "checked" : ""}></label><span><strong>${esc(track.title)} · ${esc(track.version)}</strong><small>${esc(track.filename)} · ${formatBytes(track.size)}</small><span class="track-summary-meta"><em>${comments} ${comments === 1 ? "kommentar" : "kommentarer"}</em><em>${esc(track.jottaStatus || "Venter på lokal synk")}</em></span></span><i aria-hidden="true"></i></summary>
+        <summary><label class="track-select-control" data-track-select-control><input class="track-select-box" type="checkbox" data-select-track="${esc(track.id)}" aria-label="Velg ${esc(track.title)} ${esc(track.version)}" ${selectedTrackIds.has(track.id) ? "checked" : ""}></label><span><strong>${esc(track.title)} · ${esc(track.version)}</strong><small>${esc(track.filename)} · ${formatBytes(track.size)}${previousVersion ? ` · Revisjon av ${esc(previousVersion.version)}` : ""}</small><span class="track-summary-meta"><em class="delivery-status ${esc(deliveryStatus)}">${esc(deliveryStatuses[deliveryStatus])}</em><em>${comments} ${comments === 1 ? "kommentar" : "kommentarer"}</em><em>${reviewCount} ${reviewCount === 1 ? "kundehendelse" : "kundehendelser"}</em></span></span><i aria-hidden="true"></i></summary>
         <div class="track-main">
           <div class="track-copy">
             <strong>Avspilling og levering</strong>
@@ -420,6 +492,7 @@
             <button class="tiny-button" data-share-track="${esc(track.id)}">Kopier kundelenke</button>
             <button class="tiny-button danger" data-delete-track="${esc(track.id)}">Slett lydfil</button>
           </div>
+          ${deliveryStatusControl(track)}
         </div>
         <section class="mix-feedback" aria-label="Tidsstemplet feedback for ${esc(track.title)}">
           <div class="mix-feedback-head"><div><strong>Kommentarer på tidslinjen</strong><span>Spill av eller pause der du vil kommentere.</span></div><span>${commentsForTrack(track.id).length} kommentarer</span></div>
@@ -429,6 +502,10 @@
             <button class="primary" type="submit">Legg til</button>
           </form>
           <div class="mix-comment-list">${commentRows(track.id)}</div>
+        </section>
+        <section class="delivery-review-history" aria-label="Godkjenningshistorikk for ${esc(track.title)}">
+          <div class="mix-feedback-head"><div><strong>Godkjenning og revisjoner</strong><span>Historikken gjelder kun ${esc(track.version)}.</span></div></div>
+          <div class="delivery-history-list">${reviewHistoryRows(track)}</div>
         </section>
       </details>`;
     }).join("");
@@ -457,10 +534,11 @@
   function playlistBuilderTracks() {
     const visible = projectTracks();
     if (!visible.length) return '<p class="delivery-playlist-empty">Ingen lydfiler tilgjengelig.</p>';
+    const latestIds = latestProjectTrackIds();
     return visible.map((track) => `
       <label class="delivery-track-choice">
-        <input type="checkbox" name="trackIds" value="${esc(track.id)}" checked>
-        <span><strong>${esc(track.title)}</strong><small>${esc(track.version)} · ${esc(track.filename)}</small></span>
+        <input type="checkbox" name="trackIds" value="${esc(track.id)}" ${latestIds.has(track.id) ? "checked" : ""}>
+        <span><strong>${esc(track.title)}</strong><small>${esc(track.version)} · ${latestIds.has(track.id) ? "Nyeste versjon" : "Tidligere versjon"} · ${esc(track.filename)}</small></span>
       </label>`).join("");
   }
 
@@ -576,6 +654,7 @@
         <div class="studio-section-head"><div><span class="kicker">LYDLEVERANSER</span><h3>Mikser og demoer</h3></div><span class="state violet">Privat lagring</span></div>
         <details class="studio-subdisclosure" data-project-disclosure="audio-upload"${projectSectionOpen("audio-upload")}><summary><span><strong>Last opp en ny låt eller miks</strong><small>WAV, MP3, FLAC, AIFF, M4A, AAC, OGG eller WebM</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body"><form class="audio-form" id="audio-upload-form">
             <label>Lydfil<input id="audio-file" type="file" accept=".wav,.mp3,.flac,.aif,.aiff,.m4a,.aac,.ogg,.weba,.webm,audio/*" required></label>
+            <label>Versjonstype<select id="audio-revision-of">${revisionOptions()}</select></label>
             <label>Tittel<input id="audio-title" placeholder="Låttittel"></label>
             <label>Versjon<input id="audio-version" value="V1" maxlength="40"></label>
             <button class="primary" id="upload-audio" type="submit">Last opp</button>
@@ -591,6 +670,7 @@
           </section></div></details>
         <details class="studio-subdisclosure" data-project-disclosure="audio-tracks"${projectSectionOpen("audio-tracks")}><summary><span><strong>Opplastede låter og mikser</strong><small>${projectTracks().length} ${projectTracks().length === 1 ? "lydfil" : "lydfiler"}</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body">${trackSelectionToolbar()}<div class="audio-list" id="audio-list">${trackCards()}</div>
           </div></details>
+        <details class="studio-subdisclosure" data-project-disclosure="delivery-history"${projectSectionOpen("delivery-history")}><summary><span><strong>Leveransehistorikk</strong><small>Godkjenninger og endringsforespørsler på tvers av alle versjoner</small></span><i aria-hidden="true"></i></summary><div class="studio-subdisclosure-body"><div class="project-delivery-history">${projectDeliveryHistory()}</div></div></details>
       </section>`;
   }
 
@@ -657,6 +737,13 @@
     bindContactEmailLookup(document.getElementById("project-email"), document.getElementById("project-client"));
     const upload = document.getElementById("audio-upload-form");
     if (upload) upload.onsubmit = uploadAudio;
+    const revisionOf = document.getElementById("audio-revision-of");
+    if (revisionOf) revisionOf.onchange = () => {
+      const previous = tracks.find((track) => track.id === revisionOf.value);
+      if (!previous) return;
+      document.getElementById("audio-title").value = previous.title;
+      document.getElementById("audio-version").value = nextVersionLabel(previous.version);
+    };
     const playlistForm = document.getElementById("delivery-playlist-form");
     if (playlistForm) playlistForm.onsubmit = createAudioPlaylist;
     const projectImageCamera = document.getElementById("project-image-camera");
@@ -694,6 +781,9 @@
     });
     document.querySelectorAll("[data-delete-track]").forEach((button) => {
       button.onclick = () => deleteTrack(button.dataset.deleteTrack);
+    });
+    document.querySelectorAll("[data-track-status]").forEach((select) => {
+      select.onchange = () => updateDeliveryStatus(select.dataset.trackStatus, select.value, select);
     });
     document.querySelectorAll("[data-track-player]").forEach((player) => {
       const updateTimestamp = () => {
@@ -1486,6 +1576,7 @@
     const progress = document.getElementById("upload-progress");
     const bar = progress.querySelector("i");
     const filename = safeFilename(file.name);
+    const previousVersionId = document.getElementById("audio-revision-of")?.value || "";
     const trackId = `track-${crypto.randomUUID()}`;
     const pathname = `loki-crm/audio/${trackId}/${filename}`;
     button.disabled = true;
@@ -1513,6 +1604,7 @@
             filename,
             title: document.getElementById("audio-title").value || filename.replace(/\.[^.]+$/, ""),
             version: document.getElementById("audio-version").value || "V1",
+            previousVersionId,
           },
         }),
       });
@@ -1542,6 +1634,26 @@
       }
     } catch (error) {
       toast(error.message || "Kundelenken kunne ikke opprettes.");
+    }
+  }
+
+  async function updateDeliveryStatus(id, deliveryStatus, control) {
+    const previous = tracks.find((track) => track.id === id);
+    if (!previous || !["awaiting_feedback", "under_revision"].includes(deliveryStatus)) return;
+    control.disabled = true;
+    try {
+      const data = await request("/api/studio?action=audio", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id, changes: { deliveryStatus } }),
+      });
+      tracks = tracks.map((track) => track.id === id ? data.track : track);
+      render();
+      toast(`Leveransen er satt til «${deliveryStatuses[deliveryStatus]}».`);
+    } catch (error) {
+      control.disabled = false;
+      control.value = trackDeliveryStatus(previous);
+      toast(error.message || "Leveransestatusen kunne ikke oppdateres.");
     }
   }
 

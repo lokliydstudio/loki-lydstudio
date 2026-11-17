@@ -15,6 +15,7 @@ const { bridgeAuthorized, fileBridgeAuthorized } = require("../lib/crm-bridge");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { cleanTrackIds, playlistTracks, publicAudioPlaylist, sanitizeAudioPlaylist } = require("../lib/crm-audio-playlists");
+const { DELIVERY_STATUSES, decideAudioReview, normalizeDeliveryStatus, publicAudioReview, reviewStateForTrack, sanitizeAudioReview } = require("../lib/crm-audio-reviews");
 const { calendarFeedUrl, parseIcsCalendar, parseIcsDate } = require("../lib/crm-calendar");
 const { documentPathname, jottacloudDocumentUrl, mergeDocumentIndex, publicDocument, publicDocumentsWithOpens, recordDocumentOpen, safeRelativePath, sanitizeIndexedDocument, sanitizeUploadedDocument, uploadArchivePath } = require("../lib/crm-documents");
 const { mergeScan, publicReceipt, receiptContentType, receiptPathname, sanitizeReceipt, sanitizeReceiptUpload } = require("../lib/crm-receipts");
@@ -425,6 +426,16 @@ test("customer listening tokens are scoped and expire independently of owner acc
   const playlistToken = auth.createScopedToken("playlist-123", "audio-playlist-share", 60);
   assert.equal(auth.verifyScopedToken(playlistToken, "audio-playlist-share").subject, "playlist-123");
   assert.equal(auth.verifyScopedToken(playlistToken, "audio-share"), null);
+  const realNow = Date.now;
+  let now = realNow();
+  try {
+    Date.now = () => now;
+    const shortLived = auth.createScopedToken("track-expiring", "audio-share", 60);
+    now += 61_000;
+    assert.equal(auth.verifyScopedToken(shortLived, "audio-share"), null);
+  } finally {
+    Date.now = realNow;
+  }
 });
 
 test("project patches preserve chosen channels and enforce the 32-channel interface limit", () => {
@@ -1042,6 +1053,77 @@ test("audio feedback is timestamped, sanitized and scoped to one track", () => {
   assert.equal(sanitizeAudioComment({ trackId, authorName: "Kari", body: "" }, { type: "customer" }), null);
 });
 
+test("mix review decisions are version-scoped and preserve timestamped feedback snapshots", () => {
+  const track = {
+    id: "track-123e4567-e89b-12d3-a456-426614174000",
+    projectId: "project-1",
+    mixGroupId: "mix-123e4567-e89b-12d3-a456-426614174000",
+    title: "Nordlys",
+    filename: "Nordlys-V2.wav",
+    version: "V2",
+    uploadedAt: "2026-11-17T10:00:00.000Z",
+    deliveryStatus: "awaiting_feedback",
+  };
+  const comment = sanitizeAudioComment({
+    trackId: track.id,
+    authorName: "Kari",
+    body: "Vokalen må litt frem.",
+    timestampSeconds: 34,
+  }, { type: "customer" });
+  const review = sanitizeAudioReview({
+    action: "request_changes",
+    customerName: "Kari",
+    message: "Litt mer vokal i andre refreng.",
+    clientRequestId: "request-12345678",
+  }, { track, comments: [comment] });
+  assert.equal(review.trackId, track.id);
+  assert.equal(review.projectId, track.projectId);
+  assert.equal(review.version, "V2");
+  assert.equal(review.status, "changes_requested");
+  assert.equal(review.comments[0].timestampSeconds, 34);
+  assert.equal(publicAudioReview(review).comments[0].body, "Vokalen må litt frem.");
+  assert.equal(sanitizeAudioReview({ action: "request_changes", customerName: "Kari", message: "", clientRequestId: "request-12345678" }, { track }), null);
+  assert.equal(sanitizeAudioReview({ action: "approve", customerName: "", clientRequestId: "request-12345678" }, { track }), null);
+  const state = reviewStateForTrack(track, [review]);
+  assert.equal(state.status, "changes_requested");
+  assert.equal(state.history.length, 1);
+  const firstDecision = decideAudioReview([], review);
+  assert.equal(firstDecision.result.created, true);
+  assert.equal(decideAudioReview(firstDecision.items, review).result.created, false);
+  const approval = sanitizeAudioReview({
+    action: "approve",
+    customerName: "Kari",
+    clientRequestId: "approval-12345678",
+  }, { track, comments: [comment] });
+  const approvalDecision = decideAudioReview(firstDecision.items, approval);
+  assert.equal(approvalDecision.result.created, true);
+  assert.equal(reviewStateForTrack(track, approvalDecision.items).status, "approved");
+  assert.equal(decideAudioReview(approvalDecision.items, { ...approval, clientRequestId: "approval-87654321" }).result.created, false);
+  const afterApproval = decideAudioReview(approvalDecision.items, { ...review, clientRequestId: "changes-87654321" });
+  assert.equal(afterApproval.error.status, 409);
+  assert.equal(DELIVERY_STATUSES.approved, "Godkjent");
+  assert.equal(normalizeDeliveryStatus("unsafe"), "awaiting_feedback");
+});
+
+test("each uploaded mix version starts a new approval cycle", () => {
+  const id = "track-323e4567-e89b-12d3-a456-426614174000";
+  const pathname = audioPathname(id, "Nordlys-V3.wav");
+  const track = sanitizeTrack({
+    id,
+    projectId: "project-1",
+    filename: "Nordlys-V3.wav",
+    pathname,
+    title: "Nordlys",
+    version: "V3",
+    mixGroupId: "mix-123e4567-e89b-12d3-a456-426614174000",
+    previousVersionId: "track-223e4567-e89b-12d3-a456-426614174000",
+  }, { pathname, size: 10_000, contentType: "audio/wav" }, "leon@lokilyd.no");
+  assert.equal(track.deliveryStatus, "awaiting_feedback");
+  assert.equal(track.mixGroupId, "mix-123e4567-e89b-12d3-a456-426614174000");
+  assert.equal(track.previousVersionId, "track-223e4567-e89b-12d3-a456-426614174000");
+  assert.equal(reviewStateForTrack(track, []).status, "awaiting_feedback");
+});
+
 test("audio delivery playlists preserve order and expose no owner metadata", () => {
   const first = "track-123e4567-e89b-12d3-a456-426614174000";
   const second = "track-223e4567-e89b-12d3-a456-426614174000";
@@ -1068,6 +1150,7 @@ test("audio delivery playlists preserve order and expose no owner metadata", () 
 
 test("mix feedback is available in both internal and customer players", () => {
   const studioApi = fs.readFileSync(path.join(__dirname, "..", "api", "studio.js"), "utf8");
+  const reviewModel = fs.readFileSync(path.join(__dirname, "..", "lib", "crm-audio-reviews.js"), "utf8");
   const internalScript = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "studio.js"), "utf8");
   const customerPlayer = fs.readFileSync(path.join(__dirname, "..", "lytt", "index.html"), "utf8");
   assert.match(studioApi, /action === "audio-comments"/);
@@ -1089,6 +1172,17 @@ test("mix feedback is available in both internal and customer players", () => {
   assert.match(internalScript, /Den eksisterende kundelenken viser nå de nye låtene/);
   assert.match(customerPlayer, /action=public-playlist-stream/);
   assert.match(customerPlayer, /selectPlaylistTrack/);
+  assert.match(studioApi, /action === "public-review"/);
+  assert.match(reviewModel, /clientRequestId/);
+  assert.match(reviewModel, /Denne versjonen er allerede godkjent/);
+  assert.match(internalScript, /Leveransehistorikk/);
+  assert.match(internalScript, /data-track-status/);
+  assert.match(internalScript, /audio-revision-of/);
+  assert.match(customerPlayer, />Godkjenn miks</);
+  assert.match(customerPlayer, />Be om endringer</);
+  assert.match(customerPlayer, /Hva ønsker du endret\?/);
+  assert.match(customerPlayer, /Miksen er godkjent\. Takk for tilbakemeldingen!/);
+  assert.match(customerPlayer, /Tilbakemeldingen er sendt\. Vi tar en gjennomgang av ønskene dine\./);
 });
 
 test("project audio supports controlled multi-selection deletion", () => {
