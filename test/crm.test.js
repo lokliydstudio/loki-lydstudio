@@ -32,7 +32,7 @@ const { isMissingBlobError } = require("../lib/crm-store");
 const { apnsBearerToken, sanitizeNativeDevice } = require("../lib/crm-native-push");
 const { createProjectExport, planProjectDeletion } = require("../lib/crm-project-export");
 const { projectImagePathname, publicProjectImage, sanitizeProjectImage } = require("../lib/crm-project-images");
-const { parseSpotifyUrl, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences, sanitizeTimeEntries, totalProjectHours } = require("../lib/crm-projects");
+const { parseSpotifyUrl, projectHourBudget, sanitizePatch, sanitizeProject, sanitizeSpotifyReferences, sanitizeTimeEntries, totalProjectHours } = require("../lib/crm-projects");
 const { cleanContractPath, cleanJottacloudUrl, paymentId, sanitizePayment, sanitizeRoomKeys, sanitizeTenant, seedRentalItems, splitRentalItems } = require("../lib/crm-rentals");
 const { cleanUrl, discoveryModel, mergeProspects, prospectKey, prospectScore, sanitizeProspect } = require("../lib/crm-prospects");
 const { decodeXlsxBase64, fikenContactsFromRows } = require("../lib/fiken-contact-import");
@@ -458,15 +458,19 @@ test("projects sanitize status, email and patch data", () => {
     name: "  Ny   singel  ",
     clientEmail: "ARTIST@EXAMPLE.COM",
     status: "Ikke gyldig",
+    budgetHours: 80.25,
     patch: [{ channel: 2, source: "Kick in" }],
   });
   assert.equal(project.name, "Ny singel");
   assert.equal(project.clientEmail, "artist@example.com");
   assert.equal(project.status, "Planlegges");
+  assert.equal(project.budgetHours, 80.25);
   assert.equal(project.patch.length, 1);
   assert.equal(project.patch[0].channel, 2);
   assert.equal(project.patch[0].source, "Kick in");
   assert.deepEqual(sanitizeProject({ patch: [] }, project).patch, []);
+  assert.equal(sanitizeProject({ notes: "Oppdatert" }, project).budgetHours, 80.25);
+  assert.equal(sanitizeProject({ budgetHours: "" }, project).budgetHours, 0);
 });
 
 test("projects can be archived and restored without losing their studio data", () => {
@@ -524,6 +528,8 @@ test("project time entries keep billable studio categories and valid hours", () 
   assert.equal(totalProjectHours({ timeEntries: entries }), 6.75);
   assert.equal(totalProjectHours({ timeEntries: [{ hours: 2 }, { hours: 1.5 }, { hours: -1 }, { hours: "ugyldig" }] }), 3.5);
   assert.equal(totalProjectHours(), 0);
+  assert.equal(projectHourBudget({ budgetHours: "80.126" }), 80.13);
+  assert.equal(projectHourBudget({ budgetHours: -4 }), 0);
 });
 
 test("project workspace exposes per-project time logging and backup", () => {
@@ -543,6 +549,8 @@ test("project workspace exposes per-project time logging and backup", () => {
   assert.match(studio, /Ingen timer registrert/);
   assert.match(studio, /project-hours-used/);
   assert.match(studio, /projectButtonHours\.textContent = projectHoursLabel\(project\)/);
+  assert.match(studio, /id="project-hour-budget"/);
+  assert.match(studio, /budgetHours: document\.getElementById\("project-hour-budget"\)\.value/);
   assert.doesNotMatch(customerPlayer, /timeEntries|Utført av|Innspilling|Editering/);
 });
 
@@ -1194,10 +1202,14 @@ test("mix feedback is available in both internal and customer players", () => {
   assert.match(customerPlayer, /Tilbakemeldingen er sendt\. Vi tar en gjennomgang av ønskene dine\./);
   assert.match(studioApi, /projectHoursTotal: totalProjectHours\(project\)/);
   assert.match(studioApi, /projectHoursTotal: totalProjectHours\(context\.project\)/);
+  assert.match(studioApi, /projectHoursBudget: projectHourBudget\(project\)/);
+  assert.match(studioApi, /projectHoursBudget: projectHourBudget\(context\.project\)/);
   assert.match(customerPlayer, /TIMEFØRT PÅ PROSJEKTET/);
   assert.match(customerPlayer, /Ingen timer registrert/);
-  assert.match(customerPlayer, /renderProjectHours\(data\.track\.projectHoursTotal\)/);
-  assert.match(customerPlayer, /renderProjectHours\(data\.playlist\.projectHoursTotal\)/);
+  assert.match(customerPlayer, /customer-hours-remaining/);
+  assert.match(customerPlayer, /timer"} igjen/);
+  assert.match(customerPlayer, /renderProjectHours\(data\.track\.projectHoursTotal,data\.track\.projectHoursBudget\)/);
+  assert.match(customerPlayer, /renderProjectHours\(data\.playlist\.projectHoursTotal,data\.playlist\.projectHoursBudget\)/);
 });
 
 test("revision guidance is shared by the customer player and CRM settings", () => {

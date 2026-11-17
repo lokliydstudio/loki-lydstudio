@@ -395,10 +395,12 @@
 
   function projectHoursLabel(project) {
     const entries = Array.isArray(project?.timeEntries) ? project.timeEntries : [];
-    if (!entries.length) return "Ingen timer registrert";
     const total = timeTotals(project).total;
-    const value = total.toLocaleString("nb-NO", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-    return `${value} ${total === 1 ? "time" : "timer"} brukt`;
+    const budget = Math.max(0, Number(project?.budgetHours) || 0);
+    const value = (hours) => hours.toLocaleString("nb-NO", { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    if (budget) return `${value(total)} av ${value(budget)} ${budget === 1 ? "time" : "timer"} brukt`;
+    if (!entries.length) return "Ingen timer registrert";
+    return `${value(total)} ${total === 1 ? "time" : "timer"} brukt`;
   }
 
   function timeSummary(project) {
@@ -606,6 +608,7 @@
         <label class="field">Kundens e-post<span class="contact-lookup-control"><input id="project-email" type="email" autocomplete="off" aria-autocomplete="list" aria-controls="project-contact-suggestions-editor" data-contact-suggestions="project-contact-suggestions-editor" placeholder="Skriv navn eller e-post" value="${esc(project.clientEmail)}"><span class="contact-suggestion-list" id="project-contact-suggestions-editor" role="listbox" hidden></span></span></label>
         <label class="field">Status<select id="project-status">${statuses.map((status) => `<option ${status === project.status ? "selected" : ""}>${status}</option>`).join("")}</select></label>
         <label class="field">Dato<input id="project-date" type="date" value="${esc(project.sessionDate)}"></label>
+        <label class="field">Budsjetterte timer<input id="project-hour-budget" type="number" min="0" max="100000" step="0.25" inputmode="decimal" value="${project.budgetHours || ""}" placeholder="F.eks. 80"></label>
         <label class="field field-wide">Prosjektnotater<textarea id="project-notes" placeholder="Leveranse, referanser, tidsplan og andre avtaler …">${esc(project.notes)}</textarea></label>
       </div>
       <section class="studio-section project-time-section">
@@ -1192,6 +1195,7 @@
             clientEmail: document.getElementById("project-email").value,
             status: document.getElementById("project-status").value,
             sessionDate: document.getElementById("project-date").value,
+            budgetHours: document.getElementById("project-hour-budget").value,
             notes: document.getElementById("project-notes").value,
             spotifyReferences: projects.find((project) => project.id === selectedProjectId)?.spotifyReferences || [],
             patch: collectPatch(),
