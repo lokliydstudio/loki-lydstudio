@@ -1,12 +1,12 @@
 const {
-  allowedUsers,
   clearLoginChallengeCookie,
-  createLoginChallenge,
-  createToken,
+  createAuthorizedLoginChallenge,
+  createAuthorizedToken,
   loginChallengeCookie,
   sessionCookie,
   verifyLoginCode,
 } = require("../../lib/crm-auth");
+const { resolveCrmAccess } = require("../../lib/crm-access");
 const { sendOwnerLoginMail } = require("../../lib/crm-mail");
 const { presenceCollection, presenceLogin } = require("../../lib/crm-presence");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
@@ -50,6 +50,12 @@ async function verifyCode(req, res, email) {
     });
   }
 
+  const access = await resolveCrmAccess(data.email);
+  if (!access) {
+    res.setHeader("Set-Cookie", clearLoginChallengeCookie());
+    return res.status(403).json({ error: "CRM-tilgangen er ikke aktiv." });
+  }
+
   codeAttempts.delete(key);
   if (isConfigured()) {
     try {
@@ -64,7 +70,7 @@ async function verifyCode(req, res, email) {
   }
 
   res.setHeader("Set-Cookie", [sessionCookie(data.email), clearLoginChallengeCookie()]);
-  return res.status(200).json({ ok: true, user: { email: data.email } });
+  return res.status(200).json({ ok: true, user: access });
 }
 
 module.exports = async function handler(req, res) {
@@ -79,13 +85,14 @@ module.exports = async function handler(req, res) {
   if (Date.now() - lastAttempt < 60000) return res.status(429).json({ error: "Vent ett minutt før du prøver igjen." });
   requestAttempts.set(ip, Date.now());
 
-  if (!allowedUsers().has(email)) {
+  const access = await resolveCrmAccess(email);
+  if (!access) {
     res.setHeader("Set-Cookie", clearLoginChallengeCookie());
     return res.status(200).json({ ok: true });
   }
 
-  const token = createToken(email, "login", 15 * 60);
-  const challenge = createLoginChallenge(email, 15 * 60);
+  const token = createAuthorizedToken(email, "login", 15 * 60);
+  const challenge = createAuthorizedLoginChallenge(email, 15 * 60);
   const baseUrl = String(process.env.CRM_BASE_URL || "https://www.lokilyd.no").replace(/\/$/, "");
   const link = `${baseUrl}/api/crm/auth-callback?token=${encodeURIComponent(token)}`;
   try {

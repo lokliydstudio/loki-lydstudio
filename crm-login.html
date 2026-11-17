@@ -17,9 +17,12 @@
     <span class="kicker">INTERN ARBEIDSFLATE</span>
     <h1>Logg inn sikkert</h1>
     <section class="request-step" id="request-step">
-      <p>Velg hvem du er. Vi sender en sekssifret kode og sikker lenke til Loki-adressen din.</p>
+      <p>Skriv inn e-postadressen som har tilgang. Vi sender en sekssifret kode og sikker lenke til adressen.</p>
       <form id="login-form">
-        <input id="email" name="email" type="hidden">
+        <label for="email">E-postadresse</label>
+        <input id="email" name="email" type="email" autocomplete="email" placeholder="navn@eksempel.no" required>
+        <button type="submit">Send innloggingskode</button>
+        <div class="or">EIERKONTOER</div>
         <div class="owner-grid" aria-label="Velg bruker">
           <button class="owner-button" type="button" data-owner-email="leon@lokilyd.no"><strong>Leon</strong><span>leon@lokilyd.no</span></button>
           <button class="owner-button" type="button" data-owner-email="charles@lokilyd.no"><strong>Charles</strong><span>charles@lokilyd.no</span></button>
@@ -83,6 +86,11 @@
       }
     }
 
+    document.getElementById("login-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      await requestCode();
+    });
+
     ownerButtons.forEach((button) => button.addEventListener("click", async () => {
       emailInput.value = button.dataset.ownerEmail;
       await requestCode();
@@ -122,8 +130,15 @@
       requestStep.hidden = false;
       feedback.textContent = "";
       emailInput.value = "";
-      ownerButtons[0].focus();
+      emailInput.focus();
     });
+
+    const requestedEmail = new URLSearchParams(location.search).get("email");
+    if (requestedEmail) emailInput.value = requestedEmail;
+    if (new URLSearchParams(location.search).get("invited") === "1") {
+      feedback.textContent = "Invitasjonen er godtatt. Be om en kode for å logge inn.";
+      emailInput.focus();
+    }
   </script>
 </body>
 </html>

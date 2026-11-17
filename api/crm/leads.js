@@ -1,5 +1,6 @@
 const crypto = require("crypto");
 const { requireUser } = require("../../lib/crm-auth");
+const { requireCrmAccess } = require("../../lib/crm-access");
 const { leadPriority, mailPreferenceForLead, sortLeads, suppressedByMailPreference } = require("../../lib/crm-leads");
 const { classifyEnvelope } = require("../../lib/crm-mail-sort");
 const { sanitizeActivity } = require("../../lib/crm-operations");
@@ -136,6 +137,8 @@ async function leadViews() {
 }
 
 async function handler(req, res) {
+  const permission = req.method === "DELETE" ? "delete" : req.method === "GET" ? "read" : "write";
+  if (!await requireCrmAccess(req, res, permission)) return;
   const user = requireUser(req, res);
   if (!user) return;
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert ennå." });

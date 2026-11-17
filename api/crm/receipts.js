@@ -1,6 +1,6 @@
 const { del, get, head, issueSignedToken } = require("@vercel/blob");
 const { handleUploadPresigned } = require("@vercel/blob/client");
-const { currentUser } = require("../../lib/crm-auth");
+const { requireCrmAccess } = require("../../lib/crm-access");
 const { streamPrivateBlob } = require("../../lib/crm-audio-stream");
 const {
   MAX_RECEIPT_SIZE,
@@ -164,12 +164,13 @@ async function deleteHandler(req, res) {
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "private, no-store, max-age=0");
   res.setHeader("X-Content-Type-Options", "nosniff");
-  const user = currentUser(req);
   const action = String(req.query?.action || "");
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert ennå." });
+  const permission = req.method === "DELETE" ? "delete" : req.method === "GET" ? "read" : "write";
+  const user = await requireCrmAccess(req, res, permission);
+  if (!user) return;
   if (action === "upload") return uploadHandler(req, res, user);
   if (action === "download") return downloadHandler(req, res, user);
-  if (!user) return res.status(401).json({ error: "Innlogging kreves." });
   try {
     if (req.method === "GET") {
       const receipts = await readCollection("receipts");

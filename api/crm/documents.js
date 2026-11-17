@@ -1,6 +1,7 @@
 const { head, issueSignedToken } = require("@vercel/blob");
 const { handleUploadPresigned } = require("@vercel/blob/client");
 const { currentUser } = require("../../lib/crm-auth");
+const { requireCrmAccess } = require("../../lib/crm-access");
 const { bridgeAuthorized, fileBridgeAuthorized } = require("../../lib/crm-bridge");
 const {
   MAX_DOCUMENT_SIZE,
@@ -245,11 +246,17 @@ async function registerUpload(req, res, user) {
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "private, no-store, max-age=0");
   res.setHeader("X-Content-Type-Options", "nosniff");
-  const user = currentUser(req);
+  let user = currentUser(req);
   const bridge = bridgeAuthorized(req);
   const fileBridge = bridge || fileBridgeAuthorized(req);
   const action = String(req.query?.action || "");
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert ennå." });
+
+  if (user) {
+    const readOnlyAction = req.method === "GET" || action === "opened" || action === "download";
+    user = await requireCrmAccess(req, res, readOnlyAction ? "read" : "write");
+    if (!user) return;
+  }
 
   try {
     if (action === "upload") return await uploadHandler(req, res, user, fileBridge);

@@ -1,7 +1,7 @@
-const { requireUser } = require("../../lib/crm-auth");
+const { requireCrmAccess } = require("../../lib/crm-access");
 
 module.exports = async function handler(req, res) {
-  if (!requireUser(req, res)) return;
+  if (!await requireCrmAccess(req, res, "write")) return;
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   if (process.env.AI_DRAFTS_ENABLED !== "true") return res.status(503).json({ error: "AI-utkast er ikke aktivert ennå." });
   const senderName = String(req.body?.senderName || "kunde").slice(0, 120);

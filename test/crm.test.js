@@ -10,6 +10,7 @@ process.env.MAIL_USERNAME = "lokilyd1";
 process.env.MAIL_PASSWORD = "test-only-password";
 
 const auth = require("../lib/crm-auth");
+const { ROLE_DEFINITIONS, normalizeEmail: normalizeAccessEmail, ownerFor: accessOwnerFor, publicAccess, validRole } = require("../lib/crm-access");
 const { bridgeAuthorized, fileBridgeAuthorized } = require("../lib/crm-bridge");
 const { audioPathname, sanitizeTrack } = require("../lib/crm-audio");
 const { cleanTimestamp, commentsForTrack, sanitizeAudioComment } = require("../lib/crm-audio-comments");
@@ -71,6 +72,26 @@ test("only active owners can receive CRM tokens", () => {
   assert.equal(auth.verifyToken(token, "login").email, "leon@lokilyd.no");
   assert.equal(auth.createToken("charles@lokilyd.no", "login", 60) !== null, true);
   assert.equal(auth.createToken("daniel@lokilyd.no", "login", 60), null);
+});
+
+test("CRM team roles separate ownership, administration, editing and read-only access", () => {
+  assert.deepEqual(ROLE_DEFINITIONS.owner.permissions, ["read", "write", "delete", "export", "manageUsers", "manageIntegrations"]);
+  assert.deepEqual(ROLE_DEFINITIONS.admin.permissions, ["read", "write", "delete", "export"]);
+  assert.deepEqual(ROLE_DEFINITIONS.member.permissions, ["read", "write"]);
+  assert.deepEqual(ROLE_DEFINITIONS.viewer.permissions, ["read"]);
+  assert.equal(accessOwnerFor("leon@lokilyd.no").name, "Leon Frick");
+  assert.equal(accessOwnerFor("charles@lokilyd.no").name, "Charles Wise");
+  assert.equal(accessOwnerFor("daniel@lokilyd.no"), null);
+  assert.equal(validRole("owner"), "");
+  assert.equal(validRole("member"), "member");
+  assert.equal(normalizeAccessEmail(" USER@Example.com "), "user@example.com");
+  assert.deepEqual(publicAccess({ email: "user@example.com", name: "Test User", role: "viewer", status: "active" }).permissions, ["read"]);
+});
+
+test("an authorized invited email can receive a signed session after access is checked", () => {
+  const token = auth.createAuthorizedToken("musiker@example.com", "session", 60);
+  assert.equal(auth.verifyAuthorizedToken(token, "session").email, "musiker@example.com");
+  assert.equal(auth.verifyToken(token, "session"), null);
 });
 
 test("the Jottacloud document bridge uses a separate scoped credential", () => {
@@ -210,6 +231,29 @@ test("CRM sidebar is compact, task grouped and keeps system details in settings"
   assert.doesNotMatch(html, /class="primary overview-cta"/);
 });
 
+test("CRM owners can invite team members with server-enforced roles", () => {
+  const root = path.join(__dirname, "..");
+  const html = fs.readFileSync(path.join(root, "crmplatform", "index.html"), "utf8");
+  const login = fs.readFileSync(path.join(root, "crm-login.html"), "utf8");
+  const invite = fs.readFileSync(path.join(root, "crm-invite", "index.html"), "utf8");
+  const client = fs.readFileSync(path.join(root, "crmplatform", "access-control.js"), "utf8");
+  const endpoint = fs.readFileSync(path.join(root, "lib", "crm-access-handler.js"), "utf8");
+  const studio = fs.readFileSync(path.join(root, "api", "studio.js"), "utf8");
+  assert.match(html, /data-settings-panel="access"/);
+  assert.match(html, /Administrator/);
+  assert.match(html, /Medarbeider/);
+  assert.match(html, /Lesetilgang/);
+  assert.match(html, /data-owner-only/);
+  assert.match(login, /id="email"[^>]+type="email"/);
+  assert.match(invite, /Godta invitasjonen/);
+  assert.match(invite, /accessAction=accept/);
+  assert.match(client, /LokiCRMAccess/);
+  assert.match(client, /crm-read-only/);
+  assert.match(endpoint, /requireCrmAccess\(req, res, "manageUsers"\)/);
+  assert.match(endpoint, /createScopedToken\(invite\.id, "crm-invite"/);
+  assert.match(studio, /action === "access"/);
+});
+
 test("external booking portal shares the restrained Loki product identity", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "booking", "index.html"), "utf8");
   const script = fs.readFileSync(path.join(__dirname, "..", "booking", "booking.js"), "utf8");
@@ -225,13 +269,13 @@ test("external booking portal shares the restrained Loki product identity", () =
   assert.match(styles, /env\(safe-area-inset-bottom\)/);
 });
 
-test("CRM overview is personalized and prioritizes owner tasks and stale Formspree enquiries", () => {
+test("CRM overview is personalized and prioritizes user tasks and stale Formspree enquiries", () => {
   const html = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "index.html"), "utf8");
   const workspace = fs.readFileSync(path.join(__dirname, "..", "crmplatform", "workspace.js"), "utf8");
   assert.match(html, /id="overview-greeting"/);
   assert.match(html, /id="overview-tasks"/);
   assert.match(html, /id="overview-formspree"/);
-  assert.match(html, /const ownerName=.*charles.*Charles.*Leon/);
+  assert.match(html, /const ownerName=.*authenticatedUser\?\.name/);
   assert.match(html, /const isStaleFormspree=.*formspree.*lead\.stage==="Nytt lead"/);
   assert.match(html, /const isOverdueLead=.*followUpDate.*today/);
   assert.match(html, /24\*60\*60\*1000/);
@@ -728,7 +772,7 @@ test("Bilag replaces the visible Fiken module with an iPhone camera flow", () =>
   assert.match(styles, /@media\(max-width:640px\)/);
   assert.match(styles, /min-height:56px/);
   assert.doesNotMatch(workspace, /loadFiken|refresh-fiken/);
-  assert.match(api, /currentUser\(req\)/);
+  assert.match(api, /requireCrmAccess\(req, res, permission\)/);
   assert.match(api, /access: "private"/);
   assert.match(api, /store:false|scanReceipt/);
 });
@@ -1420,7 +1464,7 @@ test("workspace tasks stay compact until their details are opened", () => {
   assert.match(styles, /\.task-row\{align-items:center;padding:9px 11px\}/);
 });
 
-test("CRM push subscriptions are private, owner-scoped and safely normalized", () => {
+test("CRM push subscriptions are private, user-scoped and safely normalized", () => {
   const subscription = sanitizeSubscription({
     endpoint: "https://push.example.test/send/device-1",
     keys: { p256dh: "A_secure-public-key_123", auth: "auth_secret_123" },
@@ -1431,7 +1475,8 @@ test("CRM push subscriptions are private, owner-scoped and safely normalized", (
   assert.equal(subscription.id.length, 32);
   assert.match(pushPublicKey(), /^[A-Za-z0-9_-]{80,100}$/);
   assert.equal(sanitizeSubscription({ endpoint: "http://push.example.test", keys: subscription.keys }, "leon@lokilyd.no"), null);
-  assert.equal(sanitizeSubscription({ endpoint: subscription.endpoint, keys: subscription.keys }, "daniel@lokilyd.no"), null);
+  assert.equal(sanitizeSubscription({ endpoint: subscription.endpoint, keys: subscription.keys }, "not-an-email"), null);
+  assert.equal(sanitizeSubscription({ endpoint: subscription.endpoint, keys: subscription.keys }, "musiker@example.com").userEmail, "musiker@example.com");
   assert.deepEqual(publicSubscriptionStatus([subscription], "leon@lokilyd.no"), {
     subscribed: true,
     deviceCount: 1,
@@ -1452,13 +1497,14 @@ test("task push messages identify who created or completed the task", () => {
   assert.equal(notificationPayload({ url: "https://evil.example/" }).url, "/crmplatform/");
 });
 
-test("native iPhone push devices require an approved CRM owner and a valid APNs token", () => {
+test("native iPhone push devices require an authenticated CRM email and a valid APNs token", () => {
   const input = { token: "a".repeat(64), environment: "sandbox", device: "Leon iPhone" };
   const device = sanitizeNativeDevice(input, "leon@lokilyd.no");
   assert.equal(device.userEmail, "leon@lokilyd.no");
   assert.equal(device.environment, "sandbox");
   assert.ok(sanitizeNativeDevice({ ...input, token: "b".repeat(80) }, "leon@lokilyd.no"));
-  assert.equal(sanitizeNativeDevice(input, "daniel@lokilyd.no"), null);
+  assert.equal(sanitizeNativeDevice(input, "not-an-email"), null);
+  assert.equal(sanitizeNativeDevice(input, "musiker@example.com").userEmail, "musiker@example.com");
   assert.equal(sanitizeNativeDevice({ ...input, token: "short" }, "leon@lokilyd.no"), null);
   assert.equal(sanitizeNativeDevice({ ...input, environment: "other" }, "leon@lokilyd.no"), null);
 });
@@ -1729,28 +1775,31 @@ test("CRM calendar UI uses an authenticated server feed without exposing its pri
   assert.doesNotMatch(operations, /private-[a-z0-9_-]+\/basic\.ics/i);
 });
 
-test("presence is limited to the two active Loki owners and expires quickly", () => {
+test("presence supports active CRM team members and expires quickly", () => {
   const now = new Date("2026-09-15T10:00:00.000Z");
   const leonLogin = presenceLogin("leon@lokilyd.no", {}, new Date("2026-09-15T09:30:00.000Z"));
   const charlesLogin = presenceLogin("charles@lokilyd.no", {}, new Date("2026-09-14T08:15:00.000Z"));
   const owners = presenceOwners();
   assert.deepEqual(owners.map((owner) => owner.name).sort(), ["Charles", "Leon"]);
   assert.equal(presenceCollection("leon@lokilyd.no"), "presence-leon");
-  assert.equal(presenceCollection("daniel@lokilyd.no"), null);
-  assert.equal(presenceHeartbeat("daniel@lokilyd.no", {}, now), null);
+  assert.match(presenceCollection("musiker@example.com"), /^presence-user-[a-f0-9]{20}$/);
+  assert.equal(presenceHeartbeat("not-an-email", {}, now), null);
 
   const records = [
     presenceHeartbeat("leon@lokilyd.no", leonLogin, now),
     presenceHeartbeat("charles@lokilyd.no", charlesLogin, new Date(now.getTime() - ONLINE_WINDOW_MS - 1)),
     { email: "outside@example.com", name: "Ukjent", lastSeen: now.toISOString() },
   ];
-  const visible = presenceStatus(records, "leon@lokilyd.no", now);
-  assert.deepEqual(visible.map((owner) => owner.name), ["Leon", "Charles"]);
+  const guest = presenceHeartbeat("musiker@example.com", {}, now, "Mia Musiker");
+  records.push(guest);
+  const visible = presenceStatus(records, "leon@lokilyd.no", now, [...owners, { email: "musiker@example.com", name: "Mia Musiker" }]);
+  assert.deepEqual(visible.map((owner) => owner.name), ["Leon", "Charles", "Mia Musiker"]);
   assert.equal(visible[0].online, true);
   assert.equal(visible[0].isCurrent, true);
   assert.equal(visible[0].lastLoginAt, leonLogin.lastLoginAt);
   assert.equal(visible[1].online, false);
   assert.equal(visible[1].lastLoginAt, charlesLogin.lastLoginAt);
+  assert.equal(visible[2].online, true);
   const loggedOut = presenceOffline("leon@lokilyd.no", records[0], now);
   assert.equal(loggedOut.online, false);
   assert.equal(loggedOut.lastLoginAt, leonLogin.lastLoginAt);

@@ -1,6 +1,7 @@
 const { del, head, issueSignedToken } = require("@vercel/blob");
 const { handleUploadPresigned } = require("@vercel/blob/client");
-const { createScopedToken, createToken, requireUser, verifyScopedToken, verifyToken } = require("../lib/crm-auth");
+const { createScopedToken, requireUser, verifyScopedToken } = require("../lib/crm-auth");
+const { OWNERS: CRM_OWNERS, readAccessRecords, requireCrmAccess } = require("../lib/crm-access");
 const { AUDIO_CONTENT_TYPES, MAX_AUDIO_SIZE, audioPathname, cleanText, sanitizeTrack } = require("../lib/crm-audio");
 const { MAX_COMMENTS_PER_TRACK, commentsForTrack, publicAudioComment, sanitizeAudioComment } = require("../lib/crm-audio-comments");
 const { playlistTracks, publicAudioPlaylist, sanitizeAudioPlaylist } = require("../lib/crm-audio-playlists");
@@ -9,7 +10,7 @@ const { bridgeAuthorized } = require("../lib/crm-bridge");
 const { loadGoogleCalendar } = require("../lib/crm-calendar");
 const { bookingConflict, sanitizeActivity, sanitizeBooking, sanitizeQuote } = require("../lib/crm-operations");
 const { COLLECTION: NATIVE_PUSH_COLLECTION, MAX_DEVICES: MAX_NATIVE_PUSH_DEVICES, deviceId: nativeDeviceId, nativePushConfigured, sanitizeNativeDevice } = require("../lib/crm-native-push");
-const { presenceCollection, presenceHeartbeat, presenceOffline, presenceOwners, presenceStatus } = require("../lib/crm-presence");
+const { presenceCollection, presenceHeartbeat, presenceOffline, presenceStatus } = require("../lib/crm-presence");
 const {
   COLLECTION: PUSH_COLLECTION,
   MAX_SUBSCRIPTIONS,
@@ -47,6 +48,7 @@ const tenantBookingHandler = require("../lib/tenant-booking-handler");
 const { removeCompletedTasks, sanitizeGoal, sanitizeNote, sanitizeTask } = require("../lib/crm-workspace");
 const { noteCollection, notesWithLiveContent } = require("../lib/crm-live-notes");
 const noteLiveHandler = require("../lib/crm-note-live-handler");
+const accessHandler = require("../lib/crm-access-handler");
 
 function publicBaseUrl(req) {
   const configured = String(process.env.CRM_BASE_URL || "").replace(/\/$/, "");
@@ -1065,14 +1067,19 @@ async function presenceHandler(req, res) {
   if (!collection) return res.status(403).json({ error: "Brukeren har ikke tilgang til tilstedeværelsesstatus." });
 
   const existing = (await readCollection(collection))[0] || {};
-  if (req.method === "POST") await writeCollection(collection, [presenceHeartbeat(user.email, existing)]);
-  else if (req.method === "DELETE") await writeCollection(collection, [presenceOffline(user.email, existing)]);
+  if (req.method === "POST") await writeCollection(collection, [presenceHeartbeat(user.email, existing, new Date(), user.name)]);
+  else if (req.method === "DELETE") await writeCollection(collection, [presenceOffline(user.email, existing, new Date(), user.name)]);
 
-  const records = await Promise.all(presenceOwners().map(async (owner) => {
+  const accessRecords = await readAccessRecords();
+  const members = [
+    ...CRM_OWNERS.map((owner) => ({ email: owner.email, name: owner.name })),
+    ...accessRecords.filter((record) => record.kind === "user" && record.status === "active").map((record) => ({ email: record.email, name: record.name })),
+  ];
+  const records = await Promise.all(members.map(async (owner) => {
     const items = await readCollection(presenceCollection(owner.email));
     return items[0] || null;
   }));
-  return res.status(200).json({ users: presenceStatus(records.filter(Boolean), user.email), onlineWindowSeconds: 150 });
+  return res.status(200).json({ users: presenceStatus(records.filter(Boolean), user.email, new Date(), members), onlineWindowSeconds: 150 });
 }
 
 async function pushHandler(req, res) {
@@ -1260,6 +1267,33 @@ module.exports = async function handler(req, res) {
   const action = String(req.query?.action || "");
   if (!isConfigured()) return res.status(503).json({ error: "CRM-lagringen er ikke aktivert." });
   try {
+    const publicActions = new Set([
+      "public-share",
+      "public-comments",
+      "public-stream",
+      "public-playlist",
+      "public-playlist-comments",
+      "public-playlist-stream",
+      "jotta-sync",
+      "jotta-download",
+      "prospect-sync",
+      "access",
+    ]);
+    const tenantPublic = action.startsWith("tenant-") && !action.startsWith("tenant-admin");
+    if (!publicActions.has(action) && !tenantPublic) {
+      const selfService = new Set(["profile", "profile-avatar-upload", "profile-avatar-stream", "presence", "push", "native-push"]);
+      const permission = selfService.has(action)
+        ? "read"
+        : ["backup", "project-export"].includes(action)
+          ? "export"
+          : req.method === "DELETE"
+            ? "delete"
+            : ["GET", "HEAD"].includes(req.method)
+              ? "read"
+              : "write";
+      if (!await requireCrmAccess(req, res, permission)) return;
+    }
+    if (action === "access") return await accessHandler(req, res);
     if (action === "projects") return await projectsHandler(req, res);
     if (action === "project-export") return await projectExportHandler(req, res);
     if (action === "upload") return await uploadHandler(req, res);

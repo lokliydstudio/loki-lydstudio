@@ -1,4 +1,4 @@
-const { requireUser } = require("../../lib/crm-auth");
+const { requireCrmAccess } = require("../../lib/crm-access");
 const { sendMail } = require("../../lib/crm-mail");
 const { sanitizeActivity } = require("../../lib/crm-operations");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
@@ -12,7 +12,7 @@ function headerText(value, max) {
 }
 
 module.exports = async function handler(req, res) {
-  const user = requireUser(req, res);
+  const user = await requireCrmAccess(req, res, "write");
   if (!user) return;
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
   const to = String(req.body?.to || "").trim().toLowerCase();

@@ -1,5 +1,6 @@
 const { normalizeApplication, notificationText } = require("../lib/camp-application");
 const { requireUser } = require("../lib/crm-auth");
+const { requireCrmAccess } = require("../lib/crm-access");
 const { sendMail } = require("../lib/crm-mail");
 const { isConfigured, mutateCollection, readCollection } = require("../lib/crm-store");
 
@@ -12,6 +13,7 @@ module.exports = async function handler(req, res) {
   if (!isConfigured()) return res.status(503).json({ error: "The registration form is temporarily unavailable." });
 
   if (req.method === "GET") {
+    if (!await requireCrmAccess(req, res, "read")) return;
     if (!requireUser(req, res)) return;
     try {
       const applications = await readCollection(COLLECTION);

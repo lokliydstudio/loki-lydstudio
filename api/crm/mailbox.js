@@ -1,5 +1,6 @@
 const { simpleParser } = require("mailparser");
 const { requireUser } = require("../../lib/crm-auth");
+const { requireCrmAccess } = require("../../lib/crm-access");
 const { createImapClient } = require("../../lib/crm-mail");
 const { inferLeadDetails } = require("../../lib/crm-lead-enrichment");
 const { classifyEnvelope, cleanEmail, sortMessages } = require("../../lib/crm-mail-sort");
@@ -51,6 +52,7 @@ async function markMessageRead(req, res) {
 }
 
 module.exports = async function handler(req, res) {
+  if (!await requireCrmAccess(req, res, req.method === "GET" ? "read" : "write")) return;
   const user = requireUser(req, res);
   if (!user) return;
   if (req.method === "POST") {

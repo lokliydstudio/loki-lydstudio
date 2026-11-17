@@ -1,5 +1,4 @@
 const CRM_SESSION_COOKIE = "loki_crm_session";
-const DEFAULT_CRM_USERS = ["leon@lokilyd.no", "charles@lokilyd.no"];
 
 function unauthorizedMember() {
   return new Response("Innlogging kreves for Loki Medlem.", {
@@ -63,17 +62,10 @@ async function validCrmSession(request) {
     if (!equalBytes(base64UrlToBytes(signature), expected)) return false;
 
     const data = JSON.parse(new TextDecoder().decode(base64UrlToBytes(payload)));
-    const allowed = new Set(
-      (process.env.CRM_ALLOWED_EMAILS || DEFAULT_CRM_USERS.join(","))
-        .split(",")
-        .map((email) => email.trim().toLowerCase())
-        .filter(Boolean),
-    );
-
     return (
       data.purpose === "session" &&
       Number(data.expires) >= Date.now() &&
-      allowed.has(String(data.email || "").toLowerCase())
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email || "").toLowerCase())
     );
   } catch {
     return false;

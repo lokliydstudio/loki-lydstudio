@@ -1,10 +1,13 @@
-const { clearLoginChallengeCookie, sessionCookie, verifyToken } = require("../../lib/crm-auth");
+const { clearLoginChallengeCookie, sessionCookie, verifyAuthorizedToken } = require("../../lib/crm-auth");
+const { resolveCrmAccess } = require("../../lib/crm-access");
 const { presenceCollection, presenceLogin } = require("../../lib/crm-presence");
 const { isConfigured, readCollection, writeCollection } = require("../../lib/crm-store");
 
 module.exports = async function handler(req, res) {
-  const data = verifyToken(req.query?.token, "login");
+  const data = verifyAuthorizedToken(req.query?.token, "login");
   if (!data) return res.status(401).send("Innloggingslenken er ugyldig eller utløpt.");
+  const access = await resolveCrmAccess(data.email);
+  if (!access) return res.status(403).send("CRM-tilgangen er ikke aktiv.");
   if (isConfigured()) {
     try {
       const collection = presenceCollection(data.email);
